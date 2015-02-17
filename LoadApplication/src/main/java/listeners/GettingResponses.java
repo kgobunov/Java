@@ -17,6 +17,7 @@ import javax.xml.xpath.XPathFactory;
 
 import org.xml.sax.InputSource;
 
+import connections.AsyncResponseTime;
 import connections.SaveData;
 
 import ru.aplana.app.Initialization;
@@ -82,9 +83,33 @@ public class GettingResponses implements MessageListener {
 
 		String request = null;
 
+		String corrId = null;
+
+		try {
+
+			corrId = inputMsg.getJMSCorrelationID();
+
+		} catch (JMSException e1) {
+
+			// nothing
+
+		}
+
 		try {
 
 			request = Common.parseMessMQ(inputMsg);
+
+			if (null != corrId) {
+
+				Initialization.saveDb.submit(new AsyncResponseTime(corrId));
+
+			} else {
+
+				this.infoLog.info("Correlation id is null! System: " + this.sysName);
+
+				this.infoLog.info("Request: " + request);
+
+			}
 
 			if (null != request) {
 

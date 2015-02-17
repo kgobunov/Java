@@ -336,6 +336,183 @@ public class DatabaseHelper {
 	}
 
 	/**
+	 * insert correlation ids
+	 * 
+	 * @param dataArray
+	 */
+	public final void insertCorrId(String corrID, String sysname) {
+
+		Date currentDate = new Date();
+
+		if (checkConnection()) {
+
+			if (null != this.connection) {
+
+				try {
+
+					this.connection.close();
+
+				} catch (SQLException e) {
+
+					this.dbSevere.severe("Can't close connection! "
+							+ e.getMessage());
+
+					e.printStackTrace();
+				}
+
+				this.connection = null;
+
+				setConnection();
+			}
+		}
+
+		PreparedStatement preparedStatement = null;
+
+		try {
+
+			if (null != this.connection) {
+
+				String insert = "insert into aplana_mq_corrid ( SYSNAME, CORR_ID, TIME_SEND ) values (?,?,?)";
+
+				preparedStatement = this.connection.prepareStatement(insert);
+
+				preparedStatement.setString(1, sysname);
+
+				preparedStatement.setString(2, corrID);
+
+				preparedStatement.setTimestamp(3,
+						new Timestamp(currentDate.getTime()));
+
+				preparedStatement.executeUpdate();
+
+				preparedStatement.close();
+
+				if (Connections.ORA_DEBUG) {
+
+					this.dbInfo.info("Insert success! ");
+
+				}
+
+			} else {
+
+				this.dbInfo.info("Test end!");
+			}
+
+		} catch (SQLException e) {
+
+			this.dbSevere.severe("Insert failed. " + e.getMessage());
+
+			e.printStackTrace();
+
+		} finally {
+
+			if (null != preparedStatement) {
+
+				try {
+
+					preparedStatement.close();
+
+				} catch (SQLException e) {
+
+					e.printStackTrace();
+
+				}
+
+			}
+
+		}
+	}
+
+	/**
+	 * insert correlation ids
+	 * 
+	 * @param dataArray
+	 */
+	public final void updateCorrIdResp(String corrID) {
+
+		Date currentDate = new Date();
+
+		if (checkConnection()) {
+
+			if (null != this.connection) {
+
+				try {
+
+					this.connection.close();
+
+				} catch (SQLException e) {
+
+					this.dbSevere.severe("Can't close connection! "
+							+ e.getMessage());
+
+					e.printStackTrace();
+				}
+
+				this.connection = null;
+
+				setConnection();
+			}
+		}
+
+		PreparedStatement preparedStatement = null;
+
+		try {
+
+			if (null != this.connection) {
+
+				String insert = "update aplana_mq_corrid set TIME_RESP = ? where CORR_ID = ?";
+
+				preparedStatement = this.connection.prepareStatement(insert);
+
+				preparedStatement.setTimestamp(1,
+						new Timestamp(currentDate.getTime()));
+
+				preparedStatement.setString(2, corrID);
+
+				preparedStatement.executeUpdate();
+
+				preparedStatement.close();
+
+				if (Connections.ORA_DEBUG) {
+
+					this.dbInfo.info("Update correlation ID success! ");
+
+				}
+
+			} else {
+
+				this.dbInfo.info("Test end!");
+			}
+
+		} catch (SQLException e) {
+
+			this.dbSevere.severe("Update correlation ID failed. "
+					+ e.getMessage());
+
+			this.dbSevere.severe("correlation ID  " + corrID);
+
+			e.printStackTrace();
+
+		} finally {
+
+			if (null != preparedStatement) {
+
+				try {
+
+					preparedStatement.close();
+
+				} catch (SQLException e) {
+
+					e.printStackTrace();
+
+				}
+
+			}
+
+		}
+	}
+
+	/**
 	 * insert pfr statistics
 	 * 
 	 * @param dataArray

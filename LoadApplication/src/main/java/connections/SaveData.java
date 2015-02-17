@@ -15,7 +15,7 @@ import ru.aplana.app.Initialization;
  * Save responses to database
  * 
  * @author Maksim Stepanov
- *
+ * 
  */
 public class SaveData implements Runnable {
 
@@ -27,9 +27,17 @@ public class SaveData implements Runnable {
 
 	public SaveData(String req, boolean flag, String system) {
 
-		this.request = req;
-
 		this.flagCheck = flag;
+
+		if (this.flagCheck) {
+
+			this.request = "";
+
+		} else {
+
+			this.request = req;
+
+		}
 
 		this.systemName = system;
 
@@ -40,9 +48,18 @@ public class SaveData implements Runnable {
 
 		if (null != Initialization.helper) {
 
-			Initialization.helper.saveResponseStatus(this.request,
-					this.flagCheck, this.systemName);
-			
+			if (Initialization.saveMode.equalsIgnoreCase("batch")) {
+
+				Initialization.helper.saveResponseStatus(this.request,
+						this.flagCheck, this.systemName);
+
+			} else {
+
+				Initialization.helper.insert(this.request, this.flagCheck,
+						this.systemName);
+
+			}
+
 		}
 
 	}

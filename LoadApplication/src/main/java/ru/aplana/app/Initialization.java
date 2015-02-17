@@ -15,6 +15,7 @@ import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
+import org.apache.xpath.operations.Bool;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -31,8 +32,9 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
 import com.ibm.mq.jms.MQQueueSession;
 
 import connections.Connections;
-import connections.MQ;
 import connections.DatabaseHelper;
+import connections.MQ;
+import connections.SaveCorrId;
 
 /**
  * 
@@ -69,8 +71,12 @@ public class Initialization {
 	public static Logger severe = null;
 
 	public static ConcurrentHashMap<String, Vector<Timestamp>> systems = null;
-	
+
 	public static ExecutorService saveDb = Executors.newCachedThreadPool();
+
+	public static String saveMode = null;
+
+	public static boolean transaction;
 
 	public static void init() throws JMSException {
 
@@ -91,6 +97,11 @@ public class Initialization {
 			System.exit(0);
 
 		}
+
+		saveMode = root.getChild("common").getChildText("modeSave");
+
+		transaction = Boolean.parseBoolean(root.getChild("common")
+				.getChildText("getTransaction"));
 
 		Connections.initConnections();
 
@@ -168,6 +179,10 @@ public class Initialization {
 
 				}
 
+				String corId = genCorId();
+
+				outputMsg.setJMSCorrelationID(corId);
+
 				if (queueReplyTo != null) {
 
 					outputMsg.setJMSReplyTo((MQQueue) session
@@ -185,6 +200,12 @@ public class Initialization {
 
 					systems.get(system)
 							.addElement(new Timestamp(now.getTime()));
+
+				}
+
+				if (transaction) {
+
+					saveDb.submit(new SaveCorrId(corId, system));
 
 				}
 
@@ -242,6 +263,29 @@ public class Initialization {
 		}
 
 		return rquid;
+	}
+
+	/**
+	 * 
+	 * Generating correlationId - additional info about message
+	 * 
+	 * @return rquid number
+	 */
+	public static String genCorId() {
+
+		String corrId = "";
+
+		Random rand = new Random();
+
+		for (int i = 0; i < 19; i++) {
+
+			corrId += rand.nextInt(10);
+
+		}
+
+		corrId += System.currentTimeMillis();
+
+		return corrId;
 	}
 
 	/**

@@ -1,7 +1,7 @@
 # Java
 Java projects:
 
-Balancer and COD - web-services (based on AXIS2). Balancer checks available url from list and return to client. 
+Balancer and COD - web-services (based on AXIS2). Balancer checks available url from list and return to client, 
 
 CKPIT, CRM, ESB, SBOL, FSB  - JMS applications (WebSphere MQ provider implementation): 
 
@@ -20,6 +20,13 @@ LoadApllication - load application , use for load testing. Load one web-service 
 GetResultLoadApp - application for getting result after load test. Export information to excel file.
 
 ClearMqQueues - application for cleaning queues after load test through pcf agents.
+
+JSP - support tools. (under tomcat7)
+
+balancerUrls - web interface for generating url for balancer under definded format
+Config_balancer - web interface for configurating balancer (check/uncheck urls, edit , etc)
+showBlackList - show urls from balancer's blacklist
+configurator - web interface for configurating web services like COD
 
 
 

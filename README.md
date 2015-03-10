@@ -21,11 +21,14 @@ GetResultLoadApp - application for getting result after load test. Export inform
 
 ClearMqQueues - application for cleaning queues after load test through pcf agents.
 
-JSP - support tools. (under tomcat7)
+JSP - support tools. (under tomcat7):
 
 balancerUrls - web interface for generating url for balancer under definded format
+
 Config_balancer - web interface for configurating balancer (check/uncheck urls, edit , etc)
+
 showBlackList - show urls from balancer's blacklist
+
 configurator - web interface for configurating web services like COD
 
 

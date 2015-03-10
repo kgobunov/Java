@@ -20,14 +20,12 @@ import listeners.Listener;
 import org.jdom.Element;
 
 import pfr.PFR;
-
-import requests.RequestHelper;
 import requests.DespatchRequest;
+import requests.RequestHelper;
 import statistics.Statistics;
 import tools.LoggerImplimentation;
 import tools.Observer;
 import tools.ObserverServices;
-import tools.HaltApplication;
 
 /**
  * Classname: InitSystems
@@ -47,13 +45,13 @@ public class InitSystems {
 	public static final void initSystems() throws NumberFormatException,
 			JMSException {
 
-		String testType = root.getChild("common").getChildText("testType"); // test type
-
-		String singleSystem = root.getChild("common").getChild("oneSystem") // single system (check for single mode)
+		// single system (check for single mode)
+		String singleSystem = root.getChild("common").getChild("oneSystem")
 				.getChildText("name");
 
+		// flag for saving responses to database
 		boolean flagStat = Boolean.parseBoolean(root.getChild("common")
-				.getChildText("flagStat")); // flag for saving responses to database
+				.getChildText("flagStat"));
 
 		int flush = Integer.parseInt(root.getChild("common").getChildText(
 				"partFlush")); // divisor for detecting flush time
@@ -142,6 +140,8 @@ public class InitSystems {
 
 				Initialization.systems = new ConcurrentHashMap<String, Vector<Timestamp>>();
 
+				Initialization.executorsSchedule.put("save_stat", scMonitor);
+
 			}
 
 			// initialization system/s
@@ -149,19 +149,23 @@ public class InitSystems {
 
 				Element node = (Element) systems.get(i);
 
+				// system ready to load test
 				boolean activeSystem = Boolean.parseBoolean(node
-						.getChildText("active")); // system ready to load test
-				
+						.getChildText("active"));
+
+				// support MQRFH2 header
 				boolean jmsSupport = Boolean.parseBoolean(node
-						.getChildText("jms")); // support MQRFH2 header
-				
+						.getChildText("jms"));
+
+				// add additional information to MQRFH2 header
 				boolean addionalProp = Boolean.parseBoolean(node
-						.getChildText("usrProperties")); // add additional information to MQRFH2 header
+						.getChildText("usrProperties"));
 
 				if (activeSystem) {
 
+					// validating expressions
 					String[] validating = node.getChildText("validation")
-							.split(";"); // validating expressions
+							.split(";");
 
 					ArrayList<String> dataValidating = new ArrayList<String>(
 							validating.length);
@@ -176,14 +180,19 @@ public class InitSystems {
 
 					}
 
-					boolean debug = Boolean.parseBoolean(node.getChildText("debug")); // debug mode
+					// debug mode
+					boolean debug = Boolean.parseBoolean(node
+							.getChildText("debug"));
 
-					String nameSystem = node.getChildText("name"); // system name
+					// system name
+					String nameSystem = node.getChildText("name");
 
+					// request per hour
 					int countRequest = Integer.parseInt(node
-							.getChildText("countRequestByHour")); // request per hour
+							.getChildText("countRequestByHour"));
 
-					// if flagStat true - saving responses (check every 10 seconds)
+					// if flagStat true - saving responses (check every 10
+					// seconds)
 					if (flagStat) {
 
 						Initialization.systems.put(nameSystem,
@@ -196,27 +205,33 @@ public class InitSystems {
 					}
 
 					// create logger for system
-					LoggerImplimentation loggers = new LoggerImplimentation("logs\\"
-							+ nameSystem, 512000000, 2);
+					LoggerImplimentation loggers = new LoggerImplimentation(
+							"logs\\" + nameSystem, 512000000, 2);
 
 					Logger info = loggers.getInfoLogger();
 
 					Logger severe = loggers.getSevereLogger();
 
-					String typeValidation = node.getChildText("typeValidating"); // type validation
+					// type validation
+					String typeValidation = node.getChildText("typeValidating");
 
-					String requestQueue = node.getChildText("requestQueue"); // request queue
+					// request queue
+					String requestQueue = node.getChildText("requestQueue");
 
-					String responseQueue = node.getChildText("responseQueue"); // response queue
+					// response queue
+					String responseQueue = node.getChildText("responseQueue");
 
-					String[] replyTo = node.getChildText("replyTo").split(";"); // replyTo jms header
+					// replyTo propertie to jms header
+					String[] replyTo = node.getChildText("replyTo").split(";");
 
 					String[] requestFile = node.getChildText("requestFile")
 							.split(";"); // request message
 
 					RequestHelper.addRequest(nameSystem, requestFile);
 
-					int threads = Integer.parseInt(node.getChildText("threads")); // count working threads
+					// count working threads
+					int threads = Integer
+							.parseInt(node.getChildText("threads"));
 
 					int countListener = Integer.parseInt(node
 							.getChildText("countListener")); // count listeners
@@ -235,13 +250,16 @@ public class InitSystems {
 					Listener listener = new Listener(settingsListener,
 							dataValidating, debug, countListener, info, severe);
 
-					if (testType.equalsIgnoreCase("step")) {
+					ScheduledExecutorService sc = null;
+
+					if (Initialization.testType.equalsIgnoreCase("step")) {
 
 						HashMap<Integer, String> scenario = new HashMap<Integer, String>(); // scenario
 
 						String[] steps = node.getChildText("step").split(";");
 
-						int poolThreadSize = steps.length + 1; // size pool equal step count
+						// size pool equal step count
+						int poolThreadSize = steps.length + 1;
 
 						int k = 1;
 
@@ -283,24 +301,35 @@ public class InitSystems {
 
 						long interval = (long) temp; // intensity
 
-						ScheduledExecutorService scStep = Executors
-								.newScheduledThreadPool(threads + 1);
+						sc = Executors.newScheduledThreadPool(threads + 1);
 
 						for (int j = 0; j < threads; j++) {
 
-							scStep.scheduleAtFixedRate(new DespatchRequest(
-									settingsRequest, info, severe, debug,
-									replyTo, requestFile, jmsSupport, addionalProp), 0, interval,
+							DespatchRequest dr = new DespatchRequest.Builder(
+									settingsRequest, debug)
+									.setLoggers(info, severe)
+									.setRequestData(replyTo, requestFile)
+									.setMessageOptions(jmsSupport, addionalProp)
+									.setSession().build();
+
+							sc.scheduleAtFixedRate(dr, 0, interval,
 									TimeUnit.MILLISECONDS);
 
 						}
 
+						Observer ob = new Observer.Builder(debug)
+								.setCurrentStep(currentStep)
+								.setLoggers(info, severe)
+								.setRequestData(requestFile)
+								.setSettings(settingsRequest, settingsArray,
+										settingsFutureArray)
+								.setScenario(scenario)
+								.setMessageOption(replyTo, jmsSupport,
+										addionalProp)
+								.setRunner(poolThreadSize, threads).build();
+
 						// check next step
-						scStep.scheduleAtFixedRate(new Observer(
-								settingsRequest, info, severe, debug,
-								settingsArray, settingsFutureArray,
-								currentStep, scenario, poolThreadSize, threads,
-								replyTo, requestFile, jmsSupport, addionalProp), 0, 10, TimeUnit.SECONDS);
+						sc.scheduleAtFixedRate(ob, 0, 10, TimeUnit.SECONDS);
 
 					} else {
 
@@ -308,19 +337,25 @@ public class InitSystems {
 
 						long interval = (long) temp; // intensity
 
-						ScheduledExecutorService sc = Executors
-								.newScheduledThreadPool(threads);
+						sc = Executors.newScheduledThreadPool(threads);
 
 						for (int j = 0; j < threads; j++) {
 
-							sc.scheduleAtFixedRate(new DespatchRequest(
-									settingsRequest, info, severe, debug,
-									replyTo, requestFile, jmsSupport, addionalProp), 0, interval,
+							DespatchRequest dr = new DespatchRequest.Builder(
+									settingsRequest, debug)
+									.setLoggers(info, severe)
+									.setRequestData(replyTo, requestFile)
+									.setMessageOptions(jmsSupport, addionalProp)
+									.setSession().build();
+
+							sc.scheduleAtFixedRate(dr, 0, interval,
 									TimeUnit.MILLISECONDS);
 
 						}
 
 					}
+
+					Initialization.executorsSchedule.put(nameSystem, sc);
 
 				} else {
 
@@ -344,23 +379,30 @@ public class InitSystems {
 
 				Element webService = (Element) webServices.get(i);
 
+				// webservice ready to load test
 				boolean activeService = Boolean.parseBoolean(webService
-						.getChildText("active")); // webservice ready to load test
+						.getChildText("active"));
+
+				String nameService = webService.getChildText("name");
 
 				if (activeService) {
 
+					// count request per hour
 					int countRequest = Integer.parseInt(webService
-							.getChildText("countRequestByHour")); // count request per hour
-					
+							.getChildText("countRequestByHour"));
+
 					int delaySec = Integer.parseInt(webService
 							.getChildText("delay"));
 
-					long delayIteration =  delaySec * 1000; // time iteration in ms
+					// time iteration in ms
+					long delayIteration = delaySec * 1000;
 
-					// calculating count thread for intensity with delay per hour (3600 sec) - intensity / (3600 /delay)
+					// calculating count thread for intensity with delay per
+					// hour (3600 sec) - intensity / (3600 /delay)
 					int threads = countRequest / (3600 / delaySec);
 
-					String url = webService.getChildText("url"); // webservice url
+					// webservice url
+					String url = webService.getChildText("url");
 
 					long delay = (Long.parseLong(webService
 							.getChildText("checkConfirmDate"))) * 1000;
@@ -368,7 +410,9 @@ public class InitSystems {
 					int retryCount = Integer.parseInt(webService
 							.getChildText("countRetryForOpenDate"));
 
-					if (testType.equalsIgnoreCase("step")) {
+					ScheduledExecutorService sc = null;
+
+					if (Initialization.testType.equalsIgnoreCase("step")) {
 
 						HashMap<Integer, String> scenario = new HashMap<Integer, String>();
 
@@ -408,8 +452,7 @@ public class InitSystems {
 
 						settingsFutureArray = settingsFuture.split(",");
 
-						ScheduledExecutorService sc = Executors
-								.newScheduledThreadPool(threads + 1);
+						sc = Executors.newScheduledThreadPool(threads + 1);
 
 						for (int j = 0; j < threads; j++) {
 
@@ -423,21 +466,24 @@ public class InitSystems {
 							}
 
 							sc.scheduleAtFixedRate(new PFR(delay, url,
-									retryCount), 0,
-									delayIteration, TimeUnit.MILLISECONDS);
+									retryCount), 0, delayIteration,
+									TimeUnit.MILLISECONDS);
 
 						}
 
-						sc.scheduleAtFixedRate(new ObserverServices(
-								delayIteration, delay, url, retryCount,
-								settingsArray, settingsFutureArray,
-								currentStep, scenario, poolThreadSize), 0, 10,
-								TimeUnit.SECONDS);
+						ObserverServices obSc = new ObserverServices.Builder(
+								url, retryCount, delayIteration)
+								.setCurrentStep(currentStep)
+								.setDelay(delay)
+								.setScenario(scenario)
+								.setSettings(settingsArray, settingsFutureArray)
+								.setRunner(poolThreadSize).build();
+
+						sc.scheduleAtFixedRate(obSc, 0, 10, TimeUnit.SECONDS);
 
 					} else {
 
-						ScheduledExecutorService sc = Executors
-								.newScheduledThreadPool(threads);
+						sc = Executors.newScheduledThreadPool(threads);
 
 						for (int j = 0; j < threads; j++) {
 
@@ -451,16 +497,16 @@ public class InitSystems {
 							}
 
 							sc.scheduleAtFixedRate(new PFR(delay, url,
-									retryCount), 0,
-									delayIteration, TimeUnit.MILLISECONDS);
+									retryCount), 0, delayIteration,
+									TimeUnit.MILLISECONDS);
 
 						}
 
 					}
 
-				} else {
+					Initialization.executorsSchedule.put(nameService, sc);
 
-					String nameService = webService.getChildText("name");
+				} else {
 
 					Initialization.info.info(nameService
 							+ " is not used in load test");
@@ -471,22 +517,9 @@ public class InitSystems {
 
 		}
 
-		// stop test
-		if (testType.equalsIgnoreCase("none")) {
-
-			String runTime = root.getChild("common").getChildText("runTime");
-
-			ScheduledExecutorService ex = Executors.newScheduledThreadPool(1);
-
-			ex.scheduleAtFixedRate(new HaltApplication(runTime), 0, 10,
-					TimeUnit.SECONDS);
-
-		}
-
 		systems = null;
 
 		webServices = null;
 
 	}
-
 }

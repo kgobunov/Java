@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,6 +19,7 @@ import javax.xml.xpath.XPathFactory;
 
 import org.xml.sax.InputSource;
 
+import ru.aplana.app.Initialization;
 import ru.aplana.tools.Common;
 import ru.aplana.tools.CreateLogger;
 import ru.aplana.tools.GetData;
@@ -42,6 +44,8 @@ public class PFR implements Runnable {
 
 	private static CreateLogger loggers = null;
 
+	private static AtomicInteger count = new AtomicInteger(0);
+
 	private SOAPMessage soapResponse;
 
 	private ArrayList<String> privateInfo = new ArrayList<String>();
@@ -56,7 +60,7 @@ public class PFR implements Runnable {
 
 	private int retry;
 
-	public PFR(long delay, String url, int retryCount) {
+	static {
 
 		if (null == loggers) {
 
@@ -72,11 +76,17 @@ public class PFR implements Runnable {
 
 		}
 
+	}
+
+	public PFR(long delay, String url, int retryCount) {
+
 		this.delay = delay;
 
 		this.url = url;
 
 		this.retry = retryCount;
+
+		Initialization.executors.put("PFR_" + count.getAndIncrement(), this.ex);
 
 	}
 

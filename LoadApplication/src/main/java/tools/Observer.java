@@ -1,9 +1,12 @@
 package tools;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import requests.DespatchRequest;
@@ -33,65 +36,177 @@ public class Observer implements Runnable {
 
 	private int currentStep; // current step
 
-	private HashMap<Integer, String> scenario;
+	private final HashMap<Integer, String> scenario;
 
-	private ScheduledExecutorService sc;
+	private final ScheduledExecutorService sc;
 
-	private int threads;
+	private static AtomicInteger count = new AtomicInteger(0);
 
-	private HashMap<String, String> settingsRequest;
+	private final int threads;
 
-	private Logger infoLog;
+	private final HashMap<String, String> settingsRequest;
 
-	private Logger severeLog;
+	private final Logger infoLog;
 
-	private boolean debug;
+	private final Logger severeLog;
 
-	private String[] replyTo;
+	private final boolean debug;
 
-	private String[] files;
+	private final String[] replyTo;
+
+	private final String[] files;
 
 	private boolean lastStep = false;
 
-	private boolean jmsSupport;
+	private final boolean jmsSupport;
 
-	private boolean additionalProp;
+	private final boolean additionalProp;
 
-	public Observer(HashMap<String, String> settingsRequest, Logger infoLog,
-			Logger severeLog, boolean debug, String[] settingsArray,
-			String[] settingsFutureArray, int currentStep,
-			HashMap<Integer, String> scenario, int poolSize, int threads,
-			String[] replyTo, String[] files, boolean jms, boolean addional) {
+	private Observer(Builder builder) {
 
-		this.settingsArray = settingsArray;
+		this.settingsArray = builder.settingsArray;
 
-		this.settingsFutureArray = settingsFutureArray;
+		this.settingsFutureArray = builder.settingsFutureArray;
 
 		this.startTime = System.currentTimeMillis();
 
-		this.currentStep = currentStep;
+		this.currentStep = builder.currentStep;
 
-		this.scenario = scenario;
+		this.scenario = builder.scenario;
 
-		this.threads = threads;
+		this.threads = builder.threads;
 
-		this.settingsRequest = settingsRequest;
+		this.settingsRequest = builder.settingsRequest;
 
-		this.infoLog = infoLog;
+		this.infoLog = builder.infoLog;
 
-		this.severeLog = severeLog;
+		this.severeLog = builder.severeLog;
 
-		this.debug = debug;
+		this.debug = builder.debug;
 
-		this.jmsSupport = jms;
+		this.jmsSupport = builder.jmsSupport;
 
-		this.additionalProp = addional;
+		this.additionalProp = builder.additionalProp;
 
-		this.sc = Executors.newScheduledThreadPool(poolSize);
+		this.sc = builder.sc;
 
-		this.replyTo = replyTo;
+		this.replyTo = builder.replyTo;
 
-		this.files = files;
+		this.files = builder.files;
+
+		Initialization.executorsSchedule.put(
+				"ObserverMQ_" + count.getAndIncrement(), this.sc);
+
+	}
+
+	public static class Builder {
+
+		private String[] settingsArray; // current step settings
+
+		private String[] settingsFutureArray; // next step settings
+
+		private int currentStep; // current step
+
+		private HashMap<Integer, String> scenario;
+
+		private ScheduledExecutorService sc;
+
+		private int threads;
+
+		private HashMap<String, String> settingsRequest;
+
+		private Logger infoLog;
+
+		private Logger severeLog;
+
+		private final boolean debug;
+
+		private String[] replyTo;
+
+		private String[] files;
+
+		private boolean jmsSupport;
+
+		private boolean additionalProp;
+
+		public Builder(boolean debug) {
+
+			this.debug = debug;
+
+		}
+
+		public Builder setLoggers(Logger infoLog, Logger severeLog) {
+
+			this.infoLog = infoLog;
+
+			this.severeLog = severeLog;
+
+			return this;
+
+		}
+
+		public Builder setSettings(HashMap<String, String> settingsRequest,
+				String[] settingsArray, String[] settingsFutureArray) {
+
+			this.settingsRequest = settingsRequest;
+
+			this.settingsArray = settingsArray;
+
+			this.settingsFutureArray = settingsFutureArray;
+
+			return this;
+		}
+
+		public Builder setCurrentStep(int currentStep) {
+
+			this.currentStep = currentStep;
+
+			return this;
+
+		}
+
+		public Builder setScenario(HashMap<Integer, String> scenario) {
+
+			this.scenario = scenario;
+
+			return this;
+
+		}
+
+		public Builder setRunner(int poolSize, int threads) {
+
+			this.threads = threads;
+
+			this.sc = Executors.newScheduledThreadPool(poolSize);
+
+			return this;
+		}
+
+		public Builder setRequestData(String[] files) {
+
+			this.files = files;
+
+			return this;
+
+		}
+
+		public Builder setMessageOption(String[] replyTo, boolean jms,
+				boolean addional) {
+
+			this.replyTo = replyTo;
+
+			this.jmsSupport = jms;
+
+			this.additionalProp = addional;
+
+			return this;
+
+		}
+
+		public Observer build() {
+
+			return new Observer(this);
+		}
 
 	}
 
@@ -120,10 +235,14 @@ public class Observer implements Runnable {
 
 			for (int i = 0; i < this.threads; i++) {
 
-				this.sc.scheduleAtFixedRate(new DespatchRequest(
-						this.settingsRequest, this.infoLog, this.severeLog,
-						this.debug, this.replyTo, this.files, this.jmsSupport,
-						this.additionalProp), 0, interval,
+				DespatchRequest dr = new DespatchRequest.Builder(
+						this.settingsRequest, this.debug)
+						.setLoggers(this.infoLog, this.severeLog)
+						.setRequestData(this.replyTo, this.files)
+						.setMessageOptions(this.jmsSupport, this.additionalProp)
+						.build();
+
+				this.sc.scheduleAtFixedRate(dr, 0, interval,
 						TimeUnit.MILLISECONDS);
 
 			}
@@ -168,7 +287,38 @@ public class Observer implements Runnable {
 
 					Initialization.info.info("Load test finished!");
 
-					System.exit(0);
+					for (Entry<String, ScheduledExecutorService> sc : Initialization.executorsSchedule
+							.entrySet()) {
+
+						Initialization.info
+								.info("Stop scheduledExecutorService: "
+										+ sc.getKey());
+
+						ScheduledExecutorService schedule = sc.getValue();
+
+						List<Runnable> listAwait = null;
+
+						if (!schedule.isShutdown()) {
+
+							listAwait = schedule.shutdownNow();
+
+						}
+
+						if (listAwait.size() > 0 && null != listAwait) {
+
+							for (Runnable runnable : listAwait) {
+
+								Initialization.info
+										.info("Await scheduledExecutorService: "
+												+ runnable.getClass().getName());
+
+							}
+
+						}
+
+					}
+
+					 System.exit(0);
 
 				}
 

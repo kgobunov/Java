@@ -10,73 +10,173 @@ import ru.aplana.app.Initialization;
 import com.ibm.mq.jms.MQQueueSession;
 
 /**
+ * Sending request
  * 
- * Classname: Maksim Stepanov
+ * Classname: DespatchRequest
  * 
  * Version: 1.1
  * 
  * Copyright: OOO Aplana
  * 
  * @author Maksim Stepanov
- *
+ * 
  */
 
 public class DespatchRequest implements Runnable {
 
-	private String requestQueue; // request queue
+	private final String requestQueue; // request queue
 
-	private String[] replyTo; // reply queue
+	private final String[] replyTo; // reply queue
 
-	private String[] file; // request message/s
+	private final String[] file; // request message/s
 
-	private String sysName; //system name
+	private final String sysName; // system name
 
-	private MQQueueSession session; // mq session
+	private final MQQueueSession session; // mq session
 
-	private Logger infoLog;
+	private final Logger infoLog; // info log
 
-	private Logger severeLog;
+	private final Logger severeLog; // severe log
 
-	private boolean debug;
-	
-	private boolean jmsSupport;
-	
-	private boolean additionalProp;
+	private final boolean debug; // debug mode
 
-	private int length;
+	private final boolean jmsSupport; // support jms standart
 
-	public DespatchRequest(HashMap<String, String> settings, Logger infoLog,
-			Logger severeLog, boolean debug, String[] replyTo,
-			String[] requestFile, boolean jms, boolean addional) {
+	private final boolean additionalProp; // set addtional jms headers
 
-		this.requestQueue = settings.get("reqQ");
+	private final int length;
 
-		this.replyTo = replyTo;
+	private HashMap<String, Object> dataRequest = new HashMap<String, Object>();
 
-		this.file = requestFile;
+	private DespatchRequest(Builder builder) {
 
-		this.sysName = settings.get("systemName");
+		this.requestQueue = builder.requestQueue;
 
-		this.infoLog = infoLog;
+		this.replyTo = builder.replyTo;
 
-		this.severeLog = severeLog;
+		this.file = builder.file;
 
-		this.debug = debug;
-		
-		this.jmsSupport = jms;
-		
-		this.additionalProp = addional;
+		this.sysName = builder.sysName;
 
-		this.length = this.file.length;
+		this.infoLog = builder.infoLog;
 
-		try {
+		this.severeLog = builder.severeLog;
 
-			this.session = (MQQueueSession) Initialization.connection
-					.createQueueSession(false, MQQueueSession.AUTO_ACKNOWLEDGE);
+		this.debug = builder.debug;
 
-		} catch (JMSException e) {
+		this.jmsSupport = builder.jmsSupport;
 
-			e.printStackTrace();
+		this.additionalProp = builder.additionalProp;
+
+		this.length = builder.length;
+
+		this.session = builder.session;
+
+		// put data for request
+		this.dataRequest.put("queueRequest", this.requestQueue);
+
+		this.dataRequest.put("system", this.sysName);
+
+		this.dataRequest.put("session", this.session);
+
+		this.dataRequest.put("infoLog", this.infoLog);
+
+		this.dataRequest.put("severeLog", this.severeLog);
+
+		this.dataRequest.put("debug", this.debug);
+
+		this.dataRequest.put("jmsSupport", this.jmsSupport);
+
+		this.dataRequest.put("addionalProp", this.additionalProp);
+
+	}
+
+	public static class Builder {
+
+		private String requestQueue; // request queue
+
+		private String[] replyTo; // reply queue
+
+		private String[] file; // request message/s
+
+		private final String sysName; // system name
+
+		private Logger infoLog;
+
+		private Logger severeLog;
+
+		private final boolean debug;
+
+		private boolean jmsSupport;
+
+		private boolean additionalProp;
+
+		private int length;
+
+		private MQQueueSession session; // mq session
+
+		public Builder(HashMap<String, String> settings, boolean debug) {
+
+			this.sysName = settings.get("systemName");
+
+			this.requestQueue = settings.get("reqQ");
+
+			this.debug = debug;
+
+		}
+
+		public Builder setLoggers(Logger infoLog, Logger severeLog) {
+
+			this.infoLog = infoLog;
+
+			this.severeLog = severeLog;
+
+			return this;
+
+		}
+
+		public Builder setRequestData(String[] replyTo, String[] requestFile) {
+
+			this.replyTo = replyTo;
+
+			this.file = requestFile;
+
+			this.length = this.file.length;
+
+			return this;
+		}
+
+		public Builder setMessageOptions(boolean jms, boolean addional) {
+
+			this.jmsSupport = jms;
+
+			this.additionalProp = addional;
+
+			return this;
+
+		}
+
+		public Builder setSession() {
+
+			try {
+
+				this.session = (MQQueueSession) Initialization.connection
+						.createQueueSession(false,
+								MQQueueSession.AUTO_ACKNOWLEDGE);
+
+			} catch (JMSException e) {
+
+				e.printStackTrace();
+			}
+
+			return this;
+
+		}
+
+		public DespatchRequest build() {
+
+			return new DespatchRequest(this);
+
 		}
 
 	}
@@ -86,17 +186,21 @@ public class DespatchRequest implements Runnable {
 
 		if (this.length == 1) {
 
-			Initialization.sendRequest(this.file[0], this.requestQueue,
-					this.replyTo[0], this.sysName, this.session, this.infoLog,
-					this.severeLog, this.debug, this.jmsSupport, this.additionalProp);
+			this.dataRequest.put("path", this.file[0]);
+
+			this.dataRequest.put("queueReplyTo", this.replyTo[0]);
+
+			Initialization.sendRequest(this.dataRequest);
 
 		} else {
 
 			for (int i = 0; i < this.length; i++) {
 
-				Initialization.sendRequest(this.file[i], this.requestQueue,
-						this.replyTo[i], this.sysName, this.session,
-						this.infoLog, this.severeLog, this.debug, this.jmsSupport, this.additionalProp);
+				this.dataRequest.put("path", this.file[i]);
+
+				this.dataRequest.put("queueReplyTo", this.replyTo[i]);
+
+				Initialization.sendRequest(this.dataRequest);
 
 			}
 

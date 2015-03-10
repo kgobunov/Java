@@ -1,12 +1,15 @@
 package tools;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import pfr.PFR;
-
 import ru.aplana.app.Initialization;
 
 /**
@@ -32,52 +35,137 @@ public class ObserverServices implements Runnable {
 
 	private int currentStep;
 
-	private HashMap<Integer, String> scenario;
+	private final HashMap<Integer, String> scenario;
 
-	private ScheduledExecutorService sc;
+	private final ScheduledExecutorService sc;
+
+	private static AtomicInteger count = new AtomicInteger(0);
 
 	private int threads;
 
 	private boolean lastStep = false;
 
-	private long delay;
+	private final long delay;
 
-	private String url;
+	private final String url;
 
-	private int retry;
+	private final int retry;
 
-	private long delayIteration;
+	private final long delayIteration;
 
-	public ObserverServices(long delayIteration, long delay, String url,
-			int retryCount, String[] settingsArray,
-			String[] settingsFutureArray, int currentStep,
-			HashMap<Integer, String> scenario, int poolSize) {
+	public ObserverServices(Builder builder) {
 
-		this.settingsArray = settingsArray;
+		this.settingsArray = builder.settingsArray;
 
-		this.settingsFutureArray = settingsFutureArray;
+		this.settingsFutureArray = builder.settingsFutureArray;
 
 		this.startTime = System.currentTimeMillis();
 
-		this.currentStep = currentStep;
+		this.currentStep = builder.currentStep;
 
-		this.scenario = scenario;
+		this.scenario = builder.scenario;
 
-		this.delayIteration = delayIteration;
+		this.delayIteration = builder.delayIteration;
 
-		int countForStep = Integer.parseInt(this.settingsFutureArray[0]);
+		this.threads = builder.threads;
 
-		int delaySec = (int) (this.delayIteration / 1000);
+		this.sc = builder.sc;
 
-		this.threads = (countForStep / (3600 / delaySec)) * poolSize;
+		this.delay = builder.delay;
 
-		this.sc = Executors.newScheduledThreadPool(this.threads);
+		this.url = builder.url;
 
-		this.delay = delay;
+		this.retry = builder.retry;
 
-		this.url = url;
+		Initialization.executorsSchedule.put(
+				"ObserverServices_" + count.getAndIncrement(), this.sc);
 
-		this.retry = retryCount;
+	}
+
+	public static class Builder {
+
+		private String[] settingsArray;
+
+		private String[] settingsFutureArray;
+
+		private int currentStep;
+
+		private HashMap<Integer, String> scenario;
+
+		private ScheduledExecutorService sc;
+
+		private int threads;
+
+		private long delay;
+
+		private final String url;
+
+		private final int retry;
+
+		private long delayIteration;
+
+		public Builder(String url, int retryCount, long delayIteration) {
+
+			this.url = url;
+
+			this.retry = retryCount;
+
+			this.delayIteration = delayIteration;
+
+		}
+
+		public Builder setDelay(long delay) {
+
+			this.delay = delay;
+
+			return this;
+
+		}
+
+		public Builder setSettings(String[] settingsArray,
+				String[] settingsFutureArray) {
+
+			this.settingsArray = settingsArray;
+
+			this.settingsFutureArray = settingsFutureArray;
+
+			return this;
+		}
+
+		public Builder setCurrentStep(int currentStep) {
+
+			this.currentStep = currentStep;
+
+			return this;
+
+		}
+
+		public Builder setScenario(HashMap<Integer, String> scenario) {
+
+			this.scenario = scenario;
+
+			return this;
+
+		}
+
+		public Builder setRunner(int poolSize) {
+
+			int countForStep = Integer.parseInt(this.settingsFutureArray[0]);
+
+			int delaySec = (int) (this.delayIteration / 1000);
+
+			this.threads = (countForStep / (3600 / delaySec)) * poolSize;
+
+			this.sc = Executors.newScheduledThreadPool(this.threads);
+
+			return this;
+		}
+
+		public ObserverServices build() {
+
+			return new ObserverServices(this);
+
+		}
 
 	}
 
@@ -156,6 +244,36 @@ public class ObserverServices implements Runnable {
 				if (diffTime > timeLastStep) {
 
 					Initialization.info.info("Load test finished!");
+
+					for (Entry<String, ExecutorService> sc : Initialization.executors
+							.entrySet()) {
+
+						Initialization.info.info("Stop ExecutorService: "
+								+ sc.getKey());
+
+						ExecutorService schedule = sc.getValue();
+
+						List<Runnable> listAwait = null;
+
+						if (!schedule.isShutdown()) {
+
+							listAwait = schedule.shutdownNow();
+
+						}
+
+						if (listAwait.size() > 0 && null != listAwait) {
+
+							for (Runnable runnable : listAwait) {
+
+								Initialization.info
+										.info("Await executorService: "
+												+ runnable.getClass().getName());
+
+							}
+
+						}
+
+					}
 
 					System.exit(0);
 

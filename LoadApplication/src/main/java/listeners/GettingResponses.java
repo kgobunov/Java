@@ -17,12 +17,13 @@ import javax.xml.xpath.XPathFactory;
 
 import org.xml.sax.InputSource;
 
+import ru.aplana.app.Initialization;
+import ru.aplana.tools.Common;
+
+import com.ibm.msg.client.jms.JmsConstants;
+
 import connections.AsyncResponseTime;
 import connections.SaveData;
-
-import ru.aplana.app.Initialization;
-
-import ru.aplana.tools.Common;
 
 /**
  * 
@@ -83,11 +84,14 @@ public class GettingResponses implements MessageListener {
 
 		String request = null;
 
-		String corrId = null;
+		String messID = null;
 
 		try {
 
-			corrId = inputMsg.getJMSCorrelationID();
+			byte[] temp = (byte[]) inputMsg
+					.getObjectProperty(JmsConstants.JMS_IBM_MQMD_CORRELID);
+
+			messID = new String(temp).trim();
 
 		} catch (JMSException e1) {
 
@@ -99,13 +103,14 @@ public class GettingResponses implements MessageListener {
 
 			request = Common.parseMessMQ(inputMsg);
 
-			if (null != corrId) {
+			if (null != messID) {
 
-				Initialization.saveDb.submit(new AsyncResponseTime(corrId));
+				Initialization.saveDb.submit(new AsyncResponseTime(messID));
 
 			} else {
 
-				this.infoLog.info("Correlation id is null! System: " + this.sysName);
+				this.infoLog.info("Correlation id is null! System: "
+						+ this.sysName);
 
 				this.infoLog.info("Request: " + request);
 

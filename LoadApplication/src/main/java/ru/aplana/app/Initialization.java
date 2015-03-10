@@ -4,24 +4,27 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
-import org.apache.xpath.operations.Bool;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 
 import requests.RequestHelper;
+import tools.HaltApplication;
 import tools.LoggerImplimentation;
 import tools.Validation;
 
@@ -30,6 +33,7 @@ import com.ibm.mq.jms.MQQueue;
 import com.ibm.mq.jms.MQQueueConnection;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 import com.ibm.mq.jms.MQQueueSession;
+import com.ibm.msg.client.jms.JmsConstants;
 
 import connections.Connections;
 import connections.DatabaseHelper;
@@ -72,11 +76,19 @@ public class Initialization {
 
 	public static ConcurrentHashMap<String, Vector<Timestamp>> systems = null;
 
-	public static ExecutorService saveDb = Executors.newCachedThreadPool();
+	public static ExecutorService saveDb = null;
 
 	public static String saveMode = null;
 
+	public static String testType;
+
 	public static boolean transaction;
+
+	public static ConcurrentHashMap<String, ScheduledExecutorService> executorsSchedule = new ConcurrentHashMap<String, ScheduledExecutorService>();
+
+	public static ConcurrentHashMap<String, ExecutorService> executors = new ConcurrentHashMap<String, ExecutorService>();
+
+	public static ScheduledExecutorService haltApp = null;
 
 	public static void init() throws JMSException {
 
@@ -97,6 +109,10 @@ public class Initialization {
 			System.exit(0);
 
 		}
+
+		saveDb = Executors.newCachedThreadPool();
+
+		executors.put("DB", saveDb);
 
 		saveMode = root.getChild("common").getChildText("modeSave");
 
@@ -122,24 +138,36 @@ public class Initialization {
 				+ "; QueueManager: " + factory.getQueueManager()
 				+ "; Channel: " + factory.getChannel());
 
+		testType = root.getChild("common").getChildText("testType");
+
+		if (testType.equalsIgnoreCase("none")) {
+
+			String runTime = root.getChild("common").getChildText("runTime");
+
+			haltApp = Executors.newScheduledThreadPool(1);
+
+			haltApp.scheduleAtFixedRate(new HaltApplication(runTime), 0, 10,
+					TimeUnit.SECONDS);
+
+		}
+
 	}
 
 	/**
 	 * Send request to mq queue
 	 * 
-	 * @param path
-	 * @param queueRequest
-	 * @param queueReplyTo
-	 * @param system
-	 * @param session
-	 * @param info
-	 * @param severe
-	 * @param debug
+	 * @param hash
+	 *            with data^ String path String queueRequest String queueReplyTo
+	 *            String system MQQueueSession session Logger info Logger severe
+	 *            Boolean debug
 	 */
-	public static void sendRequest(String path, String queueRequest,
-			String queueReplyTo, String system, MQQueueSession session,
-			Logger info, Logger severe, boolean debug, boolean jmsSupport,
-			boolean addionalProp) {
+	public static void sendRequest(HashMap<String, Object> data) {
+
+		Logger info = (Logger) data.get("infoLog");
+
+		Logger severe = (Logger) data.get("severeLog");
+
+		String system = (String) data.get("system");
 
 		if (null != connection) {
 
@@ -149,13 +177,21 @@ public class Initialization {
 
 				String request = null;
 
-				request = RequestHelper.getRequest(path);
+				request = RequestHelper.getRequest((String) data.get("path"));
+
+				MQQueueSession session = (MQQueueSession) data.get("session");
 
 				TextMessage outputMsg = session.createTextMessage(request);
 
 				// Create send queues
 				MQQueue queueSendASRequest = (MQQueue) session
-						.createQueue(queueRequest);
+						.createQueue((String) data.get("queueRequest"));
+
+				Boolean jmsSupport = (Boolean) data.get("jmsSupport");
+
+				Boolean addionalProp = (Boolean) data.get("addionalProp");
+
+				Boolean debug = (Boolean) data.get("debug");
 
 				if (!jmsSupport) {
 
@@ -179,9 +215,16 @@ public class Initialization {
 
 				}
 
-				String corId = genCorId();
+				String messID = genCorrId();
 
-				outputMsg.setJMSCorrelationID(corId);
+				outputMsg.setJMSCorrelationIDAsBytes(messID.getBytes());
+
+				queueSendASRequest.setMQMDWriteEnabled(true);
+
+				outputMsg.setObjectProperty(JmsConstants.JMS_IBM_MQMD_MSGID,
+						messID.getBytes());
+
+				String queueReplyTo = (String) data.get("queueReplyTo");
 
 				if (queueReplyTo != null) {
 
@@ -205,7 +248,7 @@ public class Initialization {
 
 				if (transaction) {
 
-					saveDb.submit(new SaveCorrId(corId, system));
+					saveDb.submit(new SaveCorrId(messID, system));
 
 				}
 
@@ -271,13 +314,13 @@ public class Initialization {
 	 * 
 	 * @return rquid number
 	 */
-	public static String genCorId() {
+	public static String genCorrId() {
 
 		String corrId = "";
 
 		Random rand = new Random();
 
-		for (int i = 0; i < 19; i++) {
+		for (int i = 0; i < 8; i++) {
 
 			corrId += rand.nextInt(10);
 

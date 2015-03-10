@@ -102,6 +102,8 @@ public class Listener {
 
 				this.queueConsumer = (MQQueue) this.session
 						.createQueue(this.queue);
+				
+				this.queueConsumer.setMQMDReadEnabled(true);
 
 				this.consumer = this.session.createConsumer(this.queueConsumer);
 

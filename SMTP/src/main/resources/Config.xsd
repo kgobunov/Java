@@ -1,0 +1,924 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="config">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="common" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Common properties</xs:documentation>
+				</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="testType" default="none" minOccurs="1" maxOccurs="1">
+								<xs:annotation>
+									<xs:documentation>
+										test type (if not stepstep -> test_type=none) 
+										(step - ступень, none - стабильность или подтверждение)
+									</xs:documentation>
+								</xs:annotation>
+								<xs:simpleType>
+									<xs:restriction base="xs:string">
+										<xs:enumeration value="none"/>
+										<xs:enumeration value="step"/>
+									</xs:restriction>
+								</xs:simpleType>							
+							</xs:element>
+							<xs:element name="delayReconnect" minOccurs="1" maxOccurs="1">
+								<xs:annotation>
+									<xs:documentation>Delay between getting a new connection after fail in listeners (seconds)</xs:documentation>
+								</xs:annotation>
+								<xs:simpleType>
+									<xs:restriction base="xs:decimal">
+										<xs:pattern value="\d+" />
+									</xs:restriction>
+								</xs:simpleType>	
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="connections" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Connections to mq and database</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="db" minOccurs="1" maxOccurs="1">
+								<xs:annotation>
+									<xs:documentation>Connect to database</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="host" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Host name</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:pattern value="\d+\.{1}\d+\.{1}\d+\.{1}\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="port" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Port</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>										
+										</xs:element>
+										<xs:element name="sid" default="sid" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>SID</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:pattern value="\S+"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="user" default="user" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Username for connect to db</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:pattern value="\S+"/>
+												</xs:restriction>
+											</xs:simpleType>	
+										</xs:element>
+										<xs:element name="password" default="password" minOccurs="1" maxOccurs="1" >
+											<xs:annotation>
+												<xs:documentation>User password</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="0"/>
+												</xs:restriction>
+											</xs:simpleType>	
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="mq" minOccurs="1" maxOccurs="1">
+								<xs:annotation>
+									<xs:documentation>Connect to mq server</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="host" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Host name</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:pattern value="\d+\.{1}\d+\.{1}\d+\.{1}\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="port" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Port</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>										
+										</xs:element>
+										<xs:element name="manager" default="manager" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Queues manager</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:pattern value="\S+"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="channel" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Channel</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:pattern value="\S+"/>
+												</xs:restriction>
+											</xs:simpleType>	
+										</xs:element>
+										</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="systems" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>All systems</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="esb" minOccurs="1" maxOccurs="1">
+								<xs:annotation>
+									<xs:documentation>Settings for enterprise system bus</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="debug" type="xs:boolean" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>
+													Debug mode (extended log)
+													true - yes
+													false - no
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="runTime" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Working time (minutes)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="-?\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="threads" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count threads for running application</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="queueToEtsm" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>TSM request queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueToErib" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>ERIB request queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueToCrm" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>CRM request queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueToFsb" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>FSB request queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>										
+										<xs:element name="queueToGarbage" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Garbage queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueToGarbageServices" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Garbage queue for services</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueFromErib" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>ERIB response queuue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueFromEtsm" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>TSM response queuue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueFromEtsmSAPHR" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>SAP HR response queuue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueFromCrmEsb" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>CRM response queuue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueFromFsbEsb" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>FSB response queuue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>										
+										<xs:element name="queueFromEtsmAsync" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>ASYNC response queuue for FMS, SPOOBK</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueFromServices" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Services response queuue for stubs (.war)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="urlSAPHR" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>SAP HR url</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="8"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="countListenersServices" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count listeners for reading service's queue </xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="maxConnections" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Max connection for connection manager (MultiThreadedHttpConnectionManager)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="ougClientTimeout" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>OSGI timeout (ms)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="osgi" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>OSGI's urls</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>										
+													<!-- This block multipled. Min occurs 1-->
+													<xs:element name="server" minOccurs="1" maxOccurs="unbounded">
+														<xs:annotation>
+															<xs:documentation>OSGI server</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="name" minOccurs="1" maxOccurs="1">
+																	<xs:annotation>
+																		<xs:documentation>System name</xs:documentation>
+																	</xs:annotation>
+																	<xs:simpleType>
+																		<xs:restriction base="xs:string">
+																			<xs:pattern value="\S+"/>
+																		</xs:restriction>
+																	</xs:simpleType>
+																</xs:element>										
+																<xs:element name="link" minOccurs="1" maxOccurs="1">	
+																	<xs:annotation>
+																		<xs:documentation>Link to OSGI</xs:documentation>
+																	</xs:annotation>
+																	<xs:simpleType>
+																		<xs:restriction base="xs:string">
+																			<xs:minLength value="8"/>
+																		</xs:restriction>
+																	</xs:simpleType>												
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>								
+													</xs:element>	
+												</xs:sequence>
+											</xs:complexType>												
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="erib" minOccurs="1" maxOccurs="1">
+								<xs:annotation>
+									<xs:documentation>Settings for ERIB</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="debug" type="xs:boolean" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>
+													Debug mode (extended log)
+													true - yes
+													false - no
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="runTime" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Working time (minutes)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="threads" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count threads for running application</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="queueTo" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Request queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueFrom" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Response queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="countStartApp" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count sending applications per hour</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="step" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Step scenario - \d - enter time, \d - duration, \d - intensive for step</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:pattern value="(\d+\,{1}\d+\,{1}\d+\;{0,1})+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>										
+									</xs:sequence>
+								</xs:complexType>												
+							</xs:element>
+							<xs:element name="crm" minOccurs="1" maxOccurs="1">
+								<xs:annotation>
+									<xs:documentation>Settings for CRM</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="debug" type="xs:boolean" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>
+													Debug mode (extended log)
+													true - yes
+													false - no
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="flagLogTsmApp" type="xs:boolean" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>
+													Process statuses from TSM
+													true - yes
+													false - no
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>										
+										<xs:element name="runTime" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Working time (minutes)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="threads" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count threads for running application</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="listeners" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count listeners</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>										
+										<xs:element name="queueTo" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Request queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueFrom" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Response queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="countStartApp" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count sending applications per hour</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="maxUserKICRM" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>max login KI</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>										
+										<xs:element name="step" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Step scenario - \d - intensive for this step, \d - duration, \d - max login KI</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:pattern value="(\d+\,{1}\d+\,{1}\d+\,{1}(\d+){1}\;{0,1})+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>										
+									</xs:sequence>
+								</xs:complexType>												
+							</xs:element>
+							<xs:element name="fsb" minOccurs="1" maxOccurs="1">
+								<xs:annotation>
+									<xs:documentation>Settings for FSB</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="debug" type="xs:boolean" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>
+													Debug mode (extended log)
+													true - yes
+													false - no
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="delay" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Delay answer for valid credit (sec)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="-?\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>											
+										<xs:element name="runTime" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Working time (minutes)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="threads" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count threads for running application</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="listeners" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count listeners</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>										
+										<xs:element name="queueTo" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Request queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueFrom" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Response queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="countStartApp" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count sending applications per hour</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="step" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Step scenario - \d - intensive for this step, \d - duration</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:pattern value="(\d+\,{1}\d+\,{1}(\d+){1}\;{0,1})+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>										
+									</xs:sequence>
+								</xs:complexType>												
+							</xs:element>							
+							<xs:element name="ckpit" minOccurs="1" maxOccurs="1">
+								<xs:annotation>
+									<xs:documentation>Settings for CKPIT</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="debug" type="xs:boolean" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>
+													Debug mode (extended log)
+													true - yes
+													false - no
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="runTime" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Working time (minutes)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="threads" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count threads for running application</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="queueTo" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Request queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueFrom" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Response queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="startProductUniqCode" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Start unique product code</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="timeIter" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Iteration time (minutes)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="timeStart" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>delayed start (minutes)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>											
+									</xs:sequence>
+								</xs:complexType>												
+							</xs:element>
+							<xs:element name="smtp" minOccurs="1" maxOccurs="1">
+								<xs:annotation>
+									<xs:documentation>Settings for SMTP server</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="mode" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Run mode: run - load testing, test - selftesting</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="3"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>									
+										<xs:element name="debug" type="xs:boolean" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>
+													Debug mode (extended log)
+													true - yes
+													false - no
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="countThreadsSmtp" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count threads for running application</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="maxConnection" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>max connections</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="port" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>smtp port</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>										
+										<xs:element name="from" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>For selftesing (from)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="subject" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>For selftesing (subject)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="body" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>For selftesing (body)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="to" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>For selftesing (to)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:pattern value=".*@.*"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>											
+										<xs:element name="connectionTime" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Connection time</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="latency" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>latency</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="bandwidth" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>bandwidth</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="gc" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count calls after need call gc</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>										
+									</xs:sequence>
+								</xs:complexType>												
+							</xs:element>							
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

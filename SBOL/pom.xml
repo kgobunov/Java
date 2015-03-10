@@ -1,37 +1,26 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-
-  <groupId>ru.aplana</groupId>
-  <artifactId>TSM_FSB</artifactId>
-  <version>1.0</version>
-  <packaging>jar</packaging>
-
-  <name>TSM_FSB</name>
-  <url>http://maven.apache.org</url>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <modelVersion>4.0.0</modelVersion>
+   <groupId>ru.aplana</groupId>
+   <artifactId>TSM_ERIB</artifactId>
+   <version>1.1</version>
+   <packaging>jar</packaging>
+   <name>TSM_SBOL</name>
+   <url>http://maven.apache.org</url>
    <developers>
       <developer>
          <id>max</id>
          <name>Maksim Stepanov</name>
          <email>maksim.stsiapanau@gmail.com</email>
       </developer>
-   </developers>  
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-
-<dependencies>
+   </developers>
+   <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+   </properties>
+   <dependencies>
       <dependency>
          <groupId>jdom</groupId>
          <artifactId>jdom</artifactId>
          <version>1.0</version>
-      </dependency>
-      <dependency>
-         <groupId>junit</groupId>
-         <artifactId>junit</artifactId>
-         <version>3.8.1</version>
-         <scope>test</scope>
       </dependency>
       <dependency>
          <groupId>jms</groupId>
@@ -143,7 +132,7 @@
                <archive>
                   <manifest>
                      <addClasspath>true</addClasspath>
-                     <mainClass>ru.aplana.app.FSBMqJms</mainClass>
+                     <mainClass>ru.aplana.app.SBOLMqJms</mainClass>
                      <classpathPrefix>dependency-jars/</classpathPrefix>
                   </manifest>
                </archive>

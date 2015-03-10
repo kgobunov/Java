@@ -1,0 +1,67 @@
+﻿<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+   <xs:element name="results">
+      <xs:complexType>
+         <xs:sequence>
+            <xs:element name="db" minOccurs="1" maxOccurs="1">
+               <xs:annotation>
+                  <xs:documentation>Connect to database</xs:documentation>
+               </xs:annotation>
+               <xs:complexType>
+                  <xs:sequence>
+                     <xs:element name="host" minOccurs="1" maxOccurs="1">
+                        <xs:annotation>
+                           <xs:documentation>Host name</xs:documentation>
+                        </xs:annotation>
+                        <xs:simpleType>
+                           <xs:restriction base="xs:string">
+                              <xs:pattern value="\d+\.{1}\d+\.{1}\d+\.{1}\d+"/>
+                           </xs:restriction>
+                        </xs:simpleType>
+                     </xs:element>
+                     <xs:element name="port" minOccurs="1" maxOccurs="1">
+                        <xs:annotation>
+                           <xs:documentation>Port</xs:documentation>
+                        </xs:annotation>
+                        <xs:simpleType>
+                           <xs:restriction base="xs:decimal">
+                              <xs:pattern value="\d+"/>
+                           </xs:restriction>
+                        </xs:simpleType>
+                     </xs:element>
+                     <xs:element name="sid" default="sid" minOccurs="1" maxOccurs="1">
+                        <xs:annotation>
+                           <xs:documentation>SID</xs:documentation>
+                        </xs:annotation>
+                        <xs:simpleType>
+                           <xs:restriction base="xs:string">
+                              <xs:pattern value="\S+"/>
+                           </xs:restriction>
+                        </xs:simpleType>
+                     </xs:element>
+                     <xs:element name="user" default="user" minOccurs="1" maxOccurs="1">
+                        <xs:annotation>
+                           <xs:documentation>Username for connect to db</xs:documentation>
+                        </xs:annotation>
+                        <xs:simpleType>
+                           <xs:restriction base="xs:string">
+                              <xs:pattern value="\S+"/>
+                           </xs:restriction>
+                        </xs:simpleType>
+                     </xs:element>
+                     <xs:element name="password" default="password" minOccurs="1" maxOccurs="1">
+                        <xs:annotation>
+                           <xs:documentation>User password</xs:documentation>
+                        </xs:annotation>
+                        <xs:simpleType>
+                           <xs:restriction base="xs:string">
+                              <xs:minLength value="0"/>
+                           </xs:restriction>
+                        </xs:simpleType>
+                     </xs:element>
+                  </xs:sequence>
+               </xs:complexType>
+            </xs:element>
+         </xs:sequence>
+      </xs:complexType>
+   </xs:element>
+</xs:schema>

@@ -67,8 +67,7 @@ public class MQTools {
 	 * @throws NumberFormatException
 	 * @throws JMSException
 	 */
-	public synchronized static final void sendMessage(String message)
-			throws NumberFormatException, JMSException {
+	public synchronized static final void sendMessage(String message) {
 
 		if (null == connection) {
 
@@ -104,21 +103,28 @@ public class MQTools {
 
 			producer.send(outputMsg);
 
-		} catch (Exception e) {
+		} catch (JMSException e) {
 
-			// nothing
+			System.err.println("JMSException: " + e.getMessage());
+			
+			e.printStackTrace();
 
 		} finally {
 
 			if (null != producer) {
 
-				producer.close();
-			}
+				try {
+					producer.close();
 
-			if (null != session) {
+					if (null != session) {
 
-				session.close();
+						session.close();
+					}
 
+				} catch (JMSException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 
 		}

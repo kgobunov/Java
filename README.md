@@ -1,19 +1,24 @@
 # Java
-Java projects:
 
-#Balancer
 
-Web-services (based on AXIS2). Balancer checks available url from list and return to client, can adds bad url to blacklist. 
+CKPIT, CRM, ESB, SBOL, FSB  - JMS applications (WebSphere MQ provider implementation). 
 
-CKPIT, CRM, ESB, SBOL, FSB  - JMS applications (WebSphere MQ provider implementation): 
+# Balancer, COD
+
+Web-services (based on AXIS2). 
+
+Balancer checks available url from list and return to client, can adds bad url to blacklist. 
+COD example of an external system.
+
+
 
 # ESB
 
-Enterprise system bus, all systems (exclude CKPIT) interacting with target system through it.
+Enterprise system bus, all systems (exclude CKPIT) and web-services like COD interacting with target system through it.
 
 #CKPIT
 
-Send 1100 messages every 15 minutes.
+Send 1100 messages every 15 minutes. (time can be changed in config file)
 
 #CRM, SBOL, FSB
 

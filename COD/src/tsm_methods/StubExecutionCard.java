@@ -4,8 +4,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import javax.jms.JMSException;
-
 import org.apache.axiom.om.OMElement;
 
 /**
@@ -132,11 +130,6 @@ public class StubExecutionCard implements Runnable {
 
 					e2.printStackTrace();
 
-				} catch (JMSException e2) {
-
-					System.err.println("JMSException: " + e2.getMessage());
-
-					e2.printStackTrace();
 				}
 
 			} catch (Exception e2) {

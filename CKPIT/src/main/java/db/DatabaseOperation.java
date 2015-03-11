@@ -30,7 +30,7 @@ public class DatabaseOperation {
 
 	private ArrayList<String> dataArray = null;
 
-	public DatabaseOperation() {
+	private DatabaseOperation() {
 
 		if (null == this.connection) {
 

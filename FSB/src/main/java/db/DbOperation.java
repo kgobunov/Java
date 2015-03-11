@@ -34,7 +34,7 @@ public class DbOperation {
 	 * 
 	 * default constructor
 	 */
-	public DbOperation() {
+	private DbOperation() {
 
 		// Set stable connection
 		if (null == this.connection) {

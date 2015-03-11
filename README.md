@@ -1,35 +1,49 @@
 # Java
 Java projects:
 
-Balancer and COD - web-services (based on AXIS2). Balancer checks available url from list and return to client, 
+#Balancer
+
+Web-services (based on AXIS2). Balancer checks available url from list and return to client, can adds bad url to blacklist. 
 
 CKPIT, CRM, ESB, SBOL, FSB  - JMS applications (WebSphere MQ provider implementation): 
 
-ESB - enterprise system bus , all systems (exclude CKPIT) interacting with target system through it.
+# ESB
 
-CKPIT send 1100 messages every 15 minutes.
+Enterprise system bus, all systems (exclude CKPIT) interacting with target system through it.
 
-CRM, SBOL , FSB - send messages with defined intensity. 
+#CKPIT
+
+Send 1100 messages every 15 minutes.
+
+#CRM, SBOL, FSB
+
+Send messages with defined intensity. 
 
 All applications have two mode supply load - stable and step. All settings set in xml- config file which validated at startup
 
 
 
-LoadApllication - load application , use for load testing. Load one web-service (SOAP protocol) and system interacting through queues (JMS - implementation Websphere MQ). Application has two mode supply laod - stable and step and support multithreading mode for every system. All statistics saved to database. All settings set in xml-config file which validated at startup.
+# LoadApllication
 
-GetResultLoadApp - application for getting result after load test. Export information to excel file.
+Load application, use for load testing. Load one web-service (SOAP protocol) and system interacting through queues (JMS - implementation Websphere MQ). Application has two mode supply laod - stable and step and support multithreading mode for every system. All statistics saved to database. All settings set in xml-config file which validated at startup.
 
-ClearMqQueues - application for cleaning queues after load test through pcf agents.
+# GetResultLoadApp
 
-JSP - support tools. (under tomcat7):
+Application for getting result after load test. Export information to excel file.
 
-balancerUrls - web interface for generating url for balancer under definded format
+# ClearMqQueues
 
-Config_balancer - web interface for configurating balancer (check/uncheck urls, edit , etc)
+Application for cleaning queues after load test through pcf agents.
 
-showBlackList - show urls from balancer's blacklist
+# JSP - support tools. (under tomcat7):
 
-configurator - web interface for configurating web services like COD
+	1) balancerUrls - web interface for generating url for balancer under definded format
+
+	2) Config_balancer - web interface for configurating balancer (check/uncheck urls, edit , etc)
+
+	3) showBlackList - show urls from balancer's blacklist
+
+	4) configurator - web interface for configurating web services like COD
 
 
 

@@ -22,7 +22,7 @@ public class dataBaseHelper {
 
 	private Lock lock = new ReentrantLock();
 
-	public dataBaseHelper() {
+	private dataBaseHelper() {
 
 		setConnection();
 

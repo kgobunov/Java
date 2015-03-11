@@ -3,6 +3,8 @@
 
 CKPIT, CRM, ESB, SBOL, FSB  - JMS applications (WebSphere MQ provider implementation). 
 
+All code contains test data. Code can be used for any purposes.
+
 # Balancer, COD
 
 Web-services (based on AXIS2). 
@@ -49,6 +51,10 @@ Application for cleaning queues after load test through pcf agents.
 	3) showBlackList - show urls from balancer's blacklist
 
 	4) configurator - web interface for configurating web services like COD
+
+# SMTP
+
+SMTP server by Dumbster with some changes. (Save emails to database for statistics, etc.)
 
 
 

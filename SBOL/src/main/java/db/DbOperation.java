@@ -26,6 +26,7 @@ public class DbOperation {
 
 	private Lock lock = new ReentrantLock();
 
+	
 	private int operation;
 
 	private ArrayList<String> dataArray = null;

@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import db.DbOperation;
 
-
 /**
  * Creates ERIB app
  * 
@@ -53,9 +52,9 @@ public class RqToESB {
 		String lastname = new String(generateName(9));
 
 		// ЗНИ если клиент банка , то кредит не срочный
-		 //this.sbflag = false;
-		//this.codeProduct = "5";
-		 //this.subProductCode = "1";
+		// this.sbflag = false;
+		// this.codeProduct = "5";
+		// this.subProductCode = "1";
 		// this.firstname = new String(generateName(2) + "оферта");
 
 		String middlename = null;
@@ -79,241 +78,44 @@ public class RqToESB {
 
 		// date get id
 		Date current = new Date();
-		
+
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-		
+
 		String dateTemp = sdf.format(current);
-		
+
 		String dateId = new String(dateTemp);
 
-		this.response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-				+ "<ChargeLoanApplicationRq xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"LoanApplication.xsd\">"
-				+ "<RqUID>"
-				+ RqUID
-				+ "</RqUID>"
-				+ "<RqTm>"
-				+ new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.S")
-						.format(new Date())
-				+ "</RqTm>"
-				+ "<OperUID>"
-				+ operUID
-				+ "</OperUID>"
-				+ "<FromAbonent>SBOL</FromAbonent>"
-				+ "<Application>"
-				+ "<Unit>99010300000</Unit>"
-				+ "<Channel>08</Channel>"
-				+ "<Product>"
-				+ "<Type>1</Type>"
-				+ "<Code>"
-				+ this.codeProduct
-				+ "</Code>"
-				+ "<SubProductCode>"
-				+ this.subProductCode
-				+ "</SubProductCode>"
-				+ "<Amount>700000</Amount>"
-				+ "<Period>60</Period>"
-				+ "<Currency>RUB</Currency>"
-				+ "<PaymentType>Annuity</PaymentType>"
-				+ "</Product>"
-				+ "<Applicant>"
-				+ "<Type>MainDebitor</Type>"
-				+ "<PersonInfo>"
-				+ "<PersonName>"
-				+ "<LastName>"
-				+ lastname
-				+ "</LastName>"
-				+ "<FirstName>"
-				+ this.firstname
-				+ "</FirstName>"
-				+ "<MiddleName>"
-				+ middlename
-				+ "</MiddleName>"
-				+ "</PersonName>"
-				+ "<NameChangedFlag>false</NameChangedFlag>"
-				+ "<Sex>0</Sex>"
-				+ "<Birthday>"
-				+ birthday
-				+ "</Birthday>"
-				+ "<BirthPlace>Москва</BirthPlace>"
-				+ "<Education>"
-				+ "<Status>5</Status>"
-				+ "<UnfinishedCourse>0</UnfinishedCourse>"
-				+ "</Education>"
-				+ "<Contact>"
-				+ "<EmailAddr>EmailAddr@dddd.ru</EmailAddr>"
-				+ "<PhoneList>"
-				+ "<Phone>"
-				+ "<Type>1</Type>"
-				+ "<CountryPrefix>7</CountryPrefix>"
-				+ "<Prefix>916</Prefix>"
-				+ "<Number>3777441</Number>"
-				+ "</Phone>"
-				+ "<Phone>"
-				+ "<Type>2</Type>"
-				+ "<CountryPrefix>7</CountryPrefix>"
-				+ "<Prefix>495</Prefix>"
-				+ "<Number>2659898</Number>"
-				+ "</Phone>"
-				+ "<Phone>"
-				+ "<Type>3</Type>"
-				+ "<CountryPrefix>7</CountryPrefix>"
-				+ "<Prefix>495</Prefix>"
-				+ "<Number>2659898</Number>"
-				+ "</Phone>"
-				+ "<Phone>"
-				+ "<Type>4</Type>"
-				+ "<CountryPrefix>7</CountryPrefix>"
-				+ "<Prefix>495</Prefix>"
-				+ "<Number>2645698</Number>"
-				+ "</Phone>"
-				+ "</PhoneList>"
-				+ "<AddressList>"
-				+ "<ResidenceEqualFlag>true</ResidenceEqualFlag>"
-				+ "<CityResidencePeriod>10</CityResidencePeriod>"
-				+ "<ActResidencePeriod>10</ActResidencePeriod>"
-				+ "<ResidenceRight>0</ResidenceRight>"
-				+ "<Address>"
-				+ "<ManualInputFlag>false</ManualInputFlag>"
-				+ "<AddrType>1</AddrType>"
-				+ "<PostalCode>109507</PostalCode>"
-				+ "<RegionCode>0077</RegionCode>"
-				+ "<AreaType></AreaType>"
-				+ "<Area>Area</Area>"
-				+ "<CityType>город</CityType>"
-				+ "<City>Москва</City>"
-				+ "<SettlementType>495</SettlementType>"
-				+ "<Settlement>Москва</Settlement>"
-				+ "<StreetType>518</StreetType>"
-				+ "<Street>Маяковская</Street>"
-				+ "<HouseNum>10</HouseNum>"
-				+ "<HouseExt>1</HouseExt>"
-				+ "<Unit></Unit>"
-				+ "<UnitNum>13</UnitNum>"
-				+ "</Address>"
-				+ "</AddressList>"
-				+ "</Contact>"
-				+ "<Citizenship>RUSSIA</Citizenship>"
-				+ "<IdentityCard>"
-				+ "<IdType>21</IdType>"
-				+ "<IdSeries>4623</IdSeries>"
-				+ "<IdNum>936534</IdNum>"
-				+ "<IssuedBy>УФМС Москвы</IssuedBy>"
-				+ "<IssuedCode>770-079</IssuedCode>"
-				+ "<IssueDt>"
-				+ dateId
-				+ "</IssueDt>"
-				+ "<PrevIDInfoFlag>false</PrevIDInfoFlag>"
-				+ "</IdentityCard>"
-				+ "<ExtPassportExFlag>true</ExtPassportExFlag>"
-				+ "</PersonInfo>"
-				+ "<MaritalCondition>"
-				+ "<Status>0</Status>"
-				+ "<MarriageContractFlag>false</MarriageContractFlag>"
-				+ "<ChildrenFlag>false</ChildrenFlag>"
-				+ "</MaritalCondition>"
-				+ "<RelativeList>"
-				+ "<Relative>"
-				+ "<Type>1</Type>"
-				+ "<PersonName>"
-				+ "<LastName>мама</LastName>"
-				+ "<FirstName>мама</FirstName>"
-				+ "<MiddleName>мама</MiddleName>"
-				+ "</PersonName>"
-				+ "<Birthday>1968-05-04</Birthday>"
-				+ "<DependentFlag>false</DependentFlag>"
-				+ "<SBCreditFlag>0</SBCreditFlag>"
-				+ "<SBEmployeeFlag>false</SBEmployeeFlag>"
-				+ "</Relative>"
-				+ "</RelativeList>"
-				+ "<EmploymentHistory>"
-				+ "<Status>2</Status>"
-				+ "<OrgInfo>"
-				+ "<Name>сбербанк</Name>"
-				+ "<OrgCode>001</OrgCode>"
-				+ "</OrgInfo>"
-				+ "<OrgInfoExt>"
-				+ "<FullName>ЗАО Сбербанк</FullName>"
-				+ "<TaxId>77347878</TaxId>"
-				+ "<IndustSector>"
-				+ "<Code>1</Code>"
-				+ // bank
-				"</IndustSector>"
-				+ "<NumEmployeesCode>1000</NumEmployeesCode>"
-				+ "</OrgInfoExt>"
-				+ "<SBEmployeeFlag>"
-				+ sbflag
-				+ "</SBEmployeeFlag>"
-				+ "<SBEmployee>"
-				+ "<RegionId>99</RegionId>"
-				+ "<FullName>УВИСАС</FullName>"
-				+ "<JobType>1</JobType>"
-				+ "</SBEmployee>"
-				+ "<EmployeeInfo>"
-				+ "<JobType>1</JobType>"
-				+ "<JobTitle>начальник</JobTitle>"
-				+ "<ExperienceCode>5</ExperienceCode>"
-				+ "<WorkPlacesNum>0</WorkPlacesNum>"
-				+ "</EmployeeInfo>"
-				+ "</EmploymentHistory>"
-				+ "<Income>"
-				+ "<BasicIncome6M>150000</BasicIncome6M>"
-				+ "<AddIncome6M>0.0</AddIncome6M>"
-				+ "<FamilyIncome6M>150000</FamilyIncome6M>"
-				+ "<Expenses6M>50000</Expenses6M>"
-				+ "</Income>"
-				+ "<RealEstateFlag>true</RealEstateFlag>"
-				+ "<RealEstateList>"
-				+ "<RealEstate>"
-				+ "<Type>2</Type>"
-				+ "<Address>Ленина</Address>"
-				+ "<PurchaseYear>2005</PurchaseYear>"
-				+ "<Area>100.00</Area>"
-				+ "<Units>1</Units>"
-				+ "<Cost>100000.00</Cost>"
-				+ "</RealEstate>"
-				+ "</RealEstateList>"
-				+ "<VehicleFlag>true</VehicleFlag>"
-				+ "<VehicleList>"
-				+ "<Vehicle>"
-				+ "<Type>1</Type>"
-				+ "<RegNumber>E881KH99RUS</RegNumber>"
-				+ "<PurchaseYear>2013</PurchaseYear>"
-				+ "<BrandName>Audi</BrandName>"
-				+ "<AgeInYears>1</AgeInYears>"
-				+ "<Cost>50000.00</Cost>"
-				+ "</Vehicle>"
-				+ "</VehicleList>"
-				+ "<LoanFlag>false</LoanFlag>"
-				+ "<AddData>"
-				+ "<LoanIssue>"
-				+ "<Type>1</Type>"
-				+ "<AcctId>AcctId0</AcctId>"
-				+ "<CardNum>1234598765986214</CardNum>"
-				+ "</LoanIssue>"
-				+ "<InsuranceFlag>false</InsuranceFlag>"
-				+ "<InsuranseNumber>000-000-000 00</InsuranseNumber>"
-				+ "<CBReqApprovalFlag>true</CBReqApprovalFlag>"
-				+ "<CBSendApprovalFlag>true</CBSendApprovalFlag>"
-				+ "<PFRReqApprovalFlag>true</PFRReqApprovalFlag>"
-				+ "<CBCode>CBCode0</CBCode>"
-				+ "<CCardGetApprovalFlag>false</CCardGetApprovalFlag>"
-				+ "<SpecialAttentionFlag>false</SpecialAttentionFlag>"
-				+ "<SBSalaryCardFlag>true</SBSalaryCardFlag>"
-				+ "<SalaryCardList>"
-				+ "<SalaryCard>"
-				+ "<Type>0</Type>"
-				+ "<CardNum>0000000000000</CardNum>"
-				+ "</SalaryCard>"
-				+ "</SalaryCardList>"
-				+ "<SBSalaryDepFlag>false</SBSalaryDepFlag>"
-				+ "<SBShareHolderFlag>false</SBShareHolderFlag>"
-				+ "<SigningDate>"
-				+ dateId
-				+ "</SigningDate>"
-				+ "</AddData>"
-				+ "</Applicant>"
-				+ "</Application>"
-				+ "</ChargeLoanApplicationRq>";
+		this.response = new StringBuilder(
+				"<?xml version=\"1.0\" encoding=\"UTF-8\"?><ChargeLoanApplicationRq xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"LoanApplication.xsd\"><RqUID>")
+				.append("")
+				.append(RqUID)
+				.append("</RqUID><RqTm>")
+				.append(new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.S")
+						.format(new Date()))
+				.append("</RqTm>")
+				.append("<OperUID>")
+				.append(operUID)
+				.append("</OperUID>")
+				.append("<FromAbonent>SBOL</FromAbonent><Application><Unit>99010300000</Unit><Channel>08</Channel><Product><Type>1</Type><Code>")
+				.append(this.codeProduct)
+				.append("</Code><SubProductCode>")
+				.append(this.subProductCode)
+				.append("</SubProductCode><Amount>700000</Amount><Period>60</Period><Currency>RUB</Currency><PaymentType>Annuity</PaymentType></Product><Applicant><Type>MainDebitor</Type><PersonInfo><PersonName><LastName>")
+				.append(lastname)
+				.append("</LastName><FirstName>")
+				.append(this.firstname)
+				.append("</FirstName><MiddleName>")
+				.append(middlename)
+				.append("</MiddleName></PersonName><NameChangedFlag>false</NameChangedFlag><Sex>0</Sex><Birthday>")
+				.append(birthday)
+				.append("</Birthday><BirthPlace>Москва</BirthPlace><Education><Status>5</Status><UnfinishedCourse>0</UnfinishedCourse></Education><Contact><EmailAddr>EmailAddr@dddd.ru</EmailAddr><PhoneList><Phone><Type>1</Type><CountryPrefix>7</CountryPrefix><Prefix>916</Prefix><Number>3777441</Number></Phone><Phone><Type>2</Type><CountryPrefix>7</CountryPrefix><Prefix>495</Prefix><Number>2659898</Number></Phone><Phone><Type>3</Type><CountryPrefix>7</CountryPrefix><Prefix>495</Prefix><Number>2659898</Number></Phone><Phone><Type>4</Type><CountryPrefix>7</CountryPrefix><Prefix>495</Prefix><Number>2645698</Number></Phone></PhoneList><AddressList><ResidenceEqualFlag>true</ResidenceEqualFlag><CityResidencePeriod>10</CityResidencePeriod><ActResidencePeriod>10</ActResidencePeriod><ResidenceRight>0</ResidenceRight><Address><ManualInputFlag>false</ManualInputFlag><AddrType>1</AddrType><PostalCode>109507</PostalCode><RegionCode>0077</RegionCode><AreaType></AreaType><Area>Area</Area><CityType>город</CityType><City>Москва</City><SettlementType>495</SettlementType><Settlement>Москва</Settlement><StreetType>518</StreetType><Street>Маяковская</Street><HouseNum>10</HouseNum><HouseExt>1</HouseExt><Unit></Unit><UnitNum>13</UnitNum></Address></AddressList></Contact><Citizenship>RUSSIA</Citizenship><IdentityCard><IdType>21</IdType><IdSeries>4623</IdSeries><IdNum>936534</IdNum><IssuedBy>УФМС Москвы</IssuedBy><IssuedCode>770-079</IssuedCode><IssueDt>")
+				.append(dateId)
+				.append("</IssueDt><PrevIDInfoFlag>false</PrevIDInfoFlag></IdentityCard><ExtPassportExFlag>true</ExtPassportExFlag></PersonInfo><MaritalCondition><Status>0</Status><MarriageContractFlag>false</MarriageContractFlag><ChildrenFlag>false</ChildrenFlag></MaritalCondition><RelativeList><Relative><Type>1</Type><PersonName><LastName>мама</LastName><FirstName>мама</FirstName><MiddleName>мама</MiddleName></PersonName><Birthday>1968-05-04</Birthday><DependentFlag>false</DependentFlag><SBCreditFlag>0</SBCreditFlag><SBEmployeeFlag>false</SBEmployeeFlag></Relative></RelativeList><EmploymentHistory><Status>2</Status><OrgInfo><Name>сбербанк</Name><OrgCode>001</OrgCode></OrgInfo><OrgInfoExt><FullName>ЗАО Сбербанк</FullName><TaxId>77347878</TaxId><IndustSector><Code>1</Code></IndustSector><NumEmployeesCode>1000</NumEmployeesCode></OrgInfoExt><SBEmployeeFlag>")
+				.append(this.sbflag)
+				.append("</SBEmployeeFlag><SBEmployee><RegionId>99</RegionId><FullName>УВИСАС</FullName><JobType>1</JobType></SBEmployee><EmployeeInfo><JobType>1</JobType><JobTitle>начальник</JobTitle><ExperienceCode>5</ExperienceCode><WorkPlacesNum>0</WorkPlacesNum></EmployeeInfo></EmploymentHistory><Income><BasicIncome6M>150000</BasicIncome6M><AddIncome6M>0.0</AddIncome6M><FamilyIncome6M>150000</FamilyIncome6M><Expenses6M>50000</Expenses6M></Income><RealEstateFlag>true</RealEstateFlag><RealEstateList><RealEstate><Type>2</Type><Address>Ленина</Address><PurchaseYear>2005</PurchaseYear><Area>100.00</Area><Units>1</Units><Cost>100000.00</Cost></RealEstate></RealEstateList><VehicleFlag>true</VehicleFlag><VehicleList><Vehicle><Type>1</Type><RegNumber>E881KH99RUS</RegNumber><PurchaseYear>2013</PurchaseYear><BrandName>Audi</BrandName><AgeInYears>1</AgeInYears><Cost>50000.00</Cost></Vehicle></VehicleList><LoanFlag>false</LoanFlag><AddData><LoanIssue><Type>1</Type><AcctId>AcctId0</AcctId><CardNum>1234598765986214</CardNum></LoanIssue><InsuranceFlag>false</InsuranceFlag><InsuranseNumber>000-000-000 00</InsuranseNumber><CBReqApprovalFlag>true</CBReqApprovalFlag><CBSendApprovalFlag>true</CBSendApprovalFlag><PFRReqApprovalFlag>true</PFRReqApprovalFlag><CBCode>CBCode0</CBCode><CCardGetApprovalFlag>false</CCardGetApprovalFlag><SpecialAttentionFlag>false</SpecialAttentionFlag><SBSalaryCardFlag>true</SBSalaryCardFlag><SalaryCardList><SalaryCard><Type>0</Type><CardNum>0000000000000</CardNum></SalaryCard></SalaryCardList><SBSalaryDepFlag>false</SBSalaryDepFlag><SBShareHolderFlag>false</SBShareHolderFlag><SigningDate>")
+				.append(dateId)
+				.append("</SigningDate></AddData></Applicant></Application></ChargeLoanApplicationRq>")
+				.toString();
 
 		this.dataArray = new ArrayList<String>(5);
 
@@ -385,9 +187,9 @@ public class RqToESB {
 		// set potred or doverie
 
 		if (count.get() < 99)
-			
+
 			count.getAndIncrement();
-		
+
 		else {
 
 			loggerInfo.info("Count before reset: " + count.get());

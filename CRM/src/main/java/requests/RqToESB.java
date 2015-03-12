@@ -89,73 +89,35 @@ public class RqToESB {
 
 		String dateId = new String(dateTemp);
 
-		this.response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-				+ "<ChargeLoanApplicationRq xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"LoanApplication.xsd\">"
-				+ "<MessageData>" + "<RqUID>"
-				+ RqUID
-				+ "</RqUID>"
-				+ "<RqTm>"
-				+ new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.S")
-						.format(new Date())
-				+ "</RqTm>"
-				+ "<FromAbonent>CRM</FromAbonent>"
-				+ "</MessageData>"
-				+ "<Application>"
-				+ "<SrcObjID>1-12OZ3L</SrcObjID>"
-				+ "<Unit>99010300000</Unit>"
-				+ "<LoginKI>"
-				+ this.ki
-				+ "</LoginKI>"
-				+ "<Product>"
-				+ "<Type>1</Type>"
-				+ "<Code>"
-				+ this.codeProduct
-				+ "</Code>"
-				+ "<SubProductCode>"
-				+ this.subProductCode
-				+ "</SubProductCode>"
-				+ "<Amount>70000</Amount>"
-				+ "<Period>60</Period>"
-				+ "<Currency>RUB</Currency>"
-				+ "<PaymentType>Annuity</PaymentType>"
-				+ "<InterestRate>17</InterestRate>"
-				+ "</Product>"
-				+ "<Applicant>"
-				+ "<PersonInfo>"
-				+ "<PersonName>"
-				+ "<LastName>"
-				+ lastname
-				+ "</LastName>"
-				+ "<FirstName>"
-				+ firstname
-				+ "</FirstName>"
-				+ "<MiddleName>"
-				+ middlename
-				+ "</MiddleName>"
-				+ "</PersonName>"
-				+ "<Sex>1</Sex>"
-				+ "<Birthday>"
-				+ birthday
-				+ "</Birthday>"
-				+ "<Citizenship>RUSSIA</Citizenship>"
-				+ "<IdentityCard>"
-				+ "<IdType>21</IdType>"
-				+ "<IdSeries>"
-				+ serial
-				+ "</IdSeries>"
-				+ "<IdNum>"
-				+ id
-				+ "</IdNum>"
-				+ "<IssuedBy>УФМС Москвы</IssuedBy>"
-				+ "<IssuedCode>770-079</IssuedCode>"
-				+ "<IssueDt>"
-				+ dateId
-				+ "</IssueDt>"
-				+ "<PrevIDInfoFlag>false</PrevIDInfoFlag>"
-				+ "</IdentityCard>"
-				+ "</PersonInfo>"
-				+ "</Applicant>"
-				+ "</Application>" + "</ChargeLoanApplicationRq>";
+		this.response = new StringBuilder(
+				"<?xml version=\"1.0\" encoding=\"UTF-8\"?><ChargeLoanApplicationRq xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"LoanApplication.xsd\"><MessageData><RqUID>")
+				.append(RqUID)
+				.append("</RqUID><RqTm>")
+				.append(new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.S")
+						.format(new Date()))
+				.append("</RqTm><FromAbonent>CRM</FromAbonent></MessageData><Application><SrcObjID>1-12OZ3L</SrcObjID><Unit>99010300000</Unit><LoginKI>")
+
+				.append(this.ki)
+				.append("</LoginKI><Product><Type>1</Type><Code>")
+				.append(this.codeProduct)
+				.append("</Code><SubProductCode>")
+				.append(this.subProductCode)
+				.append("</SubProductCode><Amount>70000</Amount><Period>60</Period><Currency>RUB</Currency><PaymentType>Annuity</PaymentType><InterestRate>17</InterestRate></Product><Applicant><PersonInfo><PersonName><LastName>")
+				.append(lastname)
+				.append("</LastName><FirstName>")
+				.append(firstname)
+				.append("</FirstName><MiddleName>")
+				.append(middlename)
+				.append("</MiddleName></PersonName><Sex>1</Sex><Birthday>")
+				.append(birthday)
+				.append("</Birthday><Citizenship>RUSSIA</Citizenship><IdentityCard><IdType>21</IdType><IdSeries>")
+				.append(serial)
+				.append("</IdSeries><IdNum>")
+				.append(id)
+				.append("</IdNum><IssuedBy>УФМС Москвы</IssuedBy><IssuedCode>770-079</IssuedCode><IssueDt>")
+				.append(dateId)
+				.append("</IssueDt><PrevIDInfoFlag>false</PrevIDInfoFlag></IdentityCard></PersonInfo></Applicant></Application> </ChargeLoanApplicationRq>")
+				.toString();
 
 		this.dataArray = new ArrayList<String>(5);
 

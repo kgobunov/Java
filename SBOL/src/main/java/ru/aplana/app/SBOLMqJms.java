@@ -239,7 +239,7 @@ public class SBOLMqJms implements Runnable {
 	 * @throws JMSException
 	 */
 	public static void main(String[] args) throws JMSException {
-
+		
 		sc = Executors.newSingleThreadScheduledExecutor();
 
 		sc.scheduleAtFixedRate(new PropCheck(), 0, 10, TimeUnit.SECONDS);

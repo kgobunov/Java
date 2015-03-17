@@ -12,7 +12,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -25,7 +27,6 @@ import listeners.ESBListener;
 import tools.CheckConn;
 import tools.MQConn;
 import tools.PropCheck;
-
 
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueueConnection;
@@ -40,9 +41,9 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
 @SuppressWarnings("deprecation")
 public class FSBMqJms implements Runnable {
 
-	public static volatile boolean flagRequest = false;
+	public static AtomicBoolean flagRequest = new AtomicBoolean(false);
 
-	public static long startTime;
+	public static AtomicLong startTime = new AtomicLong();
 
 	public static boolean logTsmApp = false;
 
@@ -66,12 +67,22 @@ public class FSBMqJms implements Runnable {
 
 	private boolean flagReconnect = false;
 
-	public FSBMqJms() throws JMSException {
+	private static Lock lock = new ReentrantLock();
+
+	public FSBMqJms() {
 
 		// Create factory
-		this.factory = MQConn.getFactory();
+		try {
 
-		this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+			this.factory = MQConn.getFactory();
+
+			this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+
+		} catch (NumberFormatException | JMSException e) {
+
+			e.printStackTrace();
+
+		}
 
 		// Flag for logging status tsm applications
 		logTsmApp = Boolean.parseBoolean(fsb.getChildText("flagLogTsmApp"));
@@ -103,17 +114,16 @@ public class FSBMqJms implements Runnable {
 
 						flagReconnect = true;
 
-						flagRequest = false;
+						flagRequest.set(false);
 
 						loggerInfo.info("Connection to MQ closed.");
 
-						long delay = Long.parseLong(common.getChildText("delayReconnect")) * 1000;
+						long delay = Long.parseLong(common
+								.getChildText("delayReconnect")) * 1000;
 
 						while (flagReconnect) {
 
 							try {
-
-								Lock lock = new ReentrantLock();
 
 								lock.lock();
 
@@ -133,7 +143,7 @@ public class FSBMqJms implements Runnable {
 							} catch (Exception e1) {
 
 								loggerSevere
-										.severe("Cann't reconecting to MQ: "
+										.severe("Can't reconecting to MQ: "
 												+ e1.getMessage());
 							}
 
@@ -173,7 +183,7 @@ public class FSBMqJms implements Runnable {
 
 			flagReconnect = false;
 
-			flagRequest = true;
+			flagRequest.set(true);
 
 			if (debug) {
 
@@ -195,7 +205,8 @@ public class FSBMqJms implements Runnable {
 				MessageConsumer consumerCRM = getConsumer(this.connection,
 						queue);
 
-				consumerCRM.setMessageListener(new ESBListener(this.connection));
+				consumerCRM
+						.setMessageListener(new ESBListener(this.connection));
 
 				countListeners.getAndIncrement();
 
@@ -209,17 +220,7 @@ public class FSBMqJms implements Runnable {
 
 				countThreadStart.getAndIncrement();
 
-				try {
-
-					ex.submit(new Request());
-
-				} catch (JMSException e1) {
-
-					loggerSevere.severe("Error start thread for request: "
-							+ e1.getMessage());
-
-					e1.printStackTrace();
-				}
+				ex.execute(new Request());
 
 				loggerInfo.info("CountThreadStart: " + countThreadStart.get());
 
@@ -266,7 +267,7 @@ public class FSBMqJms implements Runnable {
 		// Detecting type mode - step or confirm
 		if (common.getChildText("testType").equalsIgnoreCase("step")) {
 
-			startTime = System.currentTimeMillis();
+			startTime.set(System.currentTimeMillis());
 
 		}
 
@@ -282,7 +283,7 @@ public class FSBMqJms implements Runnable {
 
 		for (int i = 0; i < countThread; i++) {
 
-			executor.submit(new FSBMqJms());
+			executor.execute(new FSBMqJms());
 
 		}
 

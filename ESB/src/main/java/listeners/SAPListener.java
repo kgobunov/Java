@@ -17,11 +17,9 @@ import javax.xml.soap.SOAPMessage;
 
 import ru.aplana.app.EsbMqJms;
 import ru.aplana.tools.GetData;
-import tools.CreateSOAPRq;
 import tools.PropsChecker;
 import tools.Queues;
-
-import answers.ReqToSAP;
+import answers.Requests;
 
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueue;
@@ -32,7 +30,7 @@ import com.ibm.mq.jms.MQQueueSession;
  * Implementation listener
  * 
  * @author Maksim Stepanov
- *
+ * 
  */
 @SuppressWarnings({ "deprecation" })
 public class SAPListener implements MessageListener {
@@ -42,8 +40,6 @@ public class SAPListener implements MessageListener {
 	private MQQueue queueSend;
 
 	private MQQueueConnection connection;
-
-	private ArrayList<String> dataRq, dataRs;
 
 	private SOAPMessage soapResponse;
 
@@ -65,6 +61,12 @@ public class SAPListener implements MessageListener {
 
 	public void onMessage(Message inputMsg) {
 
+		ArrayList<String> dataRq = null;
+
+		ArrayList<String> dataRs = null;
+
+		MessageProducer producer = null;
+
 		try {
 
 			String request = parseMessMQ(inputMsg);
@@ -73,13 +75,13 @@ public class SAPListener implements MessageListener {
 
 			if (this.debug) {
 
-				PropsChecker.loggerInfo.info("Stub[SAP_HR] - Message from ETSM: "
-						+ request);
+				PropsChecker.loggerInfo
+						.info("Stub[SAP_HR] - Message from ETSM: " + request);
 			}
 
-			GetData processRq = new GetData(request);
+			GetData processRq = GetData.getInstance(request);
 
-			this.dataRq = new ArrayList<String>();
+			dataRq = new ArrayList<String>();
 
 			// Data for request to service
 			try {
@@ -134,11 +136,11 @@ public class SAPListener implements MessageListener {
 						.createConnection();
 
 				// Send SOAP Message to SOAP Server
-				
+
 				String url = PropsChecker.esb.getChildText("urlSAPHR");
 
-				this.soapResponse = soapConnection.call(new CreateSOAPRq(
-						this.dataRq).getRs(), url);
+				this.soapResponse = soapConnection.call(
+						Requests.getSOAPMessage(dataRq), url);
 
 				// Process the SOAP Response
 				try {
@@ -155,8 +157,8 @@ public class SAPListener implements MessageListener {
 
 				if (this.debug) {
 
-					PropsChecker.loggerInfo.info("Response from service SAP_HR: "
-							+ soapResp);
+					PropsChecker.loggerInfo
+							.info("Response from service SAP_HR: " + soapResp);
 				}
 
 				soapConnection.close();
@@ -170,31 +172,31 @@ public class SAPListener implements MessageListener {
 				e.printStackTrace();
 			}
 
-			this.dataRs = new ArrayList<String>();
+			dataRs = new ArrayList<String>();
 
-			GetData processRs = new GetData(soapResp);
+			GetData processRs = GetData.getInstance(soapResp);
 
-			this.dataRs.add(processRs.getValueByName("MessageID"));
+			dataRs.add(processRs.getValueByName("MessageID"));
 
-			this.dataRs.add(processRs.getValueByName("MessageDate"));
+			dataRs.add(processRs.getValueByName("MessageDate"));
 
-			this.dataRs.add(processRs.getValueByName("MessageNumber"));
+			dataRs.add(processRs.getValueByName("MessageNumber"));
 
-			this.dataRs.add(processRs.getValueByName("Code"));
+			dataRs.add(processRs.getValueByName("Code"));
 
-			this.dataRs.add(processRs.getValueByName("Descr"));
+			dataRs.add(processRs.getValueByName("Descr"));
 
-			this.dataRs.add(processRs.getValueByName("SystemId"));
+			dataRs.add(processRs.getValueByName("SystemId"));
 
-			this.dataRs.add(processRs.getValueByName("SberbankEmployerFlag"));
+			dataRs.add(processRs.getValueByName("SberbankEmployerFlag"));
 
-			this.dataRs.add(processRs.getValueByName("ChartNumber"));
+			dataRs.add(processRs.getValueByName("ChartNumber"));
 
-			this.dataRs.add(processRs.getValueByName("StartDate"));
+			dataRs.add(processRs.getValueByName("StartDate"));
 
-			this.dataRs.add(processRs.getValueByName("EndDate"));
+			dataRs.add(processRs.getValueByName("EndDate"));
 
-			response = new ReqToSAP(this.dataRs).getRq();
+			response = Requests.getRequestToSAP(dataRs);
 
 			try {
 
@@ -203,17 +205,14 @@ public class SAPListener implements MessageListener {
 
 				this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
 
-				MessageProducer producer = this.session
-						.createProducer(this.queueSend);
+				producer = this.session.createProducer(this.queueSend);
 
 				producer.send(outputMsg);
-
-				producer.close();
 
 			} catch (JMSException e) {
 
 				PropsChecker.loggerSevere.severe(e.getMessage());
-				
+
 				e.printStackTrace();
 			}
 
@@ -228,6 +227,20 @@ public class SAPListener implements MessageListener {
 			PropsChecker.loggerSevere.severe(e2.getMessage());
 
 			e2.printStackTrace();
+
+		} finally {
+
+			try {
+
+				if (null != producer) {
+
+					producer.close();
+
+				}
+			} catch (JMSException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 

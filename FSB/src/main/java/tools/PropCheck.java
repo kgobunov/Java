@@ -133,10 +133,10 @@ public class PropCheck implements Runnable {
 
 		if (diff >= this.stopTime) {
 
-			FSBMqJms.flagRequest = false;
+			FSBMqJms.flagRequest.set(false);
 
 			try {
-				Thread.sleep(Request.delay);
+				Thread.sleep(Request.delayForStop.get());
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

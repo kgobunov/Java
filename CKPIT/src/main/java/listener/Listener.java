@@ -6,7 +6,6 @@ import static tools.PropCheck.loggerSevere;
 
 import java.util.ArrayList;
 
-import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
@@ -21,8 +20,6 @@ import db.DatabaseOperation;
  */
 public class Listener implements MessageListener {
 
-	private ArrayList<String> dataArray = null;
-
 	public Listener() {
 
 		loggerInfo.info("Init CKPITListener!");
@@ -32,47 +29,38 @@ public class Listener implements MessageListener {
 	@Override
 	public void onMessage(Message inputMsg) {
 
-		this.dataArray = new ArrayList<String>(3);
+		ArrayList<String> dataArray = new ArrayList<String>(3);
+
+		String request = parseMessMQ(inputMsg);
+
+		GetData getData = GetData.getInstance(request);
 
 		try {
 
-			String request = parseMessMQ(inputMsg);
+			dataArray.add(getData.getValueByName("UID"));
 
-			GetData getData = new GetData(request);
+			dataArray.add(getData.getValueByName("code"));
 
-			try {
+			dataArray.add(getData.getValueByName("description"));
 
-				this.dataArray.add(getData.getValueByName("UID"));
-
-				this.dataArray.add(getData.getValueByName("code"));
-
-				this.dataArray.add(getData.getValueByName("description"));
-
-			} catch (Exception e) {
-
-				loggerSevere.severe(e.getMessage());
-
-				e.printStackTrace();
-
-			}
-
-			try {
-
-				DatabaseOperation.getInstance().evalOperation(2, this.dataArray);
-
-			} catch (Exception e) {
-
-				loggerSevere.severe(e.getMessage());
-
-				e.printStackTrace();
-
-			}
-
-		} catch (JMSException e) {
+		} catch (Exception e) {
 
 			loggerSevere.severe(e.getMessage());
 
 			e.printStackTrace();
+
+		}
+
+		try {
+
+			DatabaseOperation.getInstance().evalOperation(2, dataArray);
+
+		} catch (Exception e) {
+
+			loggerSevere.severe(e.getMessage());
+
+			e.printStackTrace();
+
 		}
 
 	}

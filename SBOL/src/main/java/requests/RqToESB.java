@@ -7,7 +7,6 @@ import static ru.aplana.tools.Common.generateRqUID;
 import static tools.PropCheck.debug;
 import static tools.PropCheck.loggerInfo;
 
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,21 +22,19 @@ import db.DbOperation;
  */
 public class RqToESB {
 
-	public static AtomicInteger count = new AtomicInteger(-1);
+	private static AtomicInteger count = new AtomicInteger(-1);
 
-	private String response = null;
+	private String response = "";
 
 	private boolean sbflag;
 
-	private String codeProduct = null;
+	private String codeProduct = "";
 
-	private String subProductCode = null;
+	private String subProductCode = "";
 
-	private String firstname = null;
+	private String firstname = "";
 
-	private ArrayList<String> dataArray = null;
-
-	public RqToESB() throws UnsupportedEncodingException {
+	private RqToESB() {
 
 		// generate RqUID
 		String RqUID = generateRqUID();
@@ -49,7 +46,7 @@ public class RqToESB {
 
 		// generating FIO
 
-		String lastname = new String(generateName(9));
+		String lastname = generateName(9);
 
 		// ЗНИ если клиент банка , то кредит не срочный
 		// this.sbflag = false;
@@ -57,24 +54,24 @@ public class RqToESB {
 		// this.subProductCode = "1";
 		// this.firstname = new String(generateName(2) + "оферта");
 
-		String middlename = null;
+		String middlename = "";
 
 		if ((this.sbflag == false) && (this.codeProduct.equalsIgnoreCase("10"))) {
 
-			middlename = new String("сболыч");
+			middlename = "сболыч";
 
 		} else if ((this.sbflag == true)
 				&& (this.codeProduct.equalsIgnoreCase("10"))) {
 
-			middlename = new String("клиентбанка");
+			middlename = "клиентбанка";
 
 		} else {
 
-			middlename = new String("сболик");
+			middlename = "сболик";
 
 		}
 
-		String birthday = new String(generateDOB(1975, 15));
+		String birthday = generateDOB(1975, 15);
 
 		// date get id
 		Date current = new Date();
@@ -83,7 +80,7 @@ public class RqToESB {
 
 		String dateTemp = sdf.format(current);
 
-		String dateId = new String(dateTemp);
+		String dateId = dateTemp;
 
 		this.response = new StringBuilder(
 				"<?xml version=\"1.0\" encoding=\"UTF-8\"?><ChargeLoanApplicationRq xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"LoanApplication.xsd\"><RqUID>")
@@ -117,22 +114,28 @@ public class RqToESB {
 				.append("</SigningDate></AddData></Applicant></Application></ChargeLoanApplicationRq>")
 				.toString();
 
-		this.dataArray = new ArrayList<String>(5);
+		ArrayList<String> dataArray = new ArrayList<String>(5);
 
-		this.dataArray.add(RqUID);
+		dataArray.add(RqUID);
 
-		this.dataArray.add(this.firstname);
+		dataArray.add(this.firstname);
 
-		this.dataArray.add(lastname);
+		dataArray.add(lastname);
 
-		this.dataArray.add(middlename);
+		dataArray.add(middlename);
 
-		this.dataArray.add(birthday);
+		dataArray.add(birthday);
 
-		DbOperation.getInstance().evalOperation(1, this.dataArray);
+		DbOperation.getInstance().evalOperation(1, dataArray);
 	}
 
-	public String getRq() {
+	public static RqToESB getInstance() {
+
+		return new RqToESB();
+
+	}
+
+	public String getRequest() {
 
 		return this.response;
 	}
@@ -140,7 +143,7 @@ public class RqToESB {
 	/**
 	 * Method sets sbt flag
 	 */
-	private final void setSBFlag() {
+	private void setSBFlag() {
 
 		double[] data = { 86.16586, 78.88448, 82.679344, 80.430145, 10.104777,
 				83.449814, 26.916529, 15.24703, 82.7714, 11.47994, 98.1885,
@@ -166,7 +169,7 @@ public class RqToESB {
 
 		}
 
-		double value = (double) data[count.get()];
+		double value = data[count.get()];
 
 		if (value > 90) {
 
@@ -182,7 +185,7 @@ public class RqToESB {
 	/**
 	 * Method sets product type and sbt flag
 	 */
-	private final void setProductTypeandSBFlag() {
+	private void setProductTypeandSBFlag() {
 
 		// set potred or doverie
 
@@ -219,7 +222,7 @@ public class RqToESB {
 				79.64565, 98.99341, 71.43411, 95.19979, 96.46754, 43.443024,
 				60.580772, 15.007116, 90.71326, 25.80691, 60.219734, 12.683094 };
 
-		double value = (double) dataFirst[count.get()];
+		double value = dataFirst[count.get()];
 
 		if (value > 80) {
 
@@ -227,7 +230,7 @@ public class RqToESB {
 
 			this.subProductCode = "1";
 
-			this.firstname = new String(generateName(7));
+			this.firstname = generateName(7);
 
 		} else {
 
@@ -260,13 +263,13 @@ public class RqToESB {
 
 				this.subProductCode = "9911";
 
-				this.firstname = new String(generateName(2) + "оферта");
+				this.firstname = generateName(2) + "оферта";
 
 			} else {
 
 				this.subProductCode = "9";
 
-				this.firstname = new String(generateName(7));
+				this.firstname = generateName(7);
 			}
 
 		}

@@ -7,9 +7,12 @@ import java.util.ArrayList;
  * Reply that card was cough up
  * 
  * @author Maksim Stepanov
- *
+ * 
  */
 public class ReplyToESB {
+
+	private ReplyToESB() {
+	}
 
 	public static String getResp(ArrayList<String> data) {
 

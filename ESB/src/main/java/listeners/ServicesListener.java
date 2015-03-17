@@ -60,18 +60,9 @@ public class ServicesListener implements MessageListener {
 
 		String request = null;
 
-		try {
+		request = parseMessMQ(inputMsg);
 
-			request = parseMessMQ(inputMsg);
-
-			PropsChecker.loggerInfo.info("Request to OSGI: " + request);
-
-		} catch (JMSException e1) {
-
-			PropsChecker.loggerSevere.severe("Can't parse request!");
-
-			e1.printStackTrace();
-		}
+		PropsChecker.loggerInfo.info("Request to OSGI: " + request);
 
 		OMElement ougRequest = null;
 

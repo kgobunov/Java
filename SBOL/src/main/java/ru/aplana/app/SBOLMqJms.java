@@ -12,7 +12,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -20,12 +22,10 @@ import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 
+import listeners.ESBListener;
 import tools.CheckConn;
 import tools.MQConn;
 import tools.PropCheck;
-
-import listeners.ESBListener;
-
 
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueueConnection;
@@ -40,9 +40,9 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
 @SuppressWarnings("deprecation")
 public class SBOLMqJms implements Runnable {
 
-	public static volatile boolean flagRequest = false;
+	public static AtomicBoolean flagRequest = new AtomicBoolean(false);
 
-	public static volatile long startTime;
+	public static AtomicLong startTime = new AtomicLong();
 
 	public static ExecutorService executor = null;
 
@@ -60,11 +60,20 @@ public class SBOLMqJms implements Runnable {
 
 	private boolean flagReconnect = false;
 
-	public SBOLMqJms() throws JMSException {
+	private static Lock lock = new ReentrantLock();
 
-		this.factory = MQConn.getFactory();
+	public SBOLMqJms() {
 
-		this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+		try {
+
+			this.factory = MQConn.getFactory();
+
+			this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+
+		} catch (NumberFormatException | JMSException e) {
+
+			e.printStackTrace();
+		}
 
 	}
 
@@ -91,7 +100,7 @@ public class SBOLMqJms implements Runnable {
 
 						flagReconnect = true;
 
-						flagRequest = false;
+						flagRequest.set(false);
 
 						loggerInfo.info("Connection to MQ closed.");
 
@@ -101,8 +110,6 @@ public class SBOLMqJms implements Runnable {
 						while (flagReconnect) {
 
 							try {
-
-								Lock lock = new ReentrantLock();
 
 								lock.lock();
 
@@ -121,7 +128,7 @@ public class SBOLMqJms implements Runnable {
 							} catch (Exception e1) {
 
 								loggerSevere
-										.severe("Cann't reconecting to MQ: "
+										.severe("Can't reconecting to MQ: "
 												+ e1.getMessage());
 							}
 
@@ -161,7 +168,7 @@ public class SBOLMqJms implements Runnable {
 
 			flagReconnect = false;
 
-			flagRequest = true;
+			flagRequest.set(true);
 
 			if (debug) {
 
@@ -187,18 +194,7 @@ public class SBOLMqJms implements Runnable {
 
 				countThreadStart.getAndIncrement();
 
-				// send request to esb
-				try {
-
-					ex.submit(new Request());
-
-				} catch (JMSException e1) {
-
-					loggerSevere.severe("Error start thread for request: "
-							+ e1.getMessage());
-
-					e1.printStackTrace();
-				}
+				ex.execute(new Request());
 
 				loggerInfo.info("CountThreadStart: " + countThreadStart);
 
@@ -239,14 +235,14 @@ public class SBOLMqJms implements Runnable {
 	 * @throws JMSException
 	 */
 	public static void main(String[] args) throws JMSException {
-		
+
 		sc = Executors.newSingleThreadScheduledExecutor();
 
 		sc.scheduleAtFixedRate(new PropCheck(), 0, 10, TimeUnit.SECONDS);
 
 		if (common.getChildText("testType").equalsIgnoreCase("step")) {
 
-			startTime = System.currentTimeMillis();
+			startTime.set(System.currentTimeMillis());
 
 		}
 
@@ -258,7 +254,7 @@ public class SBOLMqJms implements Runnable {
 
 		for (int i = 0; i < countThread; i++) {
 
-			executor.submit(new SBOLMqJms());
+			executor.execute(new SBOLMqJms());
 
 		}
 

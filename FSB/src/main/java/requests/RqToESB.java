@@ -5,47 +5,47 @@ import static ru.aplana.tools.Common.generateName;
 import static ru.aplana.tools.Common.generateNumber;
 import static ru.aplana.tools.Common.generateRqUID;
 
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import db.DbOperation;
 
 /**
- * Creates CRM app
+ * Creating CRM application
  * 
  * @author Maksim Stepanov
  * 
  */
 public class RqToESB {
 
-	private String response = null;
+	private RqToESB() {
 
-	private ArrayList<String> dataArray = null;
+	}
 
-	public static AtomicInteger count = new AtomicInteger(-1);
+	public static String getRequest() {
 
-	public RqToESB(String[] settings) throws UnsupportedEncodingException {
+		String response = "";
+
+		ArrayList<String> dataArray = null;
 
 		// generate RqUID
 		String RqUID = generateRqUID();
 
 		// generating FIO
-		String firstname = new String(generateName(7));
+		String firstname = generateName(7);
 
-		String lastname = new String(generateName(9));
+		String lastname = generateName(9);
 
 		// generating ID
-		String id = new String(generateNumber(6));
+		String id = generateNumber(6);
 
 		// generating serial ID
-		String serial = new String(generateNumber(4));
+		String serial = generateNumber(4);
 
-		String middlename = new String("фсбович");
+		String middlename = "фсбович";
 
-		String birthday = new String(generateDOB(1975, 6));
+		String birthday = generateDOB(1975, 6);
 
 		// date get id
 		Date current = new Date();
@@ -54,9 +54,9 @@ public class RqToESB {
 
 		String dateTemp = sdf.format(current);
 
-		String dateId = new String(dateTemp);
+		String dateId = dateTemp;
 
-		this.response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+		response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 				+ "<ChargeLoanApplicationRq xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"LoanApplication.xsd\">"
 				+ "<MessageData>" + "<RqUID>"
 				+ RqUID
@@ -156,24 +156,22 @@ public class RqToESB {
 				+ "</Application>"
 				+ "</ChargeLoanApplicationRq>";
 
-		this.dataArray = new ArrayList<String>(5);
+		dataArray = new ArrayList<String>(5);
 
-		this.dataArray.add(RqUID);
+		dataArray.add(RqUID);
 
-		this.dataArray.add(firstname);
+		dataArray.add(firstname);
 
-		this.dataArray.add(lastname);
+		dataArray.add(lastname);
 
-		this.dataArray.add(middlename);
+		dataArray.add(middlename);
 
-		this.dataArray.add(birthday);
+		dataArray.add(birthday);
 
-		DbOperation.getInstance().evalOperation(1, this.dataArray);
-	}
+		DbOperation.getInstance().evalOperation(1, dataArray);
 
-	public String getRq() {
+		return response;
 
-		return this.response;
 	}
 
 }

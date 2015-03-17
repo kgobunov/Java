@@ -25,7 +25,6 @@ import listeners.FSBListener;
 import listeners.SAPListener;
 import listeners.ServicesListener;
 
-
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueueConnection;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
@@ -57,16 +56,25 @@ public class EsbMqJms implements Runnable {
 
 	private boolean flagReconnect = false;
 
-	public EsbMqJms() throws JMSException {
+	public EsbMqJms() {
 
 		// Get value for debug properties
 		debug = Boolean.parseBoolean(PropsChecker.esb.getChildText("debug"));
 
 		// Create factory
-		this.factory = MQConn.getFactory();
+		try {
+			
+			this.factory = MQConn.getFactory();
 
-		// specific for tsm retail JMSC.MQJMS_TP_CLIENT_MQ_TCPIP
-		this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+			this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+			
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 
@@ -188,11 +196,11 @@ public class EsbMqJms implements Runnable {
 					Queues.ESB_CRM_IN);
 
 			consumerCRM.setMessageListener(new CRMListener(this.connection));
-			
+
 			MessageConsumer consumerFSB = getConsumer(this.connection,
 					Queues.FSB_IN);
 
-			consumerFSB.setMessageListener(new FSBListener(this.connection));			
+			consumerFSB.setMessageListener(new FSBListener(this.connection));
 
 			MessageConsumer consumerASYNC = getConsumer(this.connection,
 					Queues.ASYNC_IN);
@@ -285,7 +293,7 @@ public class EsbMqJms implements Runnable {
 
 		for (int i = 0; i < countThreads; i++) {
 
-			executor.submit(new EsbMqJms());
+			executor.execute(new EsbMqJms());
 
 		}
 

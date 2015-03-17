@@ -10,15 +10,12 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
-import javax.xml.xpath.XPathExpressionException;
 
 import ru.aplana.app.EsbMqJms;
 import ru.aplana.tools.GetData;
 import tools.PropsChecker;
 import tools.Queues;
-
-import answers.ReqToTSMFromFMS;
-import answers.ReqToTSMFromSPOOBK;
+import answers.Requests;
 
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueue;
@@ -40,10 +37,8 @@ public class ASYNCListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
-	private ArrayList<String> data = null;
-
 	private boolean debug;
-	
+
 	private boolean flagError = false;
 
 	public ASYNCListener(MQQueueConnection connection) throws JMSException {
@@ -61,6 +56,10 @@ public class ASYNCListener implements MessageListener {
 
 	public void onMessage(Message inputMsg) {
 
+		ArrayList<String> data = null;
+
+		MessageProducer producer = null;
+
 		try {
 
 			String request = parseMessMQ(inputMsg);
@@ -73,54 +72,42 @@ public class ASYNCListener implements MessageListener {
 						.info("Stub[ASYNC] - Message from ETSM: " + request);
 			}
 
-			GetData processRq = new GetData(request);
+			GetData processRq = GetData.getInstance(request);
 
 			String type_request = null;
 
 			// Need for detecting response
 			int flagSystem = -1;
 
-			// Detecting system
-			try {
+			String fms_book = processRq
+					.getValueByXpath("//*[local-name()='FMSBookRequest']");
 
-				String fms_book = processRq
-						.getValueByXpath("//*[local-name()='FMSBookRequest']");
+			String fms_result = processRq
+					.getValueByXpath("//*[local-name()='FMSResultRequest']");
 
-				String fms_result = processRq
-						.getValueByXpath("//*[local-name()='FMSResultRequest']");
+			String spoobk = processRq
+					.getValueByXpath("//*[local-name()='SrvCardApproveInfoRq']");
 
-				String spoobk = processRq
-						.getValueByXpath("//*[local-name()='SrvCardApproveInfoRq']");
+			if (fms_book.length() > 0) {
 
-				if (fms_book.length() > 0) {
-					
-					type_request = "FMSBookRequest";
+				type_request = "FMSBookRequest";
 
-					flagSystem = 0;
+				flagSystem = 0;
 
-				}
+			}
 
-				if (fms_result.length() > 0) {
+			if (fms_result.length() > 0) {
 
-					type_request = "FMSResultRequest";
+				type_request = "FMSResultRequest";
 
-					flagSystem = 0;
-				}
+				flagSystem = 0;
+			}
 
-				if (spoobk.length() > 0) {
-					type_request = "SPOOBK";
+			if (spoobk.length() > 0) {
+				type_request = "SPOOBK";
 
-					flagSystem = 1;
+				flagSystem = 1;
 
-				}
-
-			} catch (XPathExpressionException e1) {
-
-				PropsChecker.loggerSevere
-						.severe("[FMS ServicesListener] Error parcing type request: "
-								+ e1.getMessage());
-
-				e1.printStackTrace();
 			}
 
 			// Get data from message
@@ -129,25 +116,25 @@ public class ASYNCListener implements MessageListener {
 
 				if (type_request.equalsIgnoreCase("FMSBookRequest")) {
 
-					this.data = new ArrayList<String>(8);
+					data = new ArrayList<String>(8);
 
 					try {
 
-						this.data.add(processRq.getValueByName("MessageId"));
+						data.add(processRq.getValueByName("MessageId"));
 
-						this.data.add(processRq.getValueByName("MessageDate"));
+						data.add(processRq.getValueByName("MessageDate"));
 
-						this.data.add(processRq.getValueByName("FromAbonent"));
+						data.add(processRq.getValueByName("FromAbonent"));
 
-						this.data.add(processRq.getValueByName("ApplicationNumber"));
+						data.add(processRq.getValueByName("ApplicationNumber"));
 
-						this.data.add(processRq.getValueByName("PassportNumber"));
+						data.add(processRq.getValueByName("PassportNumber"));
 
-						this.data.add(processRq.getValueByName("DocSeries"));
+						data.add(processRq.getValueByName("DocSeries"));
 
-						this.data.add(processRq.getValueByName("IssueLoc"));
+						data.add(processRq.getValueByName("IssueLoc"));
 
-						this.data.add(processRq.getValueByName("IssDt"));
+						data.add(processRq.getValueByName("IssDt"));
 
 					} catch (Exception e) {
 
@@ -162,15 +149,15 @@ public class ASYNCListener implements MessageListener {
 
 				if (type_request.equalsIgnoreCase("FMSResultRequest")) {
 
-					this.data = new ArrayList<String>(3);
+					data = new ArrayList<String>(3);
 
 					try {
 
-						this.data.add(processRq.getValueByName("MessageId"));
+						data.add(processRq.getValueByName("MessageId"));
 
-						this.data.add(processRq.getValueByName("MessageDate"));
+						data.add(processRq.getValueByName("MessageDate"));
 
-						this.data.add(processRq.getValueByName("FromAbonent"));
+						data.add(processRq.getValueByName("FromAbonent"));
 
 					} catch (Exception e) {
 
@@ -185,15 +172,15 @@ public class ASYNCListener implements MessageListener {
 
 				if (type_request.equalsIgnoreCase("spoobk")) {
 
-					this.data = new ArrayList<String>(3);
+					data = new ArrayList<String>(3);
 
 					try {
 
-						this.data.add(processRq.getValueByName("MessageId"));
+						data.add(processRq.getValueByName("MessageId"));
 
-						this.data.add(processRq.getValueByName("MessageDT"));
+						data.add(processRq.getValueByName("MessageDT"));
 
-						this.data.add(processRq.getValueByName("FromAbonent"));
+						data.add(processRq.getValueByName("FromAbonent"));
 
 					} catch (Exception e) {
 
@@ -212,12 +199,11 @@ public class ASYNCListener implements MessageListener {
 			switch (flagSystem) {
 
 			case 0:
-				response = new ReqToTSMFromFMS(this.data, type_request)
-						.getResp();
+				response = Requests.getRequestToTSMFromFMS(data, type_request);
 				break;
 
 			case 1:
-				response = new ReqToTSMFromSPOOBK(this.data).getResp();
+				response = Requests.getRequestToTSMFromSPOOBK(data);
 				break;
 
 			default:
@@ -233,7 +219,7 @@ public class ASYNCListener implements MessageListener {
 
 				this.queueSend = (MQQueue) this.session
 						.createQueue(Queues.SERVICE_GARBAGE_OUT);
-				
+
 				this.flagError = true;
 
 			}
@@ -242,20 +228,18 @@ public class ASYNCListener implements MessageListener {
 
 			this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
 
-			MessageProducer producer = this.session
-					.createProducer(this.queueSend);
+			producer = this.session.createProducer(this.queueSend);
 
 			// Send response
 			producer.send(outputMsg);
 
-			producer.close(); 
-			
 			if (this.flagError) {
-				
-				this.queueSend = (MQQueue) this.session.createQueue(Queues.ETSM_OUT);
-				
+
+				this.queueSend = (MQQueue) this.session
+						.createQueue(Queues.ETSM_OUT);
+
 				this.flagError = false;
-				
+
 			}
 
 			if (this.debug && (response.equalsIgnoreCase(request) == false)) {
@@ -270,8 +254,22 @@ public class ASYNCListener implements MessageListener {
 			PropsChecker.loggerSevere.severe(e.getMessage());
 
 			e.printStackTrace();
+
+		} finally {
+
+			if (null != producer) {
+
+				try {
+
+					producer.close();
+
+				} catch (JMSException e) {
+
+					e.printStackTrace();
+				}
+
+			}
 		}
 
 	}
-
 }

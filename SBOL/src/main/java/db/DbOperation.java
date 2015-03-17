@@ -26,7 +26,6 @@ public class DbOperation {
 
 	private Lock lock = new ReentrantLock();
 
-	
 	private int operation;
 
 	private ArrayList<String> dataArray = null;
@@ -111,21 +110,17 @@ public class DbOperation {
 	 * init connection to DB
 	 * 
 	 */
-	private final void initConnection() {
+	private void initConnection() {
 
 		this.lock.lock();
 
 		try {
 
-			this.connection = OracleDB.getConn(DbConn.ORA_DB_URL,
+			this.connection = OracleDB.getConnection(DbConn.ORA_DB_URL,
 					DbConn.ORA_USER, DbConn.ORA_PASS);
 
 			loggerInfo.info("Connected success!");
 
-		} catch (SQLException e) {
-
-			loggerSevere.severe("Error: Failed connect to databases! "
-					+ e.getMessage());
 		} finally {
 
 			this.lock.unlock();
@@ -133,7 +128,7 @@ public class DbOperation {
 
 	}
 
-	private final void insert(ArrayList<String> dataArray) {
+	private void insert(ArrayList<String> dataArray) {
 
 		PreparedStatement preparedStatement = null;
 
@@ -193,7 +188,7 @@ public class DbOperation {
 
 	}
 
-	private final void update(ArrayList<String> dataArray) {
+	private void update(ArrayList<String> dataArray) {
 
 		PreparedStatement preparedStatement = null;
 

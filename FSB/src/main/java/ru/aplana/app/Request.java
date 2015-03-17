@@ -8,9 +8,11 @@ import static tools.PropCheck.fsb;
 import static tools.PropCheck.loggerInfo;
 import static tools.PropCheck.loggerSevere;
 
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
@@ -18,7 +20,6 @@ import javax.jms.TextMessage;
 
 import requests.RqToESB;
 import tools.MQConn;
-
 
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueue;
@@ -43,7 +44,11 @@ public class Request implements Runnable {
 
 	private static AtomicInteger countSendMess = new AtomicInteger(0);
 
-	public static volatile long delay;
+	private static Lock lock = new ReentrantLock();
+
+	private long delay;
+
+	public static AtomicLong delayForStop = new AtomicLong();
 
 	private String testType;
 
@@ -55,23 +60,22 @@ public class Request implements Runnable {
 
 	public static AtomicInteger currentStep = new AtomicInteger(1);
 
-	public static volatile boolean flagNewStep = false;
-
 	// scenario step test
-	public static HashMap<Integer, String> scenario = new HashMap<Integer, String>();
+	public static ConcurrentHashMap<Integer, String> scenario = new ConcurrentHashMap<Integer, String>();
 
-	public Request() throws JMSException {
+	public Request() {
 
 		this.testType = common.getChildText("testType");
 
-		this.countAppStart = Integer.parseInt(fsb.getChildText("countStartApp"));
-		
+		this.countAppStart = Integer
+				.parseInt(fsb.getChildText("countStartApp"));
+
 		if (this.countAppStart == 0) {
-			
+
 			loggerInfo.info("Count app zero! Set value by default 1");
-			
+
 			this.countAppStart = 1;
-			
+
 		}
 
 		if (testType.equalsIgnoreCase("step")) {
@@ -91,9 +95,11 @@ public class Request implements Runnable {
 
 		}
 
-		float temp_delay = ((float) 3600 / this.countAppStart) * 1000;
+		float temp = ((float) 3600 / this.countAppStart) * 1000;
 
-		delay = (long) temp_delay;
+		this.delay = (long) temp;
+
+		delayForStop.set(this.delay);
 
 		if (debug) {
 
@@ -107,9 +113,22 @@ public class Request implements Runnable {
 
 		}
 
-		this.factory = MQConn.getFactory();
+		try {
 
-		this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+			this.factory = MQConn.getFactory();
+
+			this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+
+		} catch (NumberFormatException e) {
+
+			e.printStackTrace();
+
+		} catch (JMSException e) {
+
+			e.printStackTrace();
+
+		}
+
 	}
 
 	@Override
@@ -137,9 +156,9 @@ public class Request implements Runnable {
 					MQQueueSession.AUTO_ACKNOWLEDGE);
 
 			// for step test
-			String settings = null;
+			String settings = "";
 
-			String settingsFuture = null;
+			String settingsFuture = "";
 
 			String[] settingsArray = null;
 
@@ -171,13 +190,12 @@ public class Request implements Runnable {
 			String queue = fsb.getChildText("queueTo");
 
 			// Send to ESB
-			while (FSBMqJms.flagRequest) {
+			while (FSBMqJms.flagRequest.get()) {
 
-				String request = new RqToESB(settingsArray).getRq();
+				String request = RqToESB.getRequest();
 
 				TextMessage outputMsg = this.session.createTextMessage(request);
 
-				// ESB.CRM.IN
 				MQQueue queueSend = (MQQueue) this.session.createQueue(queue);
 
 				MessageProducer producer = this.session
@@ -198,75 +216,86 @@ public class Request implements Runnable {
 				// if test type equals step - must be up count apps
 				if (this.testType.equalsIgnoreCase("step")) {
 
-					long now = System.currentTimeMillis();
+					lock.lock();
 
-					long diff = now - FSBMqJms.startTime;
+					try {
 
-					// sum enter with duration step
-					long timeStep = (Long.parseLong(settingsArray[0]) + Long
-							.parseLong(settingsArray[1])) * 60 * 1000;
+						long now = System.currentTimeMillis();
 
-					// new step
-					if (diff > timeStep
-							&& (currentStep.get() != scenario.size())) {
+						long diff = now - FSBMqJms.startTime.get();
 
-						loggerInfo.info("Prev start_time: "
-								+ FSBMqJms.startTime);
+						// sum enter with duration step
+						long timeStep = (Long.parseLong(settingsArray[0]) + Long
+								.parseLong(settingsArray[1])) * 60 * 1000;
 
-						loggerInfo.info("Prev delay: " + delay);
+						// new step
+						if (diff > timeStep
+								&& (currentStep.get() != scenario.size())) {
 
-						this.countAppStart = Integer
-								.parseInt(settingsFutureArray[2]);
-						
-						if (this.countAppStart == 0) {
-							
-							loggerInfo.info("Count app zero! Set value by default 1");
-							
-							this.countAppStart = 1;
-							
+							loggerInfo.info("Prev start_time: "
+									+ FSBMqJms.startTime);
+
+							loggerInfo.info("Prev delay: " + this.delay);
+
+							this.countAppStart = Integer
+									.parseInt(settingsFutureArray[2]);
+
+							if (this.countAppStart == 0) {
+
+								loggerInfo
+										.info("Count app zero! Set value by default 1");
+
+								this.countAppStart = 1;
+
+							}
+
+							currentStep.getAndIncrement();
+
+							float temp = ((float) 3600 / this.countAppStart) * 1000;
+
+							this.delay = (long) temp;
+
+							delayForStop.set(this.delay);
+
+							FSBMqJms.startTime.set(System.currentTimeMillis());
+
+							loggerInfo.info("Start time reset. New startTime: "
+									+ FSBMqJms.startTime);
+
+							loggerInfo.info("New delay: " + delay);
+
+							// re-read setting
+							settings = scenario.get(currentStep.get());
+
+							int stepNext = currentStep.get() + 1;
+
+							settingsFuture = scenario.get((stepNext > scenario
+									.size()) ? scenario.size() : stepNext);
+
+							settingsArray = settings.split(",");
+
+							settingsFutureArray = settingsFuture.split(",");
+
+							if (debug) {
+
+								loggerInfo
+										.info("Re-read settings: " + settings);
+
+								loggerInfo.info("Re-read future settings: "
+										+ settingsFuture);
+
+							}
+
+							if (!(currentStep.get() != scenario.size())) {
+
+								loggerInfo.info("Last step succeed!");
+							}
+
 						}
 
-						currentStep.getAndIncrement();
+					} finally {
 
-						float temp = ((float) 3600 / this.countAppStart) * 1000;
-
-						delay = (long) temp;
-
-						FSBMqJms.startTime = System.currentTimeMillis();
-
-						loggerInfo.info("Start time reset. New startTime: "
-								+ FSBMqJms.startTime);
-
-						loggerInfo.info("New delay: " + delay);
-
-						// re-read setting
-						settings = scenario.get(currentStep.get());
-
-						int stepNext = currentStep.get() + 1;
-
-						settingsFuture = scenario.get((stepNext > scenario
-								.size()) ? scenario.size() : stepNext);
-
-						settingsArray = settings.split(",");
-
-						settingsFutureArray = settingsFuture.split(",");
-
-						if (debug) {
-
-							loggerInfo.info("Re-read settings: " + settings);
-
-							loggerInfo.info("Re-read future settings: "
-									+ settingsFuture);
-
-						}
-
-						if (!(currentStep.get() != scenario.size())) {
-
-							loggerInfo.info("Last step succeed!");
-						}
-
-						flagNewStep = true;
-
+						lock.unlock();
 					}
 
 				}
@@ -305,10 +334,6 @@ public class Request implements Runnable {
 
 			loggerSevere.severe("Error: Can't send request to ESB: "
 					+ e.getMessage());
-
-			e.printStackTrace();
-
-		} catch (UnsupportedEncodingException e) {
 
 			e.printStackTrace();
 

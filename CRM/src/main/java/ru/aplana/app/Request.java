@@ -8,9 +8,12 @@ import static tools.PropCheck.debug;
 import static tools.PropCheck.loggerInfo;
 import static tools.PropCheck.loggerSevere;
 
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
@@ -18,7 +21,6 @@ import javax.jms.TextMessage;
 
 import requests.RqToESB;
 import tools.MQConn;
-
 
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueue;
@@ -43,7 +45,9 @@ public class Request implements Runnable {
 
 	private static AtomicInteger countSendMess = new AtomicInteger(0);
 
-	public static volatile long delay;
+	private static Lock lock = new ReentrantLock();
+
+	private long delay;
 
 	private String testType;
 
@@ -52,26 +56,29 @@ public class Request implements Runnable {
 
 	// setting for step test
 	private String settings;
+	
+	public static AtomicLong delayForStop = new AtomicLong();
 
 	public static AtomicInteger currentStep = new AtomicInteger(1);
 
-	public static volatile boolean flagNewStep = false;
+	public static AtomicBoolean flagNewStep = new AtomicBoolean(false);
 
 	// scenario step test
-	public static HashMap<Integer, String> scenario = new HashMap<Integer, String>();
+	public static ConcurrentHashMap<Integer, String> scenario = new ConcurrentHashMap<Integer, String>();
 
-	public Request() throws JMSException {
+	public Request() {
 
 		this.testType = common.getChildText("testType");
 
-		this.countAppStart = Integer.parseInt(crm.getChildText("countStartApp"));
-		
+		this.countAppStart = Integer
+				.parseInt(crm.getChildText("countStartApp"));
+
 		if (this.countAppStart == 0) {
-			
+
 			loggerInfo.info("Count app zero! Set value by default 1");
-			
+
 			this.countAppStart = 1;
-			
+
 		}
 
 		if (testType.equalsIgnoreCase("step")) {
@@ -91,9 +98,11 @@ public class Request implements Runnable {
 
 		}
 
-		float temp_delay = ((float) 3600 / this.countAppStart) * 1000;
+		float temp = ((float) 3600 / this.countAppStart) * 1000;
 
-		delay = (long) temp_delay;
+		this.delay = (long) temp;
+		
+		delayForStop.set(this.delay);
 
 		if (debug) {
 
@@ -107,9 +116,17 @@ public class Request implements Runnable {
 
 		}
 
-		this.factory = MQConn.getFactory();
+		try {
 
-		this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+			this.factory = MQConn.getFactory();
+
+			this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+
+		} catch (NumberFormatException | JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 
 	@Override
@@ -171,9 +188,10 @@ public class Request implements Runnable {
 			String queue = crm.getChildText("queueTo");
 
 			// Send to ESB
-			while (CRMMqJms.flagRequest) {
+			while (CRMMqJms.flagRequest.get()) {
 
-				String request = new RqToESB(settingsArray).getRq();
+				String request = RqToESB.getInstance(settingsArray)
+						.getRequest();
 
 				TextMessage outputMsg = this.session.createTextMessage(request);
 
@@ -198,74 +216,90 @@ public class Request implements Runnable {
 				// if test type equals step - must be up count apps
 				if (this.testType.equalsIgnoreCase("step")) {
 
-					long now = System.currentTimeMillis();
+					lock.lock();
 
-					long diff = now - CRMMqJms.startTime;
+					try {
 
-					// sum enter with duration step
-					long timeStep = (Long.parseLong(settingsArray[0]) + Long
-							.parseLong(settingsArray[1])) * 60 * 1000;
+						long now = System.currentTimeMillis();
 
-					// new step
-					if (diff > timeStep
-							&& (currentStep.get() != scenario.size())) {
+						long diff = now - CRMMqJms.startTime.get();
 
-						loggerInfo.info("Prev start_time: "
-								+ CRMMqJms.startTime);
+						// sum enter with duration step
+						long timeStep = (Long.parseLong(settingsArray[0]) + Long
+								.parseLong(settingsArray[1])) * 60 * 1000;
 
-						loggerInfo.info("Prev delay: " + delay);
+						// new step
+						if (diff > timeStep
+								&& (currentStep.get() != scenario.size())) {
 
-						this.countAppStart = Integer
-								.parseInt(settingsFutureArray[2]);
-						
-						if (this.countAppStart == 0) {
+							loggerInfo.info("Prev start_time: "
+									+ CRMMqJms.startTime);
+
+							loggerInfo.info("Prev delay: " + delay);
+
+							this.countAppStart = Integer
+									.parseInt(settingsFutureArray[2]);
+
+							if (this.countAppStart == 0) {
+
+								loggerInfo
+										.info("Count app zero! Set value by default 1");
+
+								this.countAppStart = 1;
+
+							}
+
+							currentStep.getAndIncrement();
+
+							float temp = ((float) 3600 / this.countAppStart) * 1000;
+
+							this.delay = (long) temp;
 							
-							loggerInfo.info("Count app zero! Set value by default 1");
-							
-							this.countAppStart = 1;
-							
+							delayForStop.set(this.delay);
+
+							CRMMqJms.startTime.set(System.currentTimeMillis());
+
+							loggerInfo.info("Start time reset. New startTime: "
+									+ CRMMqJms.startTime);
+
+							loggerInfo.info("New delay: " + this.delay);
+
+							// re-read setting
+							settings = scenario.get(currentStep.get());
+
+							int stepNext = currentStep.get() + 1;
+
+							settingsFuture = scenario.get((stepNext > scenario
+									.size()) ? scenario.size() : stepNext);
+
+							settingsArray = settings.split(",");
+
+							settingsFutureArray = settingsFuture.split(",");
+
+							if (debug) {
+
+								loggerInfo
+										.info("Re-read settings: " + settings);
+
+								loggerInfo.info("Re-read future settings: "
+										+ settingsFuture);
+
+							}
+
+							if (!(currentStep.get() != scenario.size())) {
+
+								loggerInfo.info("Last step succeed!");
+							}
+
+							flagNewStep.set(true);
+
 						}
 
-						currentStep.getAndIncrement();
+					}
 
-						float temp = ((float) 3600 / this.countAppStart) * 1000;
+					finally {
 
-						delay = (long) temp;
-
-						CRMMqJms.startTime = System.currentTimeMillis();
-
-						loggerInfo.info("Start time reset. New startTime: "
-								+ CRMMqJms.startTime);
-
-						loggerInfo.info("New delay: " + delay);
-
-						// re-read setting
-						settings = scenario.get(currentStep.get());
-
-						int stepNext = currentStep.get() + 1;
-
-						settingsFuture = scenario.get((stepNext > scenario
-								.size()) ? scenario.size() : stepNext);
-
-						settingsArray = settings.split(",");
-
-						settingsFutureArray = settingsFuture.split(",");
-
-						if (debug) {
-
-							loggerInfo.info("Re-read settings: " + settings);
-
-							loggerInfo.info("Re-read future settings: "
-									+ settingsFuture);
-
-						}
-
-						if (!(currentStep.get() != scenario.size())) {
-
-							loggerInfo.info("Last step succeed!");
-						}
-
-						flagNewStep = true;
+						lock.unlock();
 
 					}
 
@@ -273,7 +307,7 @@ public class Request implements Runnable {
 
 				try {
 
-					Thread.sleep((long) delay);
+					Thread.sleep((long) this.delay);
 
 				} catch (InterruptedException e) {
 
@@ -305,10 +339,6 @@ public class Request implements Runnable {
 
 			loggerSevere.severe("Error: Can't send request to ESB: "
 					+ e.getMessage());
-
-			e.printStackTrace();
-
-		} catch (UnsupportedEncodingException e) {
 
 			e.printStackTrace();
 

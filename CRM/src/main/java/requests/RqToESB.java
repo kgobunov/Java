@@ -9,7 +9,6 @@ import static tools.PropCheck.crm;
 import static tools.PropCheck.debug;
 import static tools.PropCheck.loggerInfo;
 
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -26,26 +25,24 @@ import db.DbOperation;
  */
 public class RqToESB {
 
-	private String response = null;
+	private String response = "";
 
-	private String ki = null;
+	private String ki = "";
 
-	private String codeProduct = null;
+	private String codeProduct = "";
 
-	private String subProductCode = null;
+	private String subProductCode = "";
 
-	private ArrayList<String> dataArray = null;
+	private static AtomicInteger count = new AtomicInteger(-1);
 
-	public static AtomicInteger count = new AtomicInteger(-1);
-
-	public static AtomicInteger countUser = new AtomicInteger(10);
+	private static AtomicInteger countUser = new AtomicInteger(10);
 
 	// max id for user login
 	private int maxUserKI;
 
 	private String[] settings;
 
-	public RqToESB(String[] settings) throws UnsupportedEncodingException {
+	private RqToESB(String[] settings) {
 
 		if (common.getChildText("testType").equalsIgnoreCase("step")) {
 
@@ -66,19 +63,19 @@ public class RqToESB {
 		setProductTypeandKI();
 
 		// generating FIO
-		String firstname = new String(generateName(7));
+		String firstname = generateName(7);
 
-		String lastname = new String(generateName(9));
+		String lastname = generateName(9);
 
 		// generating ID
-		String id = new String(generateNumber(6));
+		String id = generateNumber(6);
 
 		// generating serial ID
-		String serial = new String(generateNumber(4));
+		String serial = generateNumber(4);
 
-		String middlename = new String("срмович");
+		String middlename = "срмович";
 
-		String birthday = new String(generateDOB(1975, 6));
+		String birthday = generateDOB(1975, 6);
 
 		// date get id
 		Date current = new Date();
@@ -87,7 +84,7 @@ public class RqToESB {
 
 		String dateTemp = sdf.format(current);
 
-		String dateId = new String(dateTemp);
+		String dateId = dateTemp;
 
 		this.response = new StringBuilder(
 				"<?xml version=\"1.0\" encoding=\"UTF-8\"?><ChargeLoanApplicationRq xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"LoanApplication.xsd\"><MessageData><RqUID>")
@@ -119,22 +116,28 @@ public class RqToESB {
 				.append("</IssueDt><PrevIDInfoFlag>false</PrevIDInfoFlag></IdentityCard></PersonInfo></Applicant></Application> </ChargeLoanApplicationRq>")
 				.toString();
 
-		this.dataArray = new ArrayList<String>(5);
+		ArrayList<String> dataArray = new ArrayList<String>(5);
 
-		this.dataArray.add(RqUID);
+		dataArray.add(RqUID);
 
-		this.dataArray.add(firstname);
+		dataArray.add(firstname);
 
-		this.dataArray.add(lastname);
+		dataArray.add(lastname);
 
-		this.dataArray.add(middlename);
+		dataArray.add(middlename);
 
-		this.dataArray.add(birthday);
+		dataArray.add(birthday);
 
-		DbOperation.getInstance().evalOperation(1, this.dataArray);
+		DbOperation.getInstance().evalOperation(1, dataArray);
 	}
 
-	public String getRq() {
+	public static RqToESB getInstance(String[] settings) {
+
+		return new RqToESB(settings);
+
+	}
+
+	public String getRequest() {
 
 		return this.response;
 	}
@@ -157,13 +160,13 @@ public class RqToESB {
 		// if test type equal step - must up id users
 		if (common.getChildText("testType").equalsIgnoreCase("step")) {
 
-			if (Request.flagNewStep) {
+			if (Request.flagNewStep.get()) {
 
 				this.maxUserKI = Integer.parseInt(this.settings[3]);
 
 				loggerInfo.info("New max login: " + this.maxUserKI);
 
-				Request.flagNewStep = false;
+				Request.flagNewStep.set(false);
 
 			}
 

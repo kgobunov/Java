@@ -7,15 +7,15 @@ import com.ibm.mq.jms.MQQueueConnection;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 
 /**
- * Check mq connection 
+ * Check mq connection
  * 
  * @author Maksim Stepanov
- *
+ * 
  */
 @SuppressWarnings("deprecation")
 public class CheckConn {
 
-	public static synchronized boolean checkConn() throws JMSException {
+	public static boolean checkConn() {
 
 		boolean status = false;
 
@@ -24,7 +24,7 @@ public class CheckConn {
 		try {
 
 			MQQueueConnectionFactory factory = MQConn.getFactory();
-			
+
 			factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
 
 			connection = (MQQueueConnection) factory.createQueueConnection();
@@ -43,10 +43,17 @@ public class CheckConn {
 
 		} finally {
 
-			if (connection != null){
-				
-				connection.close();
-				
+			if (connection != null) {
+
+				try {
+
+					connection.close();
+
+				} catch (JMSException e) {
+
+					e.printStackTrace();
+				}
+
 			}
 		}
 

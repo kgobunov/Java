@@ -15,8 +15,7 @@ import ru.aplana.app.EsbMqJms;
 import ru.aplana.tools.GetData;
 import tools.PropsChecker;
 import tools.Queues;
-
-import answers.ReqToERIB;
+import answers.Requests;
 
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueue;
@@ -36,14 +35,12 @@ public class ETSMListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
-	private ArrayList<String> data = null;
-
 	private boolean debug;
 
 	public ETSMListener(MQQueueConnection connection) throws JMSException {
 
 		this.connection = connection;
-		
+
 		this.session = getSession(this.connection, false,
 				MQQueueSession.AUTO_ACKNOWLEDGE);
 
@@ -53,6 +50,10 @@ public class ETSMListener implements MessageListener {
 	public void onMessage(Message inputMsg) {
 
 		MQQueue queueSend = null;
+
+		ArrayList<String> data = null;
+
+		MessageProducer producer = null;
 
 		try {
 
@@ -65,7 +66,7 @@ public class ETSMListener implements MessageListener {
 				PropsChecker.loggerInfo.info("Message from ETSM: " + request);
 			}
 
-			GetData processRq = new GetData(request);
+			GetData processRq = GetData.getInstance(request);
 
 			String system = processRq.getValueByName("ToAbonent");
 
@@ -76,50 +77,49 @@ public class ETSMListener implements MessageListener {
 				queueSend = (MQQueue) this.session.createQueue(Queues.CRM_OUT);
 
 			}
-			
+
 			if (system.equalsIgnoreCase("FSB")) {
-				
+
 				response = request;
-				
+
 				queueSend = (MQQueue) this.session.createQueue(Queues.FSB_OUT);
-				
+
 			}
 
 			if (system.equalsIgnoreCase("SBOL")) {
 
 				// Array data for response
-				this.data = new ArrayList<String>(8);
+				data = new ArrayList<String>(8);
 
 				queueSend = (MQQueue) this.session.createQueue(Queues.ERIB_OUT);
 
 				try {
 
-					this.data.add(processRq.getValueByName("RqUID"));
+					data.add(processRq.getValueByName("RqUID"));
 
-					this.data.add(processRq.getValueByName("RqTm"));
+					data.add(processRq.getValueByName("RqTm"));
 
-					this.data.add(processRq.getValueByName("SrcObjID"));
+					data.add(processRq.getValueByName("SrcObjID"));
 
 					String code = processRq.getValueByName("StatusCode");
 
-					this.data.add(code);
+					data.add(code);
 
-					this.data
-							.add(processRq.getValueByName("ApplicationNumber"));
+					data.add(processRq.getValueByName("ApplicationNumber"));
 
 					if (code.equalsIgnoreCase("2")) {
 
-						this.data.add(processRq.getValueByName("PeriodM"));
+						data.add(processRq.getValueByName("PeriodM"));
 
-						this.data.add(processRq.getValueByName("Amount"));
+						data.add(processRq.getValueByName("Amount"));
 
-						this.data.add(processRq.getValueByName("InterestRate"));
+						data.add(processRq.getValueByName("InterestRate"));
 
 					} else {
 
-						this.data.add(processRq.getValueByName("ErrorCode"));
+						data.add(processRq.getValueByName("ErrorCode"));
 
-						this.data.add(processRq.getValueByName("Message"));
+						data.add(processRq.getValueByName("Message"));
 
 					}
 
@@ -132,7 +132,7 @@ public class ETSMListener implements MessageListener {
 					e.printStackTrace();
 				}
 
-				response = new ReqToERIB(this.data).getRq();
+				response = Requests.getRequestToERIB(data);
 
 			}
 
@@ -151,16 +151,14 @@ public class ETSMListener implements MessageListener {
 
 			queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
 
-			MessageProducer producer = this.session.createProducer(queueSend);
+			producer = this.session.createProducer(queueSend);
 
 			producer.send(outputMsg);
 
-			producer.close();
-
 			if (this.debug) {
 
-				PropsChecker.loggerInfo.info("Queue: " + queueSend + "; " + "Response to " + system
-						+ " from ETSM: " + response);
+				PropsChecker.loggerInfo.info("Queue: " + queueSend + "; "
+						+ "Response to " + system + " from ETSM: " + response);
 			}
 
 		} catch (JMSException e) {
@@ -168,6 +166,21 @@ public class ETSMListener implements MessageListener {
 			PropsChecker.loggerSevere.severe(e.getMessage());
 
 			e.printStackTrace();
+
+		} finally {
+
+			try {
+
+				if (null != producer) {
+
+					producer.close();
+
+				}
+			} catch (JMSException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
 		}
 
 	}

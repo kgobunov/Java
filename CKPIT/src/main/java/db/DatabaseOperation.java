@@ -156,7 +156,7 @@ public class DatabaseOperation {
 	 */
 	private final void initConnection() throws SQLException {
 
-		this.connection = OracleDB.getConn(DatabaseConn.ORA_DB_URL,
+		this.connection = OracleDB.getConnection(DatabaseConn.ORA_DB_URL,
 				DatabaseConn.ORA_USER, DatabaseConn.ORA_PASS);
 
 		loggerInfo.info("Connected success!");

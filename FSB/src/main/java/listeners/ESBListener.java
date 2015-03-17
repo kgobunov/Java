@@ -43,16 +43,8 @@ public class ESBListener implements MessageListener {
 
 		this.connection = connection;
 
-		try {
-
-			this.session = getSession(this.connection, false,
-					MQQueueSession.AUTO_ACKNOWLEDGE);
-
-		} catch (JMSException e) {
-
-			e.printStackTrace();
-
-		}
+		this.session = getSession(this.connection, false,
+				MQQueueSession.AUTO_ACKNOWLEDGE);
 
 	}
 
@@ -60,6 +52,8 @@ public class ESBListener implements MessageListener {
 	public void onMessage(Message inputMsg) {
 
 		ArrayList<String> dataArray = new ArrayList<String>(5);
+
+		MessageProducer producer = null;
 
 		int status = -99;
 
@@ -69,7 +63,7 @@ public class ESBListener implements MessageListener {
 
 			String request = parseMessMQ(inputMsg);
 
-			getData = new GetData(request);
+			getData = GetData.getInstance(request);
 
 			boolean flag_tsm = false;
 
@@ -196,8 +190,7 @@ public class ESBListener implements MessageListener {
 
 				MQQueue queueSend = (MQQueue) this.session.createQueue(queue);
 
-				MessageProducer producer = this.session
-						.createProducer(queueSend);
+				producer = this.session.createProducer(queueSend);
 
 				long delay = Long.parseLong(fsb.getChildText("delay")) * 1000;
 
@@ -221,8 +214,6 @@ public class ESBListener implements MessageListener {
 
 				producer.send(outputMsg);
 
-				producer.close();
-
 			}
 
 		} catch (JMSException e) {
@@ -230,6 +221,20 @@ public class ESBListener implements MessageListener {
 			loggerSevere.severe(e.getMessage());
 
 			e.printStackTrace();
+
+		} finally {
+
+			try {
+
+				if (null != producer) {
+
+					producer.close();
+
+				}
+			} catch (JMSException e) {
+
+				e.printStackTrace();
+			}
 		}
 
 	}

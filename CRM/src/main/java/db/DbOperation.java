@@ -123,15 +123,10 @@ public class DbOperation {
 
 		try {
 
-			this.connection = OracleDB.getConn(DbConn.ORA_DB_URL,
+			this.connection = OracleDB.getConnection(DbConn.ORA_DB_URL,
 					DbConn.ORA_USER, DbConn.ORA_PASS);
 
 			loggerInfo.info("Connected success!");
-
-		} catch (SQLException e) {
-
-			loggerSevere.severe("Error: Failed connect to databases! "
-					+ e.getMessage());
 
 		} finally {
 

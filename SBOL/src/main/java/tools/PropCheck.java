@@ -80,11 +80,12 @@ public class PropCheck implements Runnable {
 			debug = Boolean.parseBoolean(erib.getChildText("debug"));
 
 		} else {
-			
+
 			SBOLMqJms.sc.shutdownNow();
-			
-			loggerSevere.severe("Config is not valid! See error log! Application stopped!");
-			
+
+			loggerSevere
+					.severe("Config is not valid! See error log! Application stopped!");
+
 			System.exit(0);
 		}
 
@@ -133,11 +134,11 @@ public class PropCheck implements Runnable {
 
 		if (diff >= this.stopTime) {
 
-			SBOLMqJms.flagRequest = false;
+			SBOLMqJms.flagRequest.set(false);
 
 			try {
 
-				Thread.sleep(Request.delayForStop);
+				Thread.sleep(Request.delayForStop.get());
 
 			} catch (InterruptedException e) {
 

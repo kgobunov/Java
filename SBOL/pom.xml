@@ -27,11 +27,7 @@
          <artifactId>jms</artifactId>
          <version>1.0</version>
       </dependency>
-      <dependency>
-         <groupId>jta</groupId>
-         <artifactId>jta</artifactId>
-         <version>1.0</version>
-      </dependency>
+
       <dependency>
          <groupId>com.ibm.mq.headers</groupId>
          <artifactId>com.ibm.mq.headers</artifactId>
@@ -67,16 +63,7 @@
          <artifactId>dhbcore</artifactId>
          <version>1.0</version>
       </dependency>
-      <dependency>
-         <groupId>rmm</groupId>
-         <artifactId>rmm</artifactId>
-         <version>1.0</version>
-      </dependency>
-      <dependency>
-         <groupId>jndi</groupId>
-         <artifactId>jndi</artifactId>
-         <version>1.0</version>
-      </dependency>
+
       <dependency>
          <groupId>fscontext</groupId>
          <artifactId>fscontext</artifactId>
@@ -87,25 +74,16 @@
          <artifactId>providerutil</artifactId>
          <version>1.0</version>
       </dependency>
-      <dependency>
-         <groupId>CL3Export</groupId>
-         <artifactId>CL3Export</artifactId>
-         <version>1.0</version>
-      </dependency>
-      <dependency>
-         <groupId>CL3Nonexport</groupId>
-         <artifactId>CL3Nonexport</artifactId>
-         <version>1.0</version>
-      </dependency>
+
       <dependency>
          <groupId>com.ibm.mqjms</groupId>
          <artifactId>com.ibm.mqjms</artifactId>
          <version>1.0</version>
       </dependency>
       <dependency>
-         <groupId>ru.aplana.tools</groupId>
-         <artifactId>ru.aplana.tools</artifactId>
-         <version>1.0</version>
+  <groupId>ru.aplana.lib</groupId>
+  <artifactId>ru.aplana.lib</artifactId>
+  <version>1.0-jar-with-dependencies</version>
       </dependency>
       <dependency>
          <groupId>ojdbc14_g</groupId>

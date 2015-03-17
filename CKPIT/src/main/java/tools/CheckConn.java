@@ -15,7 +15,7 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
 @SuppressWarnings("deprecation")
 public class CheckConn {
 
-	public static synchronized boolean checkConn() throws JMSException {
+	public static boolean checkConn() throws JMSException {
 
 		boolean status = false;
 

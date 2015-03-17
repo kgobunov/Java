@@ -6,7 +6,6 @@ import static tools.PropCheck.loggerSevere;
 
 import java.util.ArrayList;
 
-import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
@@ -22,8 +21,6 @@ import db.DbOperation;
  */
 public class ESBListener implements MessageListener {
 
-	private ArrayList<String> dataArray = null;
-
 	public ESBListener() {
 
 		loggerInfo.info("Init ESBListener");
@@ -33,111 +30,102 @@ public class ESBListener implements MessageListener {
 	@Override
 	public void onMessage(Message inputMsg) {
 
-		this.dataArray = new ArrayList<String>(5);
+		ArrayList<String> dataArray = new ArrayList<String>(5);
+
+		String request = parseMessMQ(inputMsg);
+
+		GetData getData = GetData.getInstance(request);
+
+		boolean flag_tsm = false;
 
 		try {
 
-			String request = parseMessMQ(inputMsg);
+			String rquid = getData.getValueByName("RqUID");
 
-			GetData getData = new GetData(request);
+			if (rquid.length() == 0) {
 
-			boolean flag_tsm = false;
+				rquid = getData.getValueByName("MessageId");
+
+				flag_tsm = true;
+
+			}
+
+			dataArray.add(rquid);
+
+			dataArray.add(getData.getValueByName("StatusCode"));
+
+			dataArray.add(getData.getValueByName("ApplicationNumber"));
+
+			dataArray.add(getData.getValueByName("ErrorCode"));
+
+			int status = -99;
 
 			try {
 
-				String rquid = getData.getValueByName("RqUID");
-
-				if (rquid.length() == 0) {
-
-					rquid = getData.getValueByName("MessageId");
-
-					flag_tsm = true;
-
-				}
-				this.dataArray.add(rquid);
-
-				this.dataArray.add(getData.getValueByName("StatusCode"));
-
-				this.dataArray.add(getData.getValueByName("ApplicationNumber"));
-
-				this.dataArray.add(getData.getValueByName("ErrorCode"));
-
-				int status = -99;
-
-				try {
-
-					status = Integer.parseInt(this.dataArray.get(1));
-
-				} catch (Exception e) {
-
-					loggerSevere.severe("Error: Can't parse status. "
-							+ e.getMessage());
-
-					this.dataArray.set(1, "-99");
-
-				}
-				switch (status) {
-				case 1:
-					this.dataArray.add("Заявка успешно создана!");
-					break;
-				case 0:
-					this.dataArray.add("Отказ в кредите!");
-					break;
-				case 2:
-					this.dataArray.add("Заявка одобрена!");
-					break;
-				case 3:
-					this.dataArray.add("Заявка отправлена в обработку!");
-					break;
-				case 4:
-					this.dataArray.add("Кредит выдан!");
-					break;
-				case -99:
-					this.dataArray.add("Unknown xml!");
-					break;
-				default:
-					this.dataArray.add(getData.getValueByName("Message"));
-					break;
-				}
+				status = Integer.parseInt(dataArray.get(1));
 
 			} catch (Exception e) {
 
-				loggerSevere.severe("Error: Can't save data from TSM "
+				loggerSevere.severe("Error: Can't parse status. "
 						+ e.getMessage());
 
-				e.printStackTrace();
+				dataArray.set(1, "-99");
 
 			}
+			switch (status) {
+			case 1:
+				dataArray.add("Заявка успешно создана!");
+				break;
+			case 0:
+				dataArray.add("Отказ в кредите!");
+				break;
+			case 2:
+				dataArray.add("Заявка одобрена!");
+				break;
+			case 3:
+				dataArray.add("Заявка отправлена в обработку!");
+				break;
+			case 4:
+				dataArray.add("Кредит выдан!");
+				break;
+			case -99:
+				dataArray.add("Unknown xml!");
+				break;
+			default:
+				dataArray.add(getData.getValueByName("Message"));
+				break;
+			}
 
-			try {
+		} catch (Exception e) {
 
-				if (flag_tsm) {
+			loggerSevere.severe("Error: Can't save data from TSM "
+					+ e.getMessage());
 
-					if (CRMMqJms.logTsmApp) {
+			e.printStackTrace();
 
-						DbOperation.getInstance().evalOperation(3,
-								this.dataArray);
+		}
 
-					}
+		try {
 
-				} else {
+			if (flag_tsm) {
 
-					DbOperation.getInstance().evalOperation(2, this.dataArray);
+				if (CRMMqJms.logTsmApp) {
+
+					DbOperation.getInstance().evalOperation(3, dataArray);
+
 				}
 
-			} catch (Exception e) {
+			} else {
 
-				loggerSevere.severe(e.getMessage());
-
-				e.printStackTrace();
-
+				DbOperation.getInstance().evalOperation(2, dataArray);
 			}
 
-		} catch (JMSException e) {
+		} catch (Exception e) {
 
 			loggerSevere.severe(e.getMessage());
 
 			e.printStackTrace();
+
 		}
 
 	}

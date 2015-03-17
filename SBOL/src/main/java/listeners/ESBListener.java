@@ -6,7 +6,6 @@ import static tools.PropCheck.loggerSevere;
 
 import java.util.ArrayList;
 
-import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
@@ -21,8 +20,6 @@ import db.DbOperation;
  */
 public class ESBListener implements MessageListener {
 
-	private ArrayList<String> dataArray = null;
-
 	public ESBListener() {
 
 		loggerInfo.info("Init ESBListener!");
@@ -32,94 +29,85 @@ public class ESBListener implements MessageListener {
 	@Override
 	public void onMessage(Message inputMsg) {
 
-		this.dataArray = new ArrayList<String>(6);
+		ArrayList<String> dataArray = new ArrayList<String>(6);
+
+		String request = parseMessMQ(inputMsg);
+
+		GetData getData = GetData.getInstance(request);
 
 		try {
 
-			String request = parseMessMQ(inputMsg);
+			dataArray.add(getData.getValueByName("RqUID"));
 
-			GetData getData = new GetData(request);
+			dataArray.add(getData.getValueByName("StatusCode"));
 
-			try {
+			dataArray.add(getData.getValueByName("ApplicationNumber"));
 
-				this.dataArray.add(getData.getValueByName("RqUID"));
+			if (dataArray.get(2).length() == 0) {
 
-				this.dataArray.add(getData.getValueByName("StatusCode"));
+				dataArray.set(2, "null");
 
-				this.dataArray.add(getData.getValueByName("ApplicationNumber"));
+				dataArray.add(getData.getValueByName("ErrorCode"));
 
-				if (this.dataArray.get(2).length() == 0) {
+				dataArray.add(getData.getValueByName("Message"));
 
-					this.dataArray.set(2, "null");
+			} else {
 
-					this.dataArray.add(getData.getValueByName("ErrorCode"));
+				String error_code = getData.getValueByName("ErrorCode");
 
-					this.dataArray.add(getData.getValueByName("Message"));
+				if (error_code.length() > 0) {
+
+					dataArray.add(error_code);
 
 				} else {
 
-					String error_code = getData.getValueByName("ErrorCode");
-
-					if (error_code.length() > 0) {
-
-						this.dataArray.add(error_code);
-
-					} else {
-
-						this.dataArray.add("0");
-					}
-
-					switch (Integer.valueOf(this.dataArray.get(1))) {
-
-					case -1:
-						this.dataArray.add("Ошибки заполнения");
-						break;
-					case 0:
-						this.dataArray.add("Отказ");
-						break;
-					case 1:
-						this.dataArray.add("Заявка создана успешно");
-						break;
-					case 2:
-						this.dataArray.add("Одобрена");
-						break;
-					case 3:
-						this.dataArray.add("Обрабатывается");
-						break;
-					case 4:
-						this.dataArray.add("Кредит Выдан");
-						break;
-					default:
-						break;
-					}
-
+					dataArray.add("0");
 				}
 
-			} catch (Exception e) {
+				switch (Integer.parseInt(dataArray.get(1))) {
 
-				loggerSevere.severe(e.getMessage());
-
-				e.printStackTrace();
+				case -1:
+					dataArray.add("Ошибки заполнения");
+					break;
+				case 0:
+					dataArray.add("Отказ");
+					break;
+				case 1:
+					dataArray.add("Заявка создана успешно");
+					break;
+				case 2:
+					dataArray.add("Одобрена");
+					break;
+				case 3:
+					dataArray.add("Обрабатывается");
+					break;
+				case 4:
+					dataArray.add("Кредит Выдан");
+					break;
+				default:
+					break;
+				}
 
 			}
 
-			try {
-
-				DbOperation.getInstance().evalOperation(2, this.dataArray);
-
-			} catch (Exception e) {
-
-				loggerSevere.severe(e.getMessage());
-
-				e.printStackTrace();
-
-			}
-
-		} catch (JMSException e) {
+		} catch (Exception e) {
 
 			loggerSevere.severe(e.getMessage());
 
 			e.printStackTrace();
+
+		}
+
+		try {
+
+			DbOperation.getInstance().evalOperation(2, dataArray);
+
+		} catch (Exception e) {
+
+			loggerSevere.severe(e.getMessage());
+
+			e.printStackTrace();
+
 		}
 
 	}

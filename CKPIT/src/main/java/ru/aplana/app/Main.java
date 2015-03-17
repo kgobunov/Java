@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -52,7 +53,7 @@ public class Main implements Runnable {
 
 	public static AtomicInteger count = new AtomicInteger(101);
 
-	public static volatile boolean flag = false;
+	public static AtomicBoolean flag = new AtomicBoolean(false);
 
 	public static AtomicInteger countSetListener = new AtomicInteger(0);
 
@@ -84,12 +85,22 @@ public class Main implements Runnable {
 
 	private static final Lock lock = new ReentrantLock();
 
-	public Main() throws NumberFormatException, JMSException {
+	public Main() {
 
 		// connect to mq
-		this.factory = MQConn.getFactory();
+		try {
 
-		this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+			this.factory = MQConn.getFactory();
+
+			this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 
@@ -99,9 +110,9 @@ public class Main implements Runnable {
 
 	public void run() {
 
-		if (flag == false) {
+		if (flag.get() == false) {
 
-			flag = true;
+			flag.set(true);
 		}
 
 		if (debug) {
@@ -132,7 +143,7 @@ public class Main implements Runnable {
 
 							flagReconnect = true;
 
-							flag = false;
+							flag.set(false);
 
 							loggerInfo.info("Connection to MQ closed.");
 
@@ -200,7 +211,7 @@ public class Main implements Runnable {
 
 				flagReconnect = false;
 
-				flag = true;
+				flag.set(true);
 
 				if (debug) {
 
@@ -262,7 +273,7 @@ public class Main implements Runnable {
 
 			ArrayList<String> data = new ArrayList<String>();
 
-			while (flag) {
+			while (flag.get()) {
 
 				if ((count.get() > 453) && (count.get() > 679)) {
 
@@ -317,7 +328,7 @@ public class Main implements Runnable {
 
 				if (count.get() > 1144) {
 
-					flag = false;
+					flag.set(false);
 
 					count.getAndSet(101);
 

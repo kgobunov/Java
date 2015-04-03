@@ -1,10 +1,15 @@
 package tools;
 
+import static tools.WebAppContext.loggerInfoBlack;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.namespace.QName;
 
@@ -13,16 +18,19 @@ import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.OMFactory;
 
 /**
- * Class include staff.
+ * Staff functions.
  * 
  * @author Maksim Stepanov
  * 
  */
 public class Staff {
 
-	public static HashMap<String, Integer> errorServers = new HashMap<String, Integer>();
+	public static final ConcurrentHashMap<String, Integer> errorServers = new ConcurrentHashMap<String, Integer>();
 
-	public static HashMap<String, Integer> blackList = new HashMap<String, Integer>();
+	public static final ConcurrentHashMap<String, Integer> blackList = new ConcurrentHashMap<String, Integer>();
+
+	private Staff() {
+	}
 
 	/**
 	 * Parsing url for two component ip and port
@@ -31,7 +39,7 @@ public class Staff {
 	 *            for parsing
 	 * @return array with ip and port
 	 */
-	public static final Vector<String> parsingUrl(String url) {
+	public static Vector<String> parsingUrl(String url) {
 
 		Vector<String> data = new Vector<String>(2);
 
@@ -79,20 +87,42 @@ public class Staff {
 	 */
 	public static void clearBadUrl() {
 
-		if (Staff.blackList.size() > 0) {
+		int blackListSize = blackList.size();
 
-			WebAppContext.loggerInfoBlack.info("Hash size before clearing: "
-					+ Staff.blackList.size());
+		int errorServersSize = errorServers.size();
 
-			Staff.blackList.clear();
+		if (blackListSize > 0 && errorServersSize > 0) {
 
-			WebAppContext.loggerInfoBlack.info("Black list cleared in "
-					+ new Date());
+			ReturnURL.clearList.set(true);
 
-			WebAppContext.loggerInfoBlack.info("Hash size after clearing: "
-					+ Staff.blackList.size());
+			loggerInfoBlack.info("BlackList size before clearing: "
+					+ blackListSize);
+
+			loggerInfoBlack.info("ErrorServers size before clearing: "
+					+ errorServersSize);
+
+			blackList.clear();
+
+			errorServers.clear();
+
+			loggerInfoBlack.info("BlackList cleared in " + new Date());
+
+			loggerInfoBlack.info("ErrorsServers cleared in " + new Date());
+			
+			blackListSize = blackList.size();
+
+			errorServersSize = errorServers.size();
+
+			loggerInfoBlack.info("BlackList size after clearing: "
+					+ blackListSize);
+
+			loggerInfoBlack.info("Hash size after clearing: "
+					+ errorServersSize);
+
+			ReturnURL.clearList.set(false);
 
 		}
+
 	}
 
 	/**
@@ -148,6 +178,57 @@ public class Staff {
 		}
 
 		return servers;
+
+	}
+
+	public static boolean checkSocket(Vector<String> data) {
+
+		boolean avaliable = false;
+
+		String ip = data.get(1);
+
+		int port = Integer.parseInt(data.get(0));
+
+		Socket sc = new Socket();
+
+		try {
+
+			sc.connect(new InetSocketAddress(ip, port), 500);
+
+			avaliable = true;
+
+			if (WebAppContext.debug) {
+
+				WebAppContext.loggerInfo.info("Socket opened successfully");
+
+			}
+
+		} catch (IOException e) {
+
+			WebAppContext.loggerSevere.severe("Can't connect to " + ip + ":"
+					+ port);
+
+			e.printStackTrace();
+
+		} finally {
+
+			try {
+
+				sc.close();
+
+				WebAppContext.loggerInfo.info("Socket closed successfully!");
+
+			} catch (IOException e) {
+
+				WebAppContext.loggerSevere.severe("Cann't closed socket!");
+
+				e.printStackTrace();
+			}
+
+			sc = null;
+		}
+
+		return avaliable;
 
 	}
 

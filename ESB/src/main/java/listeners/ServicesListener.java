@@ -19,7 +19,6 @@ import org.apache.axis2.transport.http.HTTPConstants;
 import tools.PropsChecker;
 import tools.Queues;
 
-
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueue;
 import com.ibm.mq.jms.MQQueueConnection;
@@ -44,15 +43,25 @@ public class ServicesListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
-	public ServicesListener(MQQueueConnection connection) throws JMSException {
+	public ServicesListener(MQQueueConnection connection) {
 
 		this.connection = connection;
 
 		this.session = getSession(this.connection, false,
 				MQQueueSession.AUTO_ACKNOWLEDGE);
 
-		this.queueSend = (MQQueue) this.session
-				.createQueue(Queues.SERVICE_GARBAGE_OUT);
+		try {
+
+			this.queueSend = (MQQueue) this.session
+					.createQueue(Queues.SERVICE_GARBAGE_OUT);
+
+			this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
+
+		} catch (JMSException e) {
+
+			e.printStackTrace();
+
+		}
 
 	}
 
@@ -150,18 +159,15 @@ public class ServicesListener implements MessageListener {
 
 			// send bad message to garbage queue
 
+			MessageProducer producer = null;
+
 			try {
 
 				TextMessage outputMsg = this.session.createTextMessage(request);
 
-				this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
-
-				MessageProducer producer = this.session
-						.createProducer(this.queueSend);
+				producer = this.session.createProducer(this.queueSend);
 
 				producer.send(outputMsg);
-
-				producer.close();
 
 				PropsChecker.loggerInfo.info("OSGI: " + urlOsgi
 						+ "; Message send to " + Queues.SERVICE_GARBAGE_OUT
@@ -175,6 +181,23 @@ public class ServicesListener implements MessageListener {
 						+ e.getMessage());
 
 				e.printStackTrace();
+
+			} finally {
+
+				try {
+
+					if (null != producer) {
+
+						producer.close();
+
+					}
+
+				} catch (JMSException e) {
+
+					e.printStackTrace();
+
+				}
+
 			}
 
 		}

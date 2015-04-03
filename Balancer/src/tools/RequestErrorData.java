@@ -10,30 +10,35 @@ import org.apache.axiom.om.OMElement;
  */
 public class RequestErrorData {
 
-	private int type;
+	private OMElement request;
 
-	private String errorServer;
+	private RequestErrorData(OMElement req) {
 
-	public RequestErrorData(OMElement getUrl) {
-
-		String type = ((OMElement) getUrl.getChildrenWithLocalName("in").next())
-				.getText();
-
-		this.type = Integer.parseInt(new String(type.substring(0, 3)));
-
-		this.errorServer = new String(type.substring(3, type.length()));
+		this.request = req;
 
 	}
 
-	public int getType() {
+	public static RequestErrorData getInstance(OMElement request) {
 
-		return this.type;
+		return new RequestErrorData(request);
 
 	}
 
-	public String getErrorServer() {
+	public final int getType() {
 
-		return this.errorServer;
+		int type = Integer.parseInt(((OMElement) this.request
+				.getChildrenWithLocalName("type").next()).getText());
+
+		return type;
+
+	}
+
+	public final String getErrorServer() {
+
+		String errorServer = ((OMElement) this.request
+				.getChildrenWithLocalName("server").next()).getText();
+
+		return errorServer;
 
 	}
 

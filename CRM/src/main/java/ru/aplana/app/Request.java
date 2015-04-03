@@ -110,7 +110,7 @@ public class Request implements Runnable {
 
 			loggerInfo.info("Count_app_start: " + this.countAppStart);
 
-			loggerInfo.info("Delay: " + delay);
+			loggerInfo.info("Delay: " + this.delay);
 
 			loggerInfo.info("Start time: " + CRMMqJms.startTime);
 

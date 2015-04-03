@@ -13,17 +13,17 @@ import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 
-import tools.MQConn;
-import tools.PropsChecker;
-import tools.Queues;
-
 import listeners.ASYNCListener;
 import listeners.CRMListener;
 import listeners.ERIBListener;
 import listeners.ETSMListener;
 import listeners.FSBListener;
+import listeners.MDMListener;
 import listeners.SAPListener;
 import listeners.ServicesListener;
+import tools.MQConn;
+import tools.PropsChecker;
+import tools.Queues;
 
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueueConnection;
@@ -179,8 +179,14 @@ public class EsbMqJms implements Runnable {
 			// Set listeners and consumers
 			MessageConsumer consumerERIB = getConsumer(this.connection,
 					Queues.ERIB_IN);
-
+			
 			consumerERIB.setMessageListener(new ERIBListener(this.connection));
+			
+
+			MessageConsumer consumerMDM = getConsumer(this.connection,
+					Queues.MDM_IN);
+			
+			consumerMDM.setMessageListener(new MDMListener(this.connection));
 
 			MessageConsumer consumerETSM = getConsumer(this.connection,
 					Queues.ETSM_IN);

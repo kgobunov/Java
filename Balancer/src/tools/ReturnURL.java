@@ -1,93 +1,90 @@
 package tools;
 
-import java.io.IOException;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.namespace.QName;
 
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
-import org.apache.axiom.om.OMException;
 import org.apache.axiom.om.OMFactory;
 
 /**
  * 
- * Class return good url for login user
+ * Return avaliable url for login user
  * 
  * @author Maksim Stepanov
  * 
  */
 public class ReturnURL {
 
-	private boolean flag = true;
+	private final int type;
 
-	private OMElement urlFinal = null;
+	private static Lock lockKI = new ReentrantLock();
 
-	private String url = null;
+	private static Lock lockUW = new ReentrantLock();
 
-	public ReturnURL(int type) throws OMException, IOException {
+	public static AtomicBoolean clearList = new AtomicBoolean(false);
 
-		switch (type) {
+	private ReturnURL(int type) {
+
+		this.type = type;
+
+	}
+
+	public static ReturnURL getInstance(int type) {
+
+		return new ReturnURL(type);
+
+	}
+
+	@SuppressWarnings("static-access")
+	public final OMElement getUrl() {
+
+		long time = System.currentTimeMillis();
+
+		boolean flag = true;
+
+		OMElement urlFinal = null;
+
+		String url = "";
+
+		OMFactory factory = OMAbstractFactory.getOMFactory();
+
+		switch (this.type) {
 
 		case 0:
 
-			while (this.flag) {
+			int countTryKI = 1;
 
-				if (WebAppContext.ready) {
+			while (flag) {
 
-					this.url = WebAppContext.getNextUrlKI();
+				if (WebAppContext.ready.get()) {
 
-					if (null != this.url
-							&& !(Staff.errorServers.containsKey(this.url))) {
+					this.lockKI.lock();
 
-						Vector<String> vector = Staff.parsingUrl(this.url);
+					try {
 
-						if (CheckConn.checkSocket(vector)) {
+						url = WebAppContext.getNextUrlKI();
 
-							this.flag = false;
+					} finally {
 
-							OMFactory factory = OMAbstractFactory
-									.getOMFactory();
-
-							this.urlFinal = factory.createOMElement(new QName(
-									"replyInfo"));
-
-							OMElement urlReq = factory
-									.createOMElement(new QName("url"));
-
-							urlReq.setText(this.url);
-
-							this.urlFinal.addChild(urlReq);
-						}
+						this.lockKI.unlock();
 
 					}
 
-				}
-			}
+					if (null != url && !(clearList.get())
+							&& !(Staff.errorServers.containsKey(url))) {
 
-			break;
+						Vector<String> vector = Staff.parsingUrl(url);
 
-		case 1:
+						if (Staff.checkSocket(vector)) {
 
-			while (this.flag) {
+							flag = false;
 
-				if (WebAppContext.ready) {
-
-					this.url = WebAppContext.getNextUrlUND();
-
-					if (null != this.url
-							&& !(Staff.errorServers.containsKey(this.url))) {
-
-						Vector<String> vector = Staff.parsingUrl(this.url);
-
-						if (CheckConn.checkSocket(vector)) {
-
-							this.flag = false;
-
-							OMFactory factory = OMAbstractFactory
-									.getOMFactory();
-
-							this.urlFinal = factory.createOMElement(new QName(
+							urlFinal = factory.createOMElement(new QName(
 									"replyInfo"));
 
 							OMElement urlReq = factory
@@ -95,10 +92,151 @@ public class ReturnURL {
 
 							urlReq.setText(url);
 
-							this.urlFinal.addChild(urlReq);
+							urlFinal.addChild(urlReq);
+
 						}
 
+					} else {
+
+						if (countTryKI == WebAppContext.sizeKI) {
+
+							flag = false;
+
+							urlFinal = factory.createOMElement(new QName(
+									"replyInfo"));
+
+							OMElement urlReq = factory
+									.createOMElement(new QName("url"));
+
+							urlReq.setText("all urls ki in error list");
+
+							urlFinal.addChild(urlReq);
+
+							WebAppContext.loggerSevere
+									.severe("All urls ki in error list!");
+
+						} else {
+
+							if (Staff.errorServers.containsKey(url)) {
+
+								countTryKI++;
+
+							}
+						}
 					}
+
+				}
+
+				if ((System.currentTimeMillis() - time) > 100000) {
+
+					flag = false;
+
+					urlFinal = factory.createOMElement(new QName("replyInfo"));
+
+					OMElement urlReq = factory
+							.createOMElement(new QName("url"));
+
+					urlReq.setText("Step download timeout error!");
+
+					urlFinal.addChild(urlReq);
+
+					WebAppContext.loggerSevere
+							.severe("Step download timeout error!");
+
+				}
+
+			}
+
+			break;
+
+		case 1:
+
+			int countTryUW = 1;
+
+			while (flag) {
+
+				if (WebAppContext.ready.get()) {
+
+					this.lockUW.lock();
+
+					try {
+
+						url = WebAppContext.getNextUrlUND();
+
+					} finally {
+
+						this.lockUW.unlock();
+
+					}
+
+					if (null != url && !(clearList.get())
+							&& !(Staff.errorServers.containsKey(url))) {
+
+						Vector<String> vector = Staff.parsingUrl(url);
+
+						if (Staff.checkSocket(vector)) {
+
+							flag = false;
+
+							urlFinal = factory.createOMElement(new QName(
+									"replyInfo"));
+
+							OMElement urlReq = factory
+									.createOMElement(new QName("url"));
+
+							urlReq.setText(url);
+
+							urlFinal.addChild(urlReq);
+
+						}
+
+					} else {
+
+						if (countTryUW == WebAppContext.sizeUND) {
+
+							flag = false;
+
+							urlFinal = factory.createOMElement(new QName(
+									"replyInfo"));
+
+							OMElement urlReq = factory
+									.createOMElement(new QName("url"));
+
+							urlReq.setText("all urls uw in error list");
+
+							urlFinal.addChild(urlReq);
+
+							WebAppContext.loggerSevere
+									.severe("All urls uw in error list!");
+
+						} else {
+
+							if (Staff.errorServers.containsKey(url)) {
+
+								countTryUW++;
+
+							}
+
+						}
+					}
+
+				}
+
+				if ((System.currentTimeMillis() - time) > 100000) {
+
+					flag = false;
+
+					urlFinal = factory.createOMElement(new QName("replyInfo"));
+
+					OMElement urlReq = factory
+							.createOMElement(new QName("url"));
+
+					urlReq.setText("Step download timeout error!");
+
+					urlFinal.addChild(urlReq);
+
+					WebAppContext.loggerSevere
+							.severe("Step download timeout error!");
 
 				}
 
@@ -113,11 +251,8 @@ public class ReturnURL {
 			WebAppContext.loggerInfo.info("Avaliable url: " + urlFinal);
 		}
 
-	}
+		return urlFinal;
 
-	public final OMElement getUrl() {
-
-		return this.urlFinal;
 	}
 
 }

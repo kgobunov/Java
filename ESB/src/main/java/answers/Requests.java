@@ -18,6 +18,7 @@ import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
 import javax.xml.soap.SOAPPart;
 
+import ru.aplana.tools.GetData;
 import ru.aplana.tools.RandomCreditCardNumberGenerator;
 
 /**
@@ -41,7 +42,7 @@ public class Requests {
 	private Requests() {
 
 	}
-	
+
 	public static SOAPMessage getSOAPMessage(ArrayList<String> dataRq) {
 
 		SOAPMessage soapMessage = null;
@@ -925,4 +926,61 @@ public class Requests {
 
 	}
 
+	public static String mdmResponse(String request) {
+
+		String response = "";
+
+		GetData xmlData = GetData.getInstance(request);
+
+		String rqUID = xmlData.getValueByName("RqUID");
+
+		String lastName = xmlData.getValueByName("LastName");
+
+		String firstName = xmlData.getValueByName("FirstName");
+
+		String middleName = xmlData.getValueByName("MiddleName");
+
+		String birthDay = xmlData.getValueByName("Birthday");
+
+		String gender = xmlData.getValueByName("Gender");
+
+		String idType = xmlData.getValueByName("IdType");
+
+		String idSeries = xmlData.getValueByName("IdSeries");
+
+		String idNum = xmlData.getValueByName("IdNum");
+
+		@SuppressWarnings("unused")
+		String searchType = xmlData.getValueByName("SearchType");
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("<CustInqRs>").append("<Status>").append("<StatusCode>")
+				.append("0").append("</StatusCode>").append("<Severity>")
+				.append("Info").append("</Severity>").append("</Status>")
+				.append("<RqUID>").append(rqUID).append("</RqUID>")
+				.append("<CustRec>").append("<CustId>").append("<SPName>")
+				.append("MDM").append("</SPName>").append("<CustPermId>")
+				.append("113407506868642424").append("</CustPermId>")
+				.append("</CustId>").append("<CustInfo>")
+				.append("<PersonInfo>").append("<PersonName>")
+				.append("<LastName>").append(lastName).append("</LastName>")
+				.append("<FirstName>").append(firstName).append("</FirstName>")
+				.append("<MiddleName>").append(middleName)
+				.append("</MiddleName>").append("</PersonName>")
+				.append("<Gender>").append(gender).append("</Gender>")
+				.append("<Birthday>").append(birthDay).append("</Birthday>")
+				.append("<IdentityCard>").append("<IdType>").append(idType)
+				.append("</IdType>").append("<IdSeries>").append(idSeries)
+				.append("</IdSeries>").append("<IdNum>").append(idNum)
+				.append("</IdNum>").append("<IdStatus>").append("1")
+				.append("</IdStatus>").append("</IdentityCard>")
+				.append("</PersonInfo>").append("</CustInfo>")
+				.append("</CustRec>").append("</CustInqRs>");
+
+		response = sb.toString();
+
+		return response;
+
+	}
 }

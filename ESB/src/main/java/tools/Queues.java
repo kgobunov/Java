@@ -23,6 +23,8 @@ public class Queues {
 	
 	public final static String FSB_OUT = esb.getChildText("queueToFsb");
 	
+	public final static String MDM_OUT = esb.getChildText("queueToTSMMDM");
+	
 	//garbage queue
 	public final static String GARBAGE_OUT = esb.getChildText("queueToGarbage");
 	
@@ -33,6 +35,8 @@ public class Queues {
 	// consumer's queues
 	
 	public final static String ERIB_IN = esb.getChildText("queueFromErib");
+	
+	public final static String MDM_IN = esb.getChildText("queueFromTSMMDM");
 	
 	public final static String ETSM_IN = esb.getChildText("queueFromEtsm");
 	

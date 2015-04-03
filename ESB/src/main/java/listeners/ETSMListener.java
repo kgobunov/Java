@@ -37,7 +37,7 @@ public class ETSMListener implements MessageListener {
 
 	private boolean debug;
 
-	public ETSMListener(MQQueueConnection connection) throws JMSException {
+	public ETSMListener(MQQueueConnection connection) {
 
 		this.connection = connection;
 

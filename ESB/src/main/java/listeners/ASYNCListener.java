@@ -41,14 +41,24 @@ public class ASYNCListener implements MessageListener {
 
 	private boolean flagError = false;
 
-	public ASYNCListener(MQQueueConnection connection) throws JMSException {
+	public ASYNCListener(MQQueueConnection connection) {
 
 		this.connection = connection;
 
 		this.session = getSession(this.connection, false,
 				MQQueueSession.AUTO_ACKNOWLEDGE);
 
-		this.queueSend = (MQQueue) this.session.createQueue(Queues.ETSM_OUT);
+		try {
+
+			this.queueSend = (MQQueue) this.session
+					.createQueue(Queues.ETSM_OUT);
+
+			this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
+
+		} catch (JMSException e) {
+
+			e.printStackTrace();
+		}
 
 		this.debug = EsbMqJms.debug;
 
@@ -70,6 +80,7 @@ public class ASYNCListener implements MessageListener {
 
 				PropsChecker.loggerInfo
 						.info("Stub[ASYNC] - Message from ETSM: " + request);
+
 			}
 
 			GetData processRq = GetData.getInstance(request);
@@ -225,8 +236,6 @@ public class ASYNCListener implements MessageListener {
 			}
 
 			TextMessage outputMsg = this.session.createTextMessage(response);
-
-			this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
 
 			producer = this.session.createProducer(this.queueSend);
 

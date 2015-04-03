@@ -10,6 +10,7 @@ import java.util.Vector;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
@@ -31,9 +32,11 @@ public class WebAppContext implements ServletContextListener {
 
 	private static Vector<String> urlArrayUND;
 
-	private static int sizeKI;
+	public static int sizeKI;
 
-	private static int sizeUND;
+	public static int sizeUND;
+
+	private static int countUrls;
 
 	public static boolean debug;
 
@@ -55,9 +58,7 @@ public class WebAppContext implements ServletContextListener {
 
 	public static Logger loggerSevereBlack = null;
 
-	public static volatile boolean ready = false;
-
-	private boolean stopped = false;
+	public static AtomicBoolean ready = new AtomicBoolean(false);
 
 	private String properties_fname = System.getProperty("user.dir")
 			+ "\\conf\\Balancer.properties";
@@ -70,20 +71,13 @@ public class WebAppContext implements ServletContextListener {
 
 		public PropsChecker() {
 
-			// String properties_fname =
-			// "C:\\Documents and Settings\\tester\\Рабочий стол\\Balancer.properties";
-
 			readProps(false);
 
 		}
 
 		public void run() {
 
-			while (!stopped) {
-
-				checkProps();
-
-			}
+			checkProps();
 
 		}
 
@@ -98,7 +92,7 @@ public class WebAppContext implements ServletContextListener {
 
 				previosModification = lastModification;
 
-				ready = false;
+				ready.set(false);
 
 				readProps(true);
 
@@ -164,12 +158,14 @@ public class WebAppContext implements ServletContextListener {
 
 				sizeUND = getSizeUND();
 
-				ready = true;
+				countUrls = sizeKI + sizeUND;
+
+				ready.set(true);
 
 				loggerInfo.info(">>>All urls loaded successfully!");
 
 				loggerInfo.info(">>>Size KI: " + sizeKI + "; Size Under: "
-						+ sizeUND);
+						+ sizeUND + "; Count urls: " + countUrls);
 
 			} catch (FileNotFoundException e) {
 
@@ -181,12 +177,6 @@ public class WebAppContext implements ServletContextListener {
 
 			}
 		}
-
-	}
-
-	public void shutdown() {
-
-		stopped = true;
 
 	}
 
@@ -287,18 +277,16 @@ public class WebAppContext implements ServletContextListener {
 	 */
 	public void contextDestroyed(ServletContextEvent arg0) {
 
-		shutdown();
-
 		propsChecker.shutdownNow();
 
 		loggerInfo.info(">>>Balancer Stopped!!!!");
 	}
 
-	public synchronized static String getNextUrlKI() {
+	public static String getNextUrlKI() {
 
 		String url = null;
 
-		if (ready) {
+		if (ready.get()) {
 
 			url = urlArrayKI.get(Math.abs(callCounterKI.getAndIncrement()
 					% sizeKI));
@@ -312,11 +300,11 @@ public class WebAppContext implements ServletContextListener {
 		return urlArrayKI.size();
 	}
 
-	public synchronized static String getNextUrlUND() {
+	public static String getNextUrlUND() {
 
 		String url = null;
 
-		if (ready) {
+		if (ready.get()) {
 
 			url = urlArrayUND.get(Math.abs(callCounterUND.getAndIncrement()
 					% sizeUND));

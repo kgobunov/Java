@@ -47,14 +47,25 @@ public class SAPListener implements MessageListener {
 
 	private boolean debug;
 
-	public SAPListener(MQQueueConnection connection) throws JMSException {
+	public SAPListener(MQQueueConnection connection) {
 
 		this.connection = connection;
 
 		this.session = getSession(this.connection, false,
 				MQQueueSession.AUTO_ACKNOWLEDGE);
 
-		this.queueSend = (MQQueue) this.session.createQueue(Queues.ETSM_OUT);
+		try {
+
+			this.queueSend = (MQQueue) this.session
+					.createQueue(Queues.ETSM_OUT);
+
+			this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
+
+		} catch (JMSException e) {
+
+			e.printStackTrace();
+
+		}
 
 		this.debug = EsbMqJms.debug;
 	}
@@ -202,8 +213,6 @@ public class SAPListener implements MessageListener {
 
 				TextMessage outputMsg = this.session
 						.createTextMessage(response);
-
-				this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
 
 				producer = this.session.createProducer(this.queueSend);
 

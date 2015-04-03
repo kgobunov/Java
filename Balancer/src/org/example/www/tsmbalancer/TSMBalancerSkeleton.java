@@ -6,12 +6,12 @@
  */
 package org.example.www.tsmbalancer;
 
-import java.io.IOException;
+import static tools.WebAppContext.loggerInfoBlack;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.axiom.om.OMElement;
-import org.apache.axiom.om.OMException;
 
 import tools.RequestData;
 import tools.RequestErrorData;
@@ -24,6 +24,7 @@ import tools.WebAppContext;
  */
 public class TSMBalancerSkeleton {
 
+	
 	/**
 	 * Add bad url to black list
 	 * 
@@ -33,7 +34,7 @@ public class TSMBalancerSkeleton {
 	 */
 	public OMElement setBadUrl(OMElement setBadUrl) {
 
-		RequestErrorData errorData = new RequestErrorData(setBadUrl);
+		RequestErrorData errorData = RequestErrorData.getInstance(setBadUrl);
 
 		String server = errorData.getErrorServer();
 
@@ -41,7 +42,7 @@ public class TSMBalancerSkeleton {
 
 		if (WebAppContext.debug) {
 
-			WebAppContext.loggerInfoBlack.info("Date: " + new Date()
+			loggerInfoBlack.info("Date: " + new Date()
 					+ ". Bad server: " + server + "; Error code: " + type);
 
 		}
@@ -66,11 +67,11 @@ public class TSMBalancerSkeleton {
 	 * @return getUrlResponse - response
 	 */
 
-	public OMElement getUrl(OMElement getUrl) throws OMException, IOException {
+	public OMElement getUrl(OMElement getUrl) {
 
-		int type = new RequestData(getUrl).getType();
+		int type = RequestData.getInstance(getUrl).getType();
 
-		return new ReturnURL(type).getUrl();
+		return ReturnURL.getInstance(type).getUrl();
 	}
 
 	/**

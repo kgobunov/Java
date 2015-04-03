@@ -3,31 +3,36 @@ package tools;
 import org.apache.axiom.om.OMElement;
 
 /**
- * Class gets data from request.
+ * Parse request.
  * 
  * @author Maksim Stepanov
- *
+ * 
  */
 public class RequestData {
 
-	private int type;
-	
-	public RequestData(OMElement getUrl) {
+	private OMElement request;
 
-		
-		String type = ((OMElement) getUrl
-					  .getChildrenWithLocalName("in").next()).getText();
-		
-		this.type = Integer.parseInt(type);
-		
-		
+	private RequestData(OMElement req) {
+
+		this.request = req;
+
 	}
 
-	public int getType() {
-		
-		return this.type;
-		
+	public static RequestData getInstance(OMElement req) {
+
+		return new RequestData(req);
+
 	}
-	
+
+	public final int getType() {
+
+		String typeStr = ((OMElement) this.request.getChildrenWithLocalName(
+				"in").next()).getText();
+
+		int type = Integer.parseInt(typeStr);
+
+		return type;
+
+	}
 
 }

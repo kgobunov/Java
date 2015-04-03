@@ -214,6 +214,16 @@
 												</xs:restriction>
 											</xs:simpleType>											
 										</xs:element>
+										<xs:element name="queueToTSMMDM" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>MDM request queue from TSM</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>										
 										<xs:element name="queueToCrm" minOccurs="1" maxOccurs="1">
 											<xs:annotation>
 												<xs:documentation>CRM request queue</xs:documentation>
@@ -264,6 +274,16 @@
 												</xs:restriction>
 											</xs:simpleType>											
 										</xs:element>
+										<xs:element name="queueFromTSMMDM" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>MDM response queuue to TSM</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>										
 										<xs:element name="queueFromEtsm" minOccurs="1" maxOccurs="1">
 											<xs:annotation>
 												<xs:documentation>TSM response queuue</xs:documentation>

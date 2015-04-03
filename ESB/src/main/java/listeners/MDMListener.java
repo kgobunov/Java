@@ -13,6 +13,8 @@ import ru.aplana.app.EsbMqJms;
 import tools.PropsChecker;
 import tools.Queues;
 
+import answers.Requests;
+
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueue;
 import com.ibm.mq.jms.MQQueueConnection;
@@ -25,7 +27,7 @@ import com.ibm.mq.jms.MQQueueSession;
  * 
  */
 @SuppressWarnings("deprecation")
-public class CRMListener implements MessageListener {
+public class MDMListener implements MessageListener {
 
 	private MQQueueSession session;
 
@@ -35,7 +37,7 @@ public class CRMListener implements MessageListener {
 
 	private boolean debug;
 
-	public CRMListener(MQQueueConnection connection) {
+	public MDMListener(MQQueueConnection connection) {
 
 		this.connection = connection;
 
@@ -44,15 +46,14 @@ public class CRMListener implements MessageListener {
 
 		try {
 
-			this.queueSend = (MQQueue) this.session
-					.createQueue(Queues.ETSM_OUT);
+			this.queueSend = (MQQueue) this.session.createQueue(Queues.MDM_OUT);
 
 			this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
 
 		} catch (JMSException e) {
 
 			e.printStackTrace();
-			
+
 		}
 
 		this.debug = EsbMqJms.debug;
@@ -71,11 +72,11 @@ public class CRMListener implements MessageListener {
 
 			if (debug) {
 
-				PropsChecker.loggerInfo.info("Message from CRM: " + request);
+				PropsChecker.loggerInfo
+						.info("Message from TSM_MDM: " + request);
 			}
 
-			// For this system response equals request
-			response = request;
+			response = Requests.mdmResponse(request);
 
 			TextMessage outputMsg = this.session.createTextMessage(response);
 
@@ -85,7 +86,7 @@ public class CRMListener implements MessageListener {
 
 			if (debug) {
 
-				PropsChecker.loggerInfo.info("Request to ETSM from CRM: "
+				PropsChecker.loggerInfo.info("Request to ETSM from MDM: "
 						+ response);
 			}
 
@@ -107,7 +108,7 @@ public class CRMListener implements MessageListener {
 			} catch (JMSException e) {
 
 				e.printStackTrace();
-				
+
 			}
 
 		}

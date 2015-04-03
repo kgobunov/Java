@@ -175,7 +175,7 @@ public class DbOperation {
 
 					String insert = "insert into sbb_monitor.sbol_app ( RQUD, app_number , app_status,  system, description, time ) values (?,?,?,?,?,?)";
 
-					_preparedStatement = connection.prepareStatement(insert);
+					_preparedStatement = this.connection.prepareStatement(insert);
 
 					_preparedStatement.setString(1, dataArray.get(0));
 

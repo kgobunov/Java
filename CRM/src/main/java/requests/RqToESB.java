@@ -105,7 +105,7 @@ public class RqToESB {
 				.append(firstname)
 				.append("</FirstName><MiddleName>")
 				.append(middlename)
-				.append("</MiddleName></PersonName><Sex>1</Sex><Birthday>")
+				.append("</MiddleName></PersonName><NameChangedFlag>false</NameChangedFlag><Sex>1</Sex><Birthday>")
 				.append(birthday)
 				.append("</Birthday><Citizenship>RUSSIA</Citizenship><IdentityCard><IdType>21</IdType><IdSeries>")
 				.append(serial)

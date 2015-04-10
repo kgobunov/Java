@@ -67,7 +67,7 @@ public class WebAppContext implements ServletContextListener {
 
 	private File configFile;
 
-	public class PropsChecker implements Runnable {
+	private class PropsChecker implements Runnable {
 
 		public PropsChecker() {
 

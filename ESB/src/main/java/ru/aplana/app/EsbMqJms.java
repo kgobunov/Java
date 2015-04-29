@@ -63,11 +63,11 @@ public class EsbMqJms implements Runnable {
 
 		// Create factory
 		try {
-			
+
 			this.factory = MQConn.getFactory();
 
 			this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
-			
+
 		} catch (NumberFormatException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -83,7 +83,7 @@ public class EsbMqJms implements Runnable {
 		try {
 
 			// Create connection to MQ
-			this.connection = getConnection(this.factory);
+			this.connection = getConnection(this.factory, null, null);
 
 			// ServicesListener for catch MQ exceptions
 			this.connection.setExceptionListener(new ExceptionListener() {
@@ -179,13 +179,12 @@ public class EsbMqJms implements Runnable {
 			// Set listeners and consumers
 			MessageConsumer consumerERIB = getConsumer(this.connection,
 					Queues.ERIB_IN);
-			
+
 			consumerERIB.setMessageListener(new ERIBListener(this.connection));
-			
 
 			MessageConsumer consumerMDM = getConsumer(this.connection,
 					Queues.MDM_IN);
-			
+
 			consumerMDM.setMessageListener(new MDMListener(this.connection));
 
 			MessageConsumer consumerETSM = getConsumer(this.connection,

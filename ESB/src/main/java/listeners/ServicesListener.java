@@ -82,6 +82,10 @@ public class ServicesListener implements MessageListener {
 
 		} catch (XMLStreamException e2) {
 
+			PropsChecker.loggerSevere
+					.severe("Can't convert string to Omelement! "
+							+ e2.getMessage());
+
 			e2.printStackTrace();
 		}
 
@@ -89,6 +93,7 @@ public class ServicesListener implements MessageListener {
 
 		// Set endpoint with properties
 		try {
+
 			this.ougwsStub = new OUGWSStub(urlOsgi);
 
 			Options opts = this.ougwsStub._getServiceClient().getOptions();
@@ -116,7 +121,14 @@ public class ServicesListener implements MessageListener {
 
 		try {
 
-			ougResponse = ougwsStub.ougWS(ougRequest);
+			long start = System.currentTimeMillis();
+
+			ougResponse = this.ougwsStub.ougWS(ougRequest);
+
+			long end = System.currentTimeMillis();
+
+			PropsChecker.loggerInfo.info("Response time from OSGI " + urlOsgi
+					+ ": " + (end - start) + " ms");
 
 			flag = true;
 
@@ -138,6 +150,9 @@ public class ServicesListener implements MessageListener {
 				this.ougwsStub._getServiceClient().cleanup();
 
 			} catch (AxisFault e) {
+
+				PropsChecker.loggerSevere.severe("Failed clenup! "
+						+ e.getMessage());
 
 				e.printStackTrace();
 
@@ -173,7 +188,7 @@ public class ServicesListener implements MessageListener {
 						+ "; Message send to " + Queues.SERVICE_GARBAGE_OUT
 						+ " successfully!");
 
-			} catch (JMSException e) {
+			} catch (Exception e) {
 
 				PropsChecker.loggerSevere.severe("OSGI: " + urlOsgi
 						+ "; Can't send message to "
@@ -194,6 +209,9 @@ public class ServicesListener implements MessageListener {
 
 				} catch (JMSException e) {
 
+					PropsChecker.loggerSevere.severe("Can't close produser! "
+							+ e.getMessage());
+					
 					e.printStackTrace();
 
 				}

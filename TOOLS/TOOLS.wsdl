@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://ru.aplana.com/TOOLS/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="TOOLS" targetNamespace="http://ru.aplana.com/TOOLS/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://ru.aplana.com/TOOLS/">
+      <xsd:element name="getInfoForCardVIP">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="in" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="getInfoForCardVIPResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="out" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="getAction">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="product" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="getActionResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="product_out" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>	  
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="getInfoForCardVIPRequest">
+    <wsdl:part element="tns:getInfoForCardVIP" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="getInfoForCardVIPResponse">
+    <wsdl:part element="tns:getInfoForCardVIPResponse" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="getActionRequest">
+    <wsdl:part element="tns:getAction" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="getActionResponse">
+    <wsdl:part element="tns:getActionResponse" name="parameters"/>
+  </wsdl:message>  
+  <wsdl:portType name="TOOLS">
+    <wsdl:operation name="getInfoForCardVIP">
+      <wsdl:input message="tns:getInfoForCardVIPRequest"/>
+      <wsdl:output message="tns:getInfoForCardVIPResponse"/>
+    </wsdl:operation>
+    <wsdl:operation name="getAction">
+      <wsdl:input message="tns:getActionRequest"/>
+      <wsdl:output message="tns:getActionResponse"/>
+    </wsdl:operation>	
+  </wsdl:portType>
+  <wsdl:binding name="TOOLSSOAP" type="tns:TOOLS">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="getInfoForCardVIP">
+      <soap:operation soapAction="http://ru.aplana.com/TOOLS/getInfoForCardVIP"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="getAction">
+      <soap:operation soapAction="http://ru.aplana.com/TOOLS/getAction"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>	
+  </wsdl:binding>
+  <wsdl:service name="TOOLS">
+    <wsdl:port binding="tns:TOOLSSOAP" name="TOOLSSOAP">
+      <soap:address location="http://www.example.org/"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

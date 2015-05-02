@@ -16,7 +16,6 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
  * 
  * Version: 1.0
  * 
- * Copyright: OOO Aplana
  * 
  * MQ settings
  * 

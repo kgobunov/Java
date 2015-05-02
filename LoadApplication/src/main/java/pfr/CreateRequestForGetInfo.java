@@ -22,7 +22,6 @@ import ru.aplana.tools.Common;
  * 
  * Version: 1.0
  * 
- * Copyright: OOO Aplana
  * 
  * Get info about person
  * 

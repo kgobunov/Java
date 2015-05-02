@@ -13,7 +13,6 @@ import ru.aplana.app.Initialization;
  * 
  * Version: 1.1
  * 
- * Copyright: OOO Aplana
  * 
  * Requests initialization
  * 

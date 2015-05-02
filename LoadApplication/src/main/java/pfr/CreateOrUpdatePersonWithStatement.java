@@ -21,7 +21,6 @@ import ru.aplana.tools.Common;
  * 
  * Version: 1.0
  * 
- * Copyright: OOO Aplana
  * 
  * Create or update statement
  * 

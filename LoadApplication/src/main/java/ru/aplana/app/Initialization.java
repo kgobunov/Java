@@ -46,7 +46,6 @@ import connections.SaveCorrId;
  * 
  * Version: 1.1
  * 
- * Copyright: OOO Aplana
  * 
  * Init application
  * 

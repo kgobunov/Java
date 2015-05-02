@@ -16,7 +16,6 @@ import com.ibm.mq.jms.MQQueueSession;
  * 
  * Version: 1.1
  * 
- * Copyright: OOO Aplana
  * 
  * @author Maksim Stepanov
  * 

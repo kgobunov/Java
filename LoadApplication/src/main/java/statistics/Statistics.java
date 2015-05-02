@@ -2,8 +2,6 @@ package statistics;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import ru.aplana.app.Initialization;
 
@@ -21,9 +19,9 @@ public class Statistics implements Runnable {
 
 	private String sysName; // system name
 
-	private int countRequest; //
+	private int countRequest; // intensity
 
-	private int sizeFlush;
+	private int sizeFlush; // size for flush
 
 	public Statistics(String sysName, int countReq, int flushTime) {
 
@@ -42,9 +40,6 @@ public class Statistics implements Runnable {
 
 		if (size > this.sizeFlush) {
 
-			Lock lock = new ReentrantLock();
-
-			lock.lock();
 
 			try {
 
@@ -73,10 +68,7 @@ public class Statistics implements Runnable {
 
 				e.printStackTrace();
 
-			} finally {
-
-				lock.unlock();
-			}
+			} 
 
 		}
 

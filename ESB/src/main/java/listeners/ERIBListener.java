@@ -2,6 +2,7 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
+import static tools.PropsChecker.debug;
 
 import java.util.ArrayList;
 
@@ -11,7 +12,6 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
-import ru.aplana.app.EsbMqJms;
 import ru.aplana.tools.GetData;
 import tools.PropsChecker;
 import tools.Queues;
@@ -37,8 +37,6 @@ public class ERIBListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
-	private boolean debug;
-
 	public ERIBListener(MQQueueConnection connection) {
 
 		this.connection = connection;
@@ -59,8 +57,6 @@ public class ERIBListener implements MessageListener {
 
 		}
 
-		this.debug = EsbMqJms.debug;
-
 	}
 
 	public void onMessage(Message inputMsg) {
@@ -75,7 +71,7 @@ public class ERIBListener implements MessageListener {
 
 			String response = null;
 
-			if (this.debug) {
+			if (debug.get()) {
 
 				PropsChecker.loggerInfo.info("Message from ERIB: " + request);
 			}
@@ -135,7 +131,7 @@ public class ERIBListener implements MessageListener {
 
 			producer.send(outputMsg);
 
-			if (this.debug) {
+			if (debug.get()) {
 
 				PropsChecker.loggerInfo.info("Request to ETSM from ERIB: "
 						+ response);
@@ -160,7 +156,7 @@ public class ERIBListener implements MessageListener {
 				} catch (JMSException e) {
 
 					e.printStackTrace();
-					
+
 				}
 
 			}

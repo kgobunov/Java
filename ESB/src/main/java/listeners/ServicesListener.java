@@ -2,6 +2,11 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
+import static tools.PropsChecker.debug;
+
+import java.io.StringReader;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -9,12 +14,16 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.util.AXIOMUtil;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.client.Options;
 import org.apache.axis2.transport.http.HTTPConstants;
+import org.xml.sax.InputSource;
 
 import tools.PropsChecker;
 import tools.Queues;
@@ -42,6 +51,11 @@ public class ServicesListener implements MessageListener {
 	private MQQueue queueSend;
 
 	private MQQueueConnection connection;
+
+	private static SimpleDateFormat sdf = new SimpleDateFormat(
+			"yyyy-MM-dd'T'hh:mm:ss.SSSSSS");
+
+	private XPath xPath = XPathFactory.newInstance().newXPath();
 
 	public ServicesListener(MQQueueConnection connection) {
 
@@ -71,7 +85,28 @@ public class ServicesListener implements MessageListener {
 
 		request = parseMessMQ(inputMsg);
 
-		PropsChecker.loggerInfo.info("Request to OSGI: " + request);
+		if (debug.get()) {
+
+			PropsChecker.loggerInfo.info("Request to OSGI: " + request);
+
+		}
+
+		String workflowName = "undefined";
+
+		if (request != null) {
+
+			try {
+
+				workflowName = this.xPath.evaluate("//workflow_name",
+						new InputSource(new StringReader(request)));
+
+			} catch (XPathExpressionException e1) {
+
+				e1.printStackTrace();
+
+			}
+
+		}
 
 		OMElement ougRequest = null;
 
@@ -119,6 +154,18 @@ public class ServicesListener implements MessageListener {
 
 		boolean flag = false;
 
+		if (debug.get()) {
+
+			PropsChecker.loggerInfo.info("Object: " + this);
+
+		}
+
+		Thread t = Thread.currentThread();
+
+		String threadName = t.getName();
+
+		long threadId = t.getId();
+
 		try {
 
 			long start = System.currentTimeMillis();
@@ -127,15 +174,28 @@ public class ServicesListener implements MessageListener {
 
 			long end = System.currentTimeMillis();
 
-			PropsChecker.loggerInfo.info("Response time from OSGI " + urlOsgi
-					+ ": " + (end - start) + " ms");
+			if (debug.get()) {
+
+				PropsChecker.loggerInfo.info("Time: "
+						+ sdf.format(new Date(System.currentTimeMillis()))
+						+ "; Workflow: " + workflowName
+						+ "; Thread info: ID - " + threadId + "; " + threadName
+						+ "; Start time to UG " + sdf.format(new Date(start))
+						+ "; End time to UG " + sdf.format(new Date(end))
+						+ "; Response time from UG " + urlOsgi + ": "
+						+ (end - start) + " ms");
+
+			}
 
 			flag = true;
 
 		} catch (Exception e) {
 
-			PropsChecker.loggerSevere.severe("OSGI url: " + urlOsgi
-					+ ";Can't send to OSGI: " + request + "; Error message: "
+			PropsChecker.loggerSevere.severe("Time: "
+					+ sdf.format(new Date(System.currentTimeMillis()))
+					+ "Workflow:" + workflowName + "; Thread info: ID - "
+					+ threadId + "; " + threadName + "; OSGI url: " + urlOsgi
+					+ "; Can't send to OSGI: " + request + "; Error message: "
 					+ e.getMessage());
 
 			e.printStackTrace();
@@ -164,8 +224,12 @@ public class ServicesListener implements MessageListener {
 
 		if (flag) {
 
-			PropsChecker.loggerInfo.info("Send to " + urlOsgi
-					+ "; OSGI response: " + ougResponse.toString());
+			if (debug.get()) {
+
+				PropsChecker.loggerInfo.info("Send to " + urlOsgi
+						+ "; OSGI response: " + ougResponse.toString());
+
+			}
 
 		} else {
 
@@ -211,7 +275,7 @@ public class ServicesListener implements MessageListener {
 
 					PropsChecker.loggerSevere.severe("Can't close produser! "
 							+ e.getMessage());
-					
+
 					e.printStackTrace();
 
 				}
@@ -221,5 +285,4 @@ public class ServicesListener implements MessageListener {
 		}
 
 	}
-
 }

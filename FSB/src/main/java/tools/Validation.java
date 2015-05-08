@@ -59,10 +59,10 @@ public class Validation {
 
 		} catch (SAXException e) {
 
-			PropCheck.loggerSevere.severe(xmlFile.getSystemId()
+			System.err.println(xmlFile.getSystemId()
 					+ " is not valid");
 
-			PropCheck.loggerSevere.severe("Reason: " + e.getLocalizedMessage());
+			System.err.println("Reason: " + e.getLocalizedMessage());
 
 			e.printStackTrace();
 
@@ -74,7 +74,7 @@ public class Validation {
 
 			if (validFlag) {
 
-				PropCheck.loggerInfo.info(xmlFile.getSystemId() + " is valid");
+				System.out.println(xmlFile.getSystemId() + " is valid");
 
 			}
 

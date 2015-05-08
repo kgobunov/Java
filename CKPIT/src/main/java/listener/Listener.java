@@ -10,6 +10,7 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 
 import ru.aplana.tools.GetData;
+import tools.PropCheck;
 import db.DatabaseOperation;
 
 /**
@@ -32,6 +33,12 @@ public class Listener implements MessageListener {
 		ArrayList<String> dataArray = new ArrayList<String>(3);
 
 		String request = parseMessMQ(inputMsg);
+
+		if (PropCheck.debug) {
+
+			loggerInfo.info("Message from TSM for CKPIT: " + request);
+
+		}
 
 		GetData getData = GetData.getInstance(request);
 

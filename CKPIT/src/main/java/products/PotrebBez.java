@@ -12,7 +12,7 @@ import static  ru.aplana.tools.Common.generateRqUID;
  */
 public class PotrebBez {
 
-	private String xml = null;
+	private String xml = "";
 	
 	private ArrayList<String> data = new ArrayList<String>(2);
 	
@@ -68,6 +68,18 @@ public class PotrebBez {
 					"<tns:SEGMENT_BUSINESS_5>"+
 						"<tns:NAIMEN_NORM_DOC_PO_KRED_FIZ_LIC>Регламент №1863</tns:NAIMEN_NORM_DOC_PO_KRED_FIZ_LIC>"+
 					"</tns:SEGMENT_BUSINESS_5>"+
+				      "<tns:SEGMENT_BUSINESS_14>"+
+				        "<tns:Auto_loan_employees>Y</tns:Auto_loan_employees>"+
+				        "<tns:Auto_loan_salary_proj_participant>Y</tns:Auto_loan_salary_proj_participant>"+
+				        "<tns:Auto_loan_pensioner>Y</tns:Auto_loan_pensioner>"+
+				        "<tns:Auto_loan_akkr_comp_empl>Y</tns:Auto_loan_akkr_comp_empl>"+
+				        "<tns:Auto_loan_street>Y</tns:Auto_loan_street>"+
+				        "<tns:DSA_Auto_loan_employees>Y</tns:DSA_Auto_loan_employees>"+
+				        "<tns:DSA_Auto_loan_salary_proj_participant>Y</tns:DSA_Auto_loan_salary_proj_participant>"+
+				        "<tns:DSA_Auto_loan_pensioner>Y</tns:DSA_Auto_loan_pensioner>"+
+				        "<tns:DSA_Auto_loan_akkr_comp_empl>Y</tns:DSA_Auto_loan_akkr_comp_empl>"+
+				        "<tns:DSA_Auto_loan_street>Y</tns:DSA_Auto_loan_street>"+
+				      "</tns:SEGMENT_BUSINESS_14>"+
 				"</tns:PARAMS_BUSINESS>"+
 				"<tns:PARAMS_BUSINESS_TB TB_CODE=\"0\">"+
 					"<tns:SEGMENT_BUSINESS_1_TB>"+
@@ -337,7 +349,7 @@ public class PotrebBez {
 					"<tns:SEGMENT_TARIFF_1>"+
 						"<tns:SUBPRODUCT_VERSION>1</tns:SUBPRODUCT_VERSION>"+
 						"<tns:VALID_FROM>21042014</tns:VALID_FROM>"+
-						"<tns:VALID_TO>27072019</tns:VALID_TO>"+
+						"<tns:VALID_TO>01042099</tns:VALID_TO>"+
 						"<tns:ACT_SCHEMA_CODE>0</tns:ACT_SCHEMA_CODE>"+
 						"<tns:ACT_SCHEMA_NAME>0</tns:ACT_SCHEMA_NAME>"+
 					"</tns:SEGMENT_TARIFF_1>"+

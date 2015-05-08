@@ -384,6 +384,36 @@
 												</xs:restriction>
 											</xs:simpleType>												
 										</xs:element>
+										<xs:element name="logSize" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Logs size (bytes)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="logCount" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count of log</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="logName" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Name of log</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="3"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>										
 										<xs:element name="osgi" minOccurs="1" maxOccurs="1">
 											<xs:annotation>
 												<xs:documentation>OSGI's urls</xs:documentation>
@@ -500,7 +530,37 @@
 													<xs:pattern value="(\d+\,{1}\d+\,{1}\d+\;{0,1})+"/>
 												</xs:restriction>
 											</xs:simpleType>												
-										</xs:element>										
+										</xs:element>
+										<xs:element name="logSize" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Logs size (bytes)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="logCount" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count of log</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="logName" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Name of log</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="3"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>											
 									</xs:sequence>
 								</xs:complexType>												
 							</xs:element>
@@ -607,7 +667,37 @@
 													<xs:pattern value="(\d+\,{1}\d+\,{1}\d+\,{1}(\d+){1}\;{0,1})+"/>
 												</xs:restriction>
 											</xs:simpleType>												
-										</xs:element>										
+										</xs:element>
+										<xs:element name="logSize" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Logs size (bytes)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="logCount" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count of log</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="logName" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Name of log</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="3"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>											
 									</xs:sequence>
 								</xs:complexType>												
 							</xs:element>
@@ -705,7 +795,37 @@
 													<xs:pattern value="(\d+\,{1}\d+\,{1}(\d+){1}\;{0,1})+"/>
 												</xs:restriction>
 											</xs:simpleType>												
-										</xs:element>										
+										</xs:element>
+										<xs:element name="logSize" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Logs size (bytes)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="logCount" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count of log</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="logName" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Name of log</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="3"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>											
 									</xs:sequence>
 								</xs:complexType>												
 							</xs:element>							
@@ -793,6 +913,36 @@
 													<xs:pattern value="\d+"/>
 												</xs:restriction>
 											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="logSize" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Logs size (bytes)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="logCount" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count of log</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="logName" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Name of log</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="3"/>
+												</xs:restriction>
+											</xs:simpleType>											
 										</xs:element>											
 									</xs:sequence>
 								</xs:complexType>												
@@ -931,7 +1081,37 @@
 													<xs:pattern value="\d+"/>
 												</xs:restriction>
 											</xs:simpleType>												
-										</xs:element>										
+										</xs:element>
+										<xs:element name="logSize" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Logs size (bytes)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="logCount" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count of log</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="logName" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Name of log</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="3"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>											
 									</xs:sequence>
 								</xs:complexType>												
 							</xs:element>							

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
@@ -26,13 +27,13 @@ import tools.Validation;
  */
 public class PropsChecker implements Runnable {
 
+	public static AtomicBoolean debug = new AtomicBoolean();
+
 	public static Logger loggerInfo = null;
 
 	public static Logger loggerSevere = null;
 
 	public static boolean flagListener = false;
-
-	// public static Properties properties = null;
 
 	private static Vector<String> urlArray;
 
@@ -60,6 +61,8 @@ public class PropsChecker implements Runnable {
 
 	private Element root = null;
 
+	private static int size = 0;
+
 	public PropsChecker() {
 
 		this.startTime = System.currentTimeMillis();
@@ -72,23 +75,6 @@ public class PropsChecker implements Runnable {
 
 		urlArray = new Vector<String>(20);
 
-		// Set loggers (info and severe)
-		if (null == loggerInfo) {
-
-			CreateLogger loggers = new CreateLogger("ESB", 512000000, 2);
-
-			loggerInfo = loggers.getInfoLogger();
-
-			loggerSevere = loggers.getSevereLogger();
-
-			loggerInfo.info("Start ESB_info log...");
-
-			loggerSevere.info("Start ESB_severe log...");
-
-		}
-
-		loggerInfo.info(">>>ESB Started!!!!");
-
 		if (Validation.validating()) {
 
 			readProps();
@@ -100,8 +86,8 @@ public class PropsChecker implements Runnable {
 
 			EsbMqJms.sc.shutdownNow();
 
-			loggerSevere
-					.severe("Config is not valid! See error log! Application stopped!");
+			System.err
+					.println("Config is not valid! See error log! Application stopped!");
 
 			System.exit(0);
 		}
@@ -123,19 +109,19 @@ public class PropsChecker implements Runnable {
 
 			config = (Document) builder.build(xmlSettings);
 
-			loggerInfo.info("Config file " + xmlSettings
+			System.out.println("Config file " + xmlSettings
 					+ " read successfully!");
 
 		} catch (JDOMException e) {
 
-			loggerSevere.severe("[JDOM Error] Can't parse " + xmlSettings
+			System.err.println("[JDOM Error] Can't parse " + xmlSettings
 					+ "; Error:" + e.getMessage());
 
 			e.printStackTrace();
 
 		} catch (IOException e) {
 
-			loggerSevere.severe("[IO Error] Can't read " + xmlSettings
+			System.err.println("[IO Error] Can't read " + xmlSettings
 					+ "; Error:" + e.getMessage());
 
 			e.printStackTrace();
@@ -194,11 +180,34 @@ public class PropsChecker implements Runnable {
 
 		esb = root.getChild("systems").getChild("esb");
 
+		// Set loggers (info and severe)
+		if (null == loggerInfo) {
+
+			String logName = esb.getChildText("logName");
+
+			CreateLogger loggers = new CreateLogger(logName,
+					Integer.parseInt(esb.getChildText("logSize")),
+					Integer.parseInt(esb.getChildText("logCount")));
+
+			loggerInfo = loggers.getInfoLogger();
+
+			loggerSevere = loggers.getSevereLogger();
+
+			loggerInfo.info("Start " + logName + "_info log...");
+
+			loggerSevere.info("Start " + logName + "_severe log...");
+
+			loggerInfo.info(">>>" + logName + " Started!!!!");
+
+		}
+
 		db = root.getChild("connections").getChild("db");
 
 		mq = root.getChild("connections").getChild("mq");
 
 		common = root.getChild("common");
+
+		debug.set(Boolean.parseBoolean(esb.getChildText("debug")));
 
 		synchronized (connManager) {
 
@@ -218,23 +227,24 @@ public class PropsChecker implements Runnable {
 		for (int i = 0; i < osgiSize; i++) {
 
 			String url = ((Element) osgi.get(i)).getChildText("link");
-			
+
 			urlArray.addElement(url);
-			
-			loggerInfo.info(">>>ESB Properties add osgi url: " + url);	
+
+			loggerInfo.info(">>>ESB Properties add osgi url: " + url);
 
 		}
+
+		size = urlArray.size();
 
 		loggerInfo.info(">>>ESB Properties loaded successfully!");
 
 	}
 
-	public static String getNextUrl() {
+	public static synchronized String getNextUrl() {
 
 		String url;
 
-		url = urlArray.get(Math.abs(callCounter.getAndIncrement()
-				% urlArray.size()));
+		url = urlArray.get(Math.abs(callCounter.getAndIncrement() % size));
 
 		return url;
 	}

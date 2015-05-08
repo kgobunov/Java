@@ -3,6 +3,7 @@ package listeners;
 import static ru.aplana.tools.Common.convertSOAPResponse;
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
+import static tools.PropsChecker.debug;
 
 import java.util.ArrayList;
 
@@ -15,7 +16,6 @@ import javax.xml.soap.SOAPConnection;
 import javax.xml.soap.SOAPConnectionFactory;
 import javax.xml.soap.SOAPMessage;
 
-import ru.aplana.app.EsbMqJms;
 import ru.aplana.tools.GetData;
 import tools.PropsChecker;
 import tools.Queues;
@@ -45,8 +45,6 @@ public class SAPListener implements MessageListener {
 
 	private String soapResp;
 
-	private boolean debug;
-
 	public SAPListener(MQQueueConnection connection) {
 
 		this.connection = connection;
@@ -67,7 +65,6 @@ public class SAPListener implements MessageListener {
 
 		}
 
-		this.debug = EsbMqJms.debug;
 	}
 
 	public void onMessage(Message inputMsg) {
@@ -84,7 +81,7 @@ public class SAPListener implements MessageListener {
 
 			String response = null;
 
-			if (this.debug) {
+			if (debug.get()) {
 
 				PropsChecker.loggerInfo
 						.info("Stub[SAP_HR] - Message from ETSM: " + request);
@@ -166,7 +163,7 @@ public class SAPListener implements MessageListener {
 
 				}
 
-				if (this.debug) {
+				if (debug.get()) {
 
 					PropsChecker.loggerInfo
 							.info("Response from service SAP_HR: " + soapResp);
@@ -225,7 +222,7 @@ public class SAPListener implements MessageListener {
 				e.printStackTrace();
 			}
 
-			if (this.debug) {
+			if (debug.get()) {
 
 				PropsChecker.loggerInfo.info("Response to ETSM from SAP_HR: "
 						+ response);
@@ -247,8 +244,9 @@ public class SAPListener implements MessageListener {
 
 				}
 			} catch (JMSException e) {
-				// TODO Auto-generated catch block
+
 				e.printStackTrace();
+				
 			}
 		}
 	}

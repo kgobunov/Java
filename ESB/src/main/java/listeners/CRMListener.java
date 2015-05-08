@@ -2,6 +2,7 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
+import static tools.PropsChecker.debug;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -9,7 +10,6 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
-import ru.aplana.app.EsbMqJms;
 import tools.PropsChecker;
 import tools.Queues;
 
@@ -33,7 +33,7 @@ public class CRMListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
-	private boolean debug;
+	
 
 	public CRMListener(MQQueueConnection connection) {
 
@@ -55,7 +55,7 @@ public class CRMListener implements MessageListener {
 			
 		}
 
-		this.debug = EsbMqJms.debug;
+
 
 	}
 
@@ -69,7 +69,7 @@ public class CRMListener implements MessageListener {
 
 			String response = null;
 
-			if (debug) {
+			if (debug.get()) {
 
 				PropsChecker.loggerInfo.info("Message from CRM: " + request);
 			}
@@ -83,7 +83,7 @@ public class CRMListener implements MessageListener {
 
 			producer.send(outputMsg);
 
-			if (debug) {
+			if (debug.get()) {
 
 				PropsChecker.loggerInfo.info("Request to ETSM from CRM: "
 						+ response);

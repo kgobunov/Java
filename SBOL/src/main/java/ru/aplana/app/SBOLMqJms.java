@@ -82,7 +82,7 @@ public class SBOLMqJms implements Runnable {
 
 		try {
 
-			this.connection = getConnection(this.factory);
+			this.connection = getConnection(this.factory, null, null);
 
 			this.connection.setExceptionListener(new ExceptionListener() {
 
@@ -236,6 +236,8 @@ public class SBOLMqJms implements Runnable {
 	 */
 	public static void main(String[] args) throws JMSException {
 
+		System.out.println(SBOLMqJms.class.getResource("SBOLMqJms.class"));
+		
 		sc = Executors.newSingleThreadScheduledExecutor();
 
 		sc.scheduleAtFixedRate(new PropCheck(), 0, 10, TimeUnit.SECONDS);

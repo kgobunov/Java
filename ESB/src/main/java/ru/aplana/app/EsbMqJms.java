@@ -28,6 +28,7 @@ import tools.Queues;
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueueConnection;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
+import static tools.PropsChecker.debug;
 
 /**
  * Main class - enter point
@@ -37,8 +38,6 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
  */
 @SuppressWarnings("deprecation")
 public class EsbMqJms implements Runnable {
-
-	public static boolean debug;
 
 	public static int countThreads;
 
@@ -58,9 +57,6 @@ public class EsbMqJms implements Runnable {
 
 	public EsbMqJms() {
 
-		// Get value for debug properties
-		debug = Boolean.parseBoolean(PropsChecker.esb.getChildText("debug"));
-
 		// Create factory
 		try {
 
@@ -69,11 +65,13 @@ public class EsbMqJms implements Runnable {
 			this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
 
 		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
+
 		} catch (JMSException e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
+
 		}
 
 	}
@@ -164,7 +162,7 @@ public class EsbMqJms implements Runnable {
 
 			flagReconnect = false;
 
-			if (debug) {
+			if (debug.get()) {
 
 				PropsChecker.loggerInfo
 						.info("Thread is connected to MQ server with parameters: HostName: "

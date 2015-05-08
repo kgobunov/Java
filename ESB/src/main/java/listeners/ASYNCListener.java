@@ -2,6 +2,7 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
+import static tools.PropsChecker.debug;
 
 import java.util.ArrayList;
 
@@ -11,7 +12,6 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
-import ru.aplana.app.EsbMqJms;
 import ru.aplana.tools.GetData;
 import tools.PropsChecker;
 import tools.Queues;
@@ -37,8 +37,6 @@ public class ASYNCListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
-	private boolean debug;
-
 	private boolean flagError = false;
 
 	public ASYNCListener(MQQueueConnection connection) {
@@ -60,8 +58,6 @@ public class ASYNCListener implements MessageListener {
 			e.printStackTrace();
 		}
 
-		this.debug = EsbMqJms.debug;
-
 	}
 
 	public void onMessage(Message inputMsg) {
@@ -76,7 +72,7 @@ public class ASYNCListener implements MessageListener {
 
 			String response = null;
 
-			if (this.debug) {
+			if (debug.get()) {
 
 				PropsChecker.loggerInfo
 						.info("Stub[ASYNC] - Message from ETSM: " + request);
@@ -251,7 +247,7 @@ public class ASYNCListener implements MessageListener {
 
 			}
 
-			if (this.debug && (response.equalsIgnoreCase(request) == false)) {
+			if (debug.get() && (response.equalsIgnoreCase(request) == false)) {
 
 				PropsChecker.loggerInfo.info(type_request
 						+ " - response to ETSM from : " + type_request + " "

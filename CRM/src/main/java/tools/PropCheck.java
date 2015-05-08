@@ -45,45 +45,16 @@ public class PropCheck implements Runnable {
 
 	public PropCheck() {
 
-		// Set logger
-		if (null == loggerInfo) {
-
-			CreateLogger loggers = new CreateLogger("CRM", 512000000, 2);
-
-			loggerInfo = loggers.getInfoLogger();
-
-			loggerSevere = loggers.getSevereLogger();
-
-			loggerInfo.info("Start CRM_info log...");
-
-			loggerSevere.info("Start CRM_severe log...");
-
-		}
-
 		if (Validation.validating()) {
 
 			initSettings();
-
-			this.root = this.config.getRootElement();
-
-			crm = this.root.getChild("systems").getChild("crm");
-
-			db = this.root.getChild("connections").getChild("db");
-
-			mq = this.root.getChild("connections").getChild("mq");
-
-			common = this.root.getChild("common");
-
-			this.stopTime = Long.parseLong(crm.getChildText("runTime")) * 60 * 1000;
-
-			debug = Boolean.parseBoolean(crm.getChildText("debug"));
 
 		} else {
 
 			CRMMqJms.sc.shutdownNow();
 
-			loggerSevere
-					.severe("Config is not valid! See error log! Application stopped!");
+			System.err
+					.println("Config is not valid! See error log! Application stopped!");
 
 			System.exit(0);
 		}
@@ -105,19 +76,52 @@ public class PropCheck implements Runnable {
 
 			config = (Document) builder.build(xmlSettings);
 
+			this.root = this.config.getRootElement();
+
+			crm = this.root.getChild("systems").getChild("crm");
+
+			// Set logger
+			if (null == loggerInfo) {
+
+				String logName = crm.getChildText("logName");
+
+				CreateLogger loggers = new CreateLogger(logName,
+						Integer.parseInt(crm.getChildText("logSize")),
+						Integer.parseInt(crm.getChildText("logCount")));
+
+				loggerInfo = loggers.getInfoLogger();
+
+				loggerSevere = loggers.getSevereLogger();
+
+				loggerInfo.info("Start " + logName + "_info log...");
+
+				loggerSevere.info("Start " + logName + "_severe log...");
+
+			}
+
+			db = this.root.getChild("connections").getChild("db");
+
+			mq = this.root.getChild("connections").getChild("mq");
+
+			common = this.root.getChild("common");
+
+			this.stopTime = Long.parseLong(crm.getChildText("runTime")) * 60 * 1000;
+
+			debug = Boolean.parseBoolean(crm.getChildText("debug"));
+
 			loggerInfo.info("Config file " + xmlSettings
 					+ " read successfully!");
 
 		} catch (JDOMException e) {
 
-			loggerSevere.severe("[JDOM Error] Can't parse " + xmlSettings
+			System.err.println("[JDOM Error] Can't parse " + xmlSettings
 					+ "; Error:" + e.getMessage());
 
 			e.printStackTrace();
 
 		} catch (IOException e) {
 
-			loggerSevere.severe("[IO Error] Can't read " + xmlSettings
+			System.err.println("[IO Error] Can't read " + xmlSettings
 					+ "; Error:" + e.getMessage());
 
 			e.printStackTrace();

@@ -124,7 +124,7 @@ public class Main implements Runnable {
 
 			try {
 
-				this.connection = getConnection(this.factory);
+				this.connection = getConnection(this.factory, null, null);
 
 				// exception Listener
 				this.connection.setExceptionListener(new ExceptionListener() {

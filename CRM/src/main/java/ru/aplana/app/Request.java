@@ -134,7 +134,7 @@ public class Request implements Runnable {
 
 		try {
 
-			this.connection = getConnection(this.factory);
+			this.connection = getConnection(this.factory, null, null);
 
 			this.connection.start();
 

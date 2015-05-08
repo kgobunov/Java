@@ -93,7 +93,7 @@ public class CRMMqJms implements Runnable {
 		try {
 
 			// Create connection to MQ
-			this.connection = getConnection(this.factory);
+			this.connection = getConnection(this.factory, null, null);
 
 			// Listener for catch MQ exceptions
 			this.connection.setExceptionListener(new ExceptionListener() {

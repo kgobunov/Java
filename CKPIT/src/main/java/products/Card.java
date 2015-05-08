@@ -177,7 +177,7 @@ public class Card {
 					"<tns:SEGMENT_TARIFF_1>"+
 						"<tns:SUBPRODUCT_VERSION>1</tns:SUBPRODUCT_VERSION>"+
 						"<tns:VALID_FROM>21042014</tns:VALID_FROM>"+
-						"<tns:VALID_TO>30042015</tns:VALID_TO>"+
+						"<tns:VALID_TO>01042099</tns:VALID_TO>"+
 						"<tns:ACT_SCHEMA_CODE>8</tns:ACT_SCHEMA_CODE>"+
 						"<tns:ACT_SCHEMA_NAME>777</tns:ACT_SCHEMA_NAME>"+
 					"</tns:SEGMENT_TARIFF_1>"+

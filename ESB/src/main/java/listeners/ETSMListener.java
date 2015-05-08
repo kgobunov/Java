@@ -2,6 +2,7 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
+import static tools.PropsChecker.debug;
 
 import java.util.ArrayList;
 
@@ -11,7 +12,6 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
-import ru.aplana.app.EsbMqJms;
 import ru.aplana.tools.GetData;
 import tools.PropsChecker;
 import tools.Queues;
@@ -35,8 +35,6 @@ public class ETSMListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
-	private boolean debug;
-
 	public ETSMListener(MQQueueConnection connection) {
 
 		this.connection = connection;
@@ -44,7 +42,6 @@ public class ETSMListener implements MessageListener {
 		this.session = getSession(this.connection, false,
 				MQQueueSession.AUTO_ACKNOWLEDGE);
 
-		this.debug = EsbMqJms.debug;
 	}
 
 	public void onMessage(Message inputMsg) {
@@ -61,7 +58,7 @@ public class ETSMListener implements MessageListener {
 
 			String response = null;
 
-			if (this.debug) {
+			if (debug.get()) {
 
 				PropsChecker.loggerInfo.info("Message from ETSM: " + request);
 			}
@@ -155,7 +152,7 @@ public class ETSMListener implements MessageListener {
 
 			producer.send(outputMsg);
 
-			if (this.debug) {
+			if (debug.get()) {
 
 				PropsChecker.loggerInfo.info("Queue: " + queueSend + "; "
 						+ "Response to " + system + " from ETSM: " + response);
@@ -177,8 +174,9 @@ public class ETSMListener implements MessageListener {
 
 				}
 			} catch (JMSException e) {
-				// TODO Auto-generated catch block
+
 				e.printStackTrace();
+
 			}
 
 		}

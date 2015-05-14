@@ -2,7 +2,9 @@ package ru.aplana.app;
 
 import static ru.aplana.tools.MQTools.getConnection;
 import static ru.aplana.tools.MQTools.getConsumer;
+import static tools.PropsChecker.debug;
 
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -28,7 +30,6 @@ import tools.Queues;
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueueConnection;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
-import static tools.PropsChecker.debug;
 
 /**
  * Main class - enter point
@@ -230,26 +231,66 @@ public class EsbMqJms implements Runnable {
 
 			if (countListeners.get() == countThreads) {
 
-				countListeners.set(0);
+				switch (PropsChecker.mode) {
 
-				// count listener for services queue
+				case "round":
 
-				while (countListeners.get() < countThreadListeners) {
+					countListeners.set(0);
 
-					MessageConsumer consumerServices = getConsumer(
-							this.connection, Queues.SERVICES_IN);
+					// count listener for services queue
 
-					consumerServices.setMessageListener(new ServicesListener(
-							this.connection));
+					while (countListeners.get() < countThreadListeners) {
 
-					countListeners.getAndIncrement();
+						MessageConsumer consumerServices = getConsumer(
+								this.connection, Queues.SERVICES_IN);
 
+						consumerServices
+								.setMessageListener(new ServicesListener(
+										this.connection));
+
+						countListeners.getAndIncrement();
+
+					}
+
+					countListeners.set(0);
+
+					PropsChecker.loggerInfo.info(countThreadListeners
+							+ " Listener's is set to queue "
+							+ Queues.SERVICES_IN);
+
+					break;
+
+				case "bind":
+
+					for (Entry<String, Integer> entry : PropsChecker.urlBind
+							.entrySet()) {
+
+						String url = entry.getKey();
+
+						int countListeners = entry.getValue();
+
+						for (int i = 0; i < countListeners; i++) {
+
+							MessageConsumer consumerServices = getConsumer(
+									this.connection, Queues.SERVICES_IN);
+
+							consumerServices
+									.setMessageListener(new ServicesListener(
+											this.connection, url));
+
+						}
+
+						PropsChecker.loggerInfo.info(countListeners
+								+ " Listener's is set to queue "
+								+ Queues.SERVICES_IN + " for UG: " + url);
+
+					}
+
+					break;
+
+				default:
+					break;
 				}
-
-				countListeners.set(0);
-
-				PropsChecker.loggerInfo.info(countThreadListeners
-						+ " Listener's is set to queue " + Queues.SERVICES_IN);
 
 			}
 

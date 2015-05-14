@@ -2,6 +2,7 @@ package tools;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -33,6 +34,10 @@ public class PropsChecker implements Runnable {
 
 	public static Logger loggerSevere = null;
 
+	public static Logger loggerInfoServices = null;
+
+	public static Logger loggerSevereServices = null;
+
 	public static boolean flagListener = false;
 
 	private static Vector<String> urlArray;
@@ -62,6 +67,10 @@ public class PropsChecker implements Runnable {
 	private Element root = null;
 
 	private static int size = 0;
+
+	public static String mode = "round";
+
+	public static HashMap<String, Integer> urlBind = null;
 
 	public PropsChecker() {
 
@@ -181,7 +190,7 @@ public class PropsChecker implements Runnable {
 		esb = root.getChild("systems").getChild("esb");
 
 		// Set loggers (info and severe)
-		if (null == loggerInfo) {
+		if (null == loggerInfo && null == loggerInfoServices) {
 
 			String logName = esb.getChildText("logName");
 
@@ -189,13 +198,28 @@ public class PropsChecker implements Runnable {
 					Integer.parseInt(esb.getChildText("logSize")),
 					Integer.parseInt(esb.getChildText("logCount")));
 
+			CreateLogger loggersServices = new CreateLogger(logName
+					+ "_services",
+					Integer.parseInt(esb.getChildText("logSize")),
+					Integer.parseInt(esb.getChildText("logCount")));
+
 			loggerInfo = loggers.getInfoLogger();
 
 			loggerSevere = loggers.getSevereLogger();
 
+			loggerInfoServices = loggersServices.getInfoLogger();
+
+			loggerSevereServices = loggersServices.getSevereLogger();
+
 			loggerInfo.info("Start " + logName + "_info log...");
 
-			loggerSevere.info("Start " + logName + "_severe log...");
+			loggerSevere.severe("Start " + logName + "_severe log...");
+
+			loggerInfoServices.info("Start " + logName
+					+ "_services_info log...");
+
+			loggerSevereServices.severe("Start " + logName
+					+ "_services_severe log...");
 
 			loggerInfo.info(">>>" + logName + " Started!!!!");
 
@@ -208,6 +232,8 @@ public class PropsChecker implements Runnable {
 		common = root.getChild("common");
 
 		debug.set(Boolean.parseBoolean(esb.getChildText("debug")));
+
+		mode = common.getChildText("mode");
 
 		synchronized (connManager) {
 
@@ -224,17 +250,38 @@ public class PropsChecker implements Runnable {
 
 		int osgiSize = osgi.size();
 
-		for (int i = 0; i < osgiSize; i++) {
+		switch (mode) {
+		
+		case "round":
 
-			String url = ((Element) osgi.get(i)).getChildText("link");
+			for (int i = 0; i < osgiSize; i++) {
 
-			urlArray.addElement(url);
+				String url = ((Element) osgi.get(i)).getChildText("link");
 
-			loggerInfo.info(">>>ESB Properties add osgi url: " + url);
+				urlArray.addElement(url);
 
+				loggerInfo.info(">>>ESB Properties add osgi url: " + url);
+
+			}
+
+			size = urlArray.size();
+
+			break;
+
+		case "bind":
+			
+			urlBind = new HashMap<String, Integer>();
+			
+			for (int i = 0; i < osgiSize; i++) {
+
+				urlBind.put(((Element) osgi.get(i)).getChildText("link"), Integer.valueOf(((Element) osgi.get(i)).getChildText("countListener")));
+				
+			}
+			break;
+			
+		default:
+			break;
 		}
-
-		size = urlArray.size();
 
 		loggerInfo.info(">>>ESB Properties loaded successfully!");
 

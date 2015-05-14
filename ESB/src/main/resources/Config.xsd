@@ -33,6 +33,20 @@
 									</xs:restriction>
 								</xs:simpleType>	
 							</xs:element>
+							<xs:element name="mode" default="round" minOccurs="1" maxOccurs="1">
+								<xs:annotation>
+									<xs:documentation>
+										mode - режим работы шины
+										(round - получение ссылки UG по алгоритму round robin, bind - привязка листенера к конкретному UG)
+									</xs:documentation>
+								</xs:annotation>
+								<xs:simpleType>
+									<xs:restriction base="xs:string">
+										<xs:enumeration value="round"/>
+										<xs:enumeration value="bind"/>
+									</xs:restriction>
+								</xs:simpleType>							
+							</xs:element>							
 						</xs:sequence>
 					</xs:complexType>
 				</xs:element>
@@ -447,6 +461,16 @@
 																		</xs:restriction>
 																	</xs:simpleType>												
 																</xs:element>
+																<xs:element name="countListener" minOccurs="1" maxOccurs="1">	
+																	<xs:annotation>
+																		<xs:documentation>Count listeners for UG - using when mode equal bind</xs:documentation>
+																	</xs:annotation>
+																	<xs:simpleType>
+																		<xs:restriction base="xs:decimal">
+																			<xs:pattern value="\d+"/>
+																		</xs:restriction>
+																	</xs:simpleType>												
+																</xs:element>																
 															</xs:sequence>
 														</xs:complexType>								
 													</xs:element>	

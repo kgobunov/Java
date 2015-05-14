@@ -52,12 +52,21 @@ public class ServicesListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
+	// link to UG
+	private String url = "";
+
 	private static SimpleDateFormat sdf = new SimpleDateFormat(
-			"yyyy-MM-dd'T'hh:mm:ss.SSSSSS");
+			"yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
 
 	private XPath xPath = XPathFactory.newInstance().newXPath();
 
 	public ServicesListener(MQQueueConnection connection) {
+
+		this(connection, null);
+
+	}
+
+	public ServicesListener(MQQueueConnection connection, String url) {
 
 		this.connection = connection;
 
@@ -77,6 +86,8 @@ public class ServicesListener implements MessageListener {
 
 		}
 
+		this.url = url;
+
 	}
 
 	public void onMessage(Message inputMsg) {
@@ -87,7 +98,7 @@ public class ServicesListener implements MessageListener {
 
 		if (debug.get()) {
 
-			PropsChecker.loggerInfo.info("Request to OSGI: " + request);
+			PropsChecker.loggerInfoServices.info("Request to OSGI: " + request);
 
 		}
 
@@ -117,14 +128,15 @@ public class ServicesListener implements MessageListener {
 
 		} catch (XMLStreamException e2) {
 
-			PropsChecker.loggerSevere
+			PropsChecker.loggerSevereServices
 					.severe("Can't convert string to Omelement! "
 							+ e2.getMessage());
 
 			e2.printStackTrace();
 		}
 
-		String urlOsgi = PropsChecker.getNextUrl();
+		String urlOsgi = (null == this.url) ? PropsChecker.getNextUrl()
+				: this.url;
 
 		// Set endpoint with properties
 		try {
@@ -144,7 +156,7 @@ public class ServicesListener implements MessageListener {
 
 		} catch (AxisFault e) {
 
-			PropsChecker.loggerSevere.severe("OSGI: " + urlOsgi
+			PropsChecker.loggerSevereServices.severe("OSGI: " + urlOsgi
 					+ "; Can't set endpoint! " + e.getMessage());
 
 			e.printStackTrace();
@@ -154,17 +166,11 @@ public class ServicesListener implements MessageListener {
 
 		boolean flag = false;
 
-		if (debug.get()) {
-
-			PropsChecker.loggerInfo.info("Object: " + this);
-
-		}
-
 		Thread t = Thread.currentThread();
 
-		String threadName = t.getName();
-
 		long threadId = t.getId();
+
+		String threadName = t.getName();
 
 		try {
 
@@ -176,14 +182,12 @@ public class ServicesListener implements MessageListener {
 
 			if (debug.get()) {
 
-				PropsChecker.loggerInfo.info("Time: "
+				PropsChecker.loggerInfoServices.info("| "
 						+ sdf.format(new Date(System.currentTimeMillis()))
-						+ "; Workflow: " + workflowName
-						+ "; Thread info: ID - " + threadId + "; " + threadName
-						+ "; Start time to UG " + sdf.format(new Date(start))
-						+ "; End time to UG " + sdf.format(new Date(end))
-						+ "; Response time from UG " + urlOsgi + ": "
-						+ (end - start) + " ms");
+						+ " | " + workflowName + " | " + threadId + " |"
+						+ sdf.format(new Date(start)) + " | "
+						+ sdf.format(new Date(end)) + " | " + urlOsgi + " | "
+						+ (end - start));
 
 			}
 
@@ -191,7 +195,7 @@ public class ServicesListener implements MessageListener {
 
 		} catch (Exception e) {
 
-			PropsChecker.loggerSevere.severe("Time: "
+			PropsChecker.loggerSevereServices.severe("Time: "
 					+ sdf.format(new Date(System.currentTimeMillis()))
 					+ "Workflow:" + workflowName + "; Thread info: ID - "
 					+ threadId + "; " + threadName + "; OSGI url: " + urlOsgi
@@ -211,7 +215,7 @@ public class ServicesListener implements MessageListener {
 
 			} catch (AxisFault e) {
 
-				PropsChecker.loggerSevere.severe("Failed clenup! "
+				PropsChecker.loggerSevereServices.severe("Failed clenup! "
 						+ e.getMessage());
 
 				e.printStackTrace();
@@ -226,14 +230,14 @@ public class ServicesListener implements MessageListener {
 
 			if (debug.get()) {
 
-				PropsChecker.loggerInfo.info("Send to " + urlOsgi
-						+ "; OSGI response: " + ougResponse.toString());
+				PropsChecker.loggerInfoServices.info("OSGI response: "
+						+ ougResponse.toString());
 
 			}
 
 		} else {
 
-			PropsChecker.loggerInfo
+			PropsChecker.loggerInfoServices
 					.info("Error on listener! Incoming message: " + request);
 
 			// send bad message to garbage queue
@@ -248,13 +252,13 @@ public class ServicesListener implements MessageListener {
 
 				producer.send(outputMsg);
 
-				PropsChecker.loggerInfo.info("OSGI: " + urlOsgi
+				PropsChecker.loggerInfoServices.info("OSGI: " + urlOsgi
 						+ "; Message send to " + Queues.SERVICE_GARBAGE_OUT
 						+ " successfully!");
 
 			} catch (Exception e) {
 
-				PropsChecker.loggerSevere.severe("OSGI: " + urlOsgi
+				PropsChecker.loggerSevereServices.severe("OSGI: " + urlOsgi
 						+ "; Can't send message to "
 						+ Queues.SERVICE_GARBAGE_OUT + ". Error: "
 						+ e.getMessage());
@@ -273,8 +277,8 @@ public class ServicesListener implements MessageListener {
 
 				} catch (JMSException e) {
 
-					PropsChecker.loggerSevere.severe("Can't close produser! "
-							+ e.getMessage());
+					PropsChecker.loggerSevereServices
+							.severe("Can't close produser! " + e.getMessage());
 
 					e.printStackTrace();
 

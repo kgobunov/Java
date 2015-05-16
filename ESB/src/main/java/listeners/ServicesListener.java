@@ -2,7 +2,6 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
-import static tools.PropsChecker.debug;
 
 import java.io.StringReader;
 import java.text.SimpleDateFormat;
@@ -23,6 +22,8 @@ import org.apache.axiom.om.util.AXIOMUtil;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.client.Options;
 import org.apache.axis2.transport.http.HTTPConstants;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xml.sax.InputSource;
 
 import tools.PropsChecker;
@@ -60,6 +61,9 @@ public class ServicesListener implements MessageListener {
 
 	private XPath xPath = XPathFactory.newInstance().newXPath();
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(ServicesListener.class.getName());
+
 	public ServicesListener(MQQueueConnection connection) {
 
 		this(connection, null);
@@ -82,7 +86,7 @@ public class ServicesListener implements MessageListener {
 
 		} catch (JMSException e) {
 
-			e.printStackTrace();
+			logger.error("Can't create queue %s", e.getMessage(), e);
 
 		}
 
@@ -96,11 +100,7 @@ public class ServicesListener implements MessageListener {
 
 		request = parseMessMQ(inputMsg);
 
-		if (debug.get()) {
-
-			PropsChecker.loggerInfoServices.info("Request to OSGI: " + request);
-
-		}
+		logger.debug("Request to OSGI: %s", request);
 
 		String workflowName = "undefined";
 
@@ -113,7 +113,7 @@ public class ServicesListener implements MessageListener {
 
 			} catch (XPathExpressionException e1) {
 
-				e1.printStackTrace();
+				logger.error(e1.getMessage(), e1);
 
 			}
 
@@ -128,11 +128,9 @@ public class ServicesListener implements MessageListener {
 
 		} catch (XMLStreamException e2) {
 
-			PropsChecker.loggerSevereServices
-					.severe("Can't convert string to Omelement! "
-							+ e2.getMessage());
+			logger.error("Can't convert string to Omelement! %s",
+					e2.getMessage(), e2);
 
-			e2.printStackTrace();
 		}
 
 		String urlOsgi = (null == this.url) ? PropsChecker.getNextUrl()
@@ -156,10 +154,9 @@ public class ServicesListener implements MessageListener {
 
 		} catch (AxisFault e) {
 
-			PropsChecker.loggerSevereServices.severe("OSGI: " + urlOsgi
-					+ "; Can't set endpoint! " + e.getMessage());
+			logger.error("OSGI: %s; Can't set endpoint! %s", urlOsgi,
+					e.getMessage(), e);
 
-			e.printStackTrace();
 		}
 
 		OMElement ougResponse = null;
@@ -180,29 +177,22 @@ public class ServicesListener implements MessageListener {
 
 			long end = System.currentTimeMillis();
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfoServices.info("| "
-						+ sdf.format(new Date(System.currentTimeMillis()))
-						+ " | " + workflowName + " | " + threadId + " |"
-						+ sdf.format(new Date(start)) + " | "
-						+ sdf.format(new Date(end)) + " | " + urlOsgi + " | "
-						+ (end - start));
-
-			}
+			logger.debug("| "
+					+ sdf.format(new Date(System.currentTimeMillis())) + " | "
+					+ workflowName + " | " + threadId + " |"
+					+ sdf.format(new Date(start)) + " | "
+					+ sdf.format(new Date(end)) + " | " + urlOsgi + " | "
+					+ (end - start));
 
 			flag = true;
 
 		} catch (Exception e) {
 
-			PropsChecker.loggerSevereServices.severe("Time: "
-					+ sdf.format(new Date(System.currentTimeMillis()))
-					+ "Workflow:" + workflowName + "; Thread info: ID - "
-					+ threadId + "; " + threadName + "; OSGI url: " + urlOsgi
-					+ "; Can't send to OSGI: " + request + "; Error message: "
-					+ e.getMessage());
-
-			e.printStackTrace();
+			logger.error(
+					"Time: %s; Workflow: %s; Thread info: ID - %d; %s; OSGI url: %s; Can't send to OSGI: %s; Error message: %s",
+					sdf.format(new Date(System.currentTimeMillis())),
+					workflowName, threadId, threadName, urlOsgi, request,
+					e.getMessage(), e);
 
 		} finally {
 
@@ -215,10 +205,7 @@ public class ServicesListener implements MessageListener {
 
 			} catch (AxisFault e) {
 
-				PropsChecker.loggerSevereServices.severe("Failed clenup! "
-						+ e.getMessage());
-
-				e.printStackTrace();
+				logger.error("Failed clenup! %s", e.getMessage(), e);
 
 			}
 
@@ -228,17 +215,11 @@ public class ServicesListener implements MessageListener {
 
 		if (flag) {
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfoServices.info("OSGI response: "
-						+ ougResponse.toString());
-
-			}
+			logger.debug("OSGI response: %s", ougResponse.toString());
 
 		} else {
 
-			PropsChecker.loggerInfoServices
-					.info("Error on listener! Incoming message: " + request);
+			logger.info("Can't send to UG %s", request);
 
 			// send bad message to garbage queue
 
@@ -252,18 +233,13 @@ public class ServicesListener implements MessageListener {
 
 				producer.send(outputMsg);
 
-				PropsChecker.loggerInfoServices.info("OSGI: " + urlOsgi
-						+ "; Message send to " + Queues.SERVICE_GARBAGE_OUT
-						+ " successfully!");
+				logger.info("OSGI: %s; Message send to %s successfully!",
+						urlOsgi, Queues.SERVICE_GARBAGE_OUT);
 
 			} catch (Exception e) {
 
-				PropsChecker.loggerSevereServices.severe("OSGI: " + urlOsgi
-						+ "; Can't send message to "
-						+ Queues.SERVICE_GARBAGE_OUT + ". Error: "
-						+ e.getMessage());
-
-				e.printStackTrace();
+				logger.error("OSGI: %s; Can't send message to %s. Error: %s",
+						urlOsgi, Queues.SERVICE_GARBAGE_OUT, e.getMessage(), e);
 
 			} finally {
 
@@ -277,10 +253,7 @@ public class ServicesListener implements MessageListener {
 
 				} catch (JMSException e) {
 
-					PropsChecker.loggerSevereServices
-							.severe("Can't close produser! " + e.getMessage());
-
-					e.printStackTrace();
+					logger.error("Can't close producer! %s", e.getMessage(), e);
 
 				}
 

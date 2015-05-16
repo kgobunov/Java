@@ -2,7 +2,6 @@ package ru.aplana.app;
 
 import static ru.aplana.tools.MQTools.getConnection;
 import static ru.aplana.tools.MQTools.getConsumer;
-import static tools.PropsChecker.debug;
 
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
@@ -23,6 +22,10 @@ import listeners.FSBListener;
 import listeners.MDMListener;
 import listeners.SAPListener;
 import listeners.ServicesListener;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import tools.MQConn;
 import tools.PropsChecker;
 import tools.Queues;
@@ -56,6 +59,9 @@ public class EsbMqJms implements Runnable {
 
 	private boolean flagReconnect = false;
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(EsbMqJms.class.getName());
+
 	public EsbMqJms() {
 
 		// Create factory
@@ -65,13 +71,9 @@ public class EsbMqJms implements Runnable {
 
 			this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
 
-		} catch (NumberFormatException e) {
+		} catch (NumberFormatException | JMSException e) {
 
-			e.printStackTrace();
-
-		} catch (JMSException e) {
-
-			e.printStackTrace();
+			logger.error("Can't create factory: %s", e.getMessage(), e);
 
 		}
 
@@ -91,23 +93,21 @@ public class EsbMqJms implements Runnable {
 
 					String errorCode = e.getErrorCode();
 
-					PropsChecker.loggerSevere
-							.severe("Error code: " + errorCode);
+					logger.error("Error code: %s", errorCode);
 
 					if (errorCode.equalsIgnoreCase("JMSCC0037")) {
 
-						PropsChecker.loggerSevere.severe(e.getMessage());
+						logger.error("Error msg: %s", e.getMessage(), e);
 					}
 
 					// JMSWMQ1107 - connection error
 					if (errorCode.equalsIgnoreCase("JMSWMQ1107")) {
 
-						PropsChecker.loggerSevere.severe("Error trace: "
-								+ e.getMessage());
+						logger.error("Error msg: %s", e.getMessage(), e);
 
 						flagReconnect = true;
 
-						PropsChecker.loggerInfo.info("Connection to MQ closed");
+						logger.info("Connection to MQ closed");
 
 						long delay = Long.parseLong(PropsChecker.common
 								.getChildText("delayReconnect")) * 1000;
@@ -120,9 +120,8 @@ public class EsbMqJms implements Runnable {
 
 							} catch (Exception e1) {
 
-								PropsChecker.loggerSevere
-										.severe("Cann't reconecting to MQ: "
-												+ e1.getMessage());
+								logger.error("Can't reconecting to MQ: %s",
+										e1.getMessage(), e1);
 							}
 
 							// Delay between retry
@@ -136,22 +135,20 @@ public class EsbMqJms implements Runnable {
 
 								long diff = stop - start;
 
-								PropsChecker.loggerInfo.info("Time wait: "
-										+ diff);
+								logger.info("Time wait: %s", diff);
 
 								// ensure for early wake up thread
 								if (diff < delay) {
 
-									PropsChecker.loggerInfo
-											.info("Wake up early! Wait: "
-													+ (delay - diff));
+									logger.info("Wake up early! Wait: %s",
+											(delay - diff));
 
 									Thread.sleep(delay - diff);
 								}
 
 							} catch (InterruptedException e1) {
 
-								e1.printStackTrace();
+								logger.error(e1.getMessage(), e1);
 							}
 
 						}
@@ -163,17 +160,10 @@ public class EsbMqJms implements Runnable {
 
 			flagReconnect = false;
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfo
-						.info("Thread is connected to MQ server with parameters: HostName: "
-								+ this.factory.getHostName()
-								+ "; Port: "
-								+ this.factory.getPort()
-								+ "; QueueManager: "
-								+ this.factory.getQueueManager()
-								+ "; Channel: " + this.factory.getChannel());
-			}
+			logger.debug(
+					"Thread is connected to MQ server with parameters: HostName: %s; Port: %s; QueueManager: %s; Channel: %s",
+					this.factory.getHostName(), this.factory.getPort(),
+					this.factory.getQueueManager(), this.factory.getChannel());
 
 			// Set listeners and consumers
 			MessageConsumer consumerERIB = getConsumer(this.connection,
@@ -212,20 +202,15 @@ public class EsbMqJms implements Runnable {
 			consumerASYNC
 					.setMessageListener(new ASYNCListener(this.connection));
 
-			PropsChecker.loggerInfo.info("Listener is set to queue "
-					+ Queues.ERIB_IN);
+			logger.info("Listener is set to queue %s", Queues.ERIB_IN);
 
-			PropsChecker.loggerInfo.info("Listener is set to queue "
-					+ Queues.ETSM_IN);
+			logger.info("Listener is set to queue %s", Queues.ETSM_IN);
 
-			PropsChecker.loggerInfo.info("Listener is set to queue "
-					+ Queues.SAP_HR_IN);
+			logger.info("Listener is set to queue %s", Queues.SAP_HR_IN);
 
-			PropsChecker.loggerInfo.info("Listener is set to queue "
-					+ Queues.ESB_CRM_IN);
+			logger.info("Listener is set to queue %s", Queues.ESB_CRM_IN);
 
-			PropsChecker.loggerInfo.info("Listener is set to queue "
-					+ Queues.ASYNC_IN);
+			logger.info("Listener is set to queue %s", Queues.ASYNC_IN);
 
 			countListeners.getAndIncrement();
 
@@ -254,9 +239,8 @@ public class EsbMqJms implements Runnable {
 
 					countListeners.set(0);
 
-					PropsChecker.loggerInfo.info(countThreadListeners
-							+ " Listener's is set to queue "
-							+ Queues.SERVICES_IN);
+					logger.info("%s Listener's is set to queue %s",
+							countThreadListeners, Queues.SERVICES_IN);
 
 					break;
 
@@ -280,9 +264,9 @@ public class EsbMqJms implements Runnable {
 
 						}
 
-						PropsChecker.loggerInfo.info(countListeners
-								+ " Listener's is set to queue "
-								+ Queues.SERVICES_IN + " for UG: " + url);
+						logger.info(
+								"%s Listener's is set to queue %s for UG: %s",
+								countListeners, Queues.SERVICES_IN, url);
 
 					}
 
@@ -296,10 +280,7 @@ public class EsbMqJms implements Runnable {
 
 		} catch (JMSException e) {
 
-			PropsChecker.loggerSevere.severe("Error: Can't set listener "
-					+ e.getMessage());
-
-			e.printStackTrace();
+			logger.error("Can't set listener %s", e.getMessage(), e);
 
 			if (!flagReconnect) {
 

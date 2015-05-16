@@ -2,7 +2,6 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
-import static tools.PropsChecker.debug;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -10,7 +9,9 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
-import tools.PropsChecker;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import tools.Queues;
 
 import com.ibm.mq.jms.JMSC;
@@ -33,7 +34,8 @@ public class CRMListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
-	
+	private static final Logger logger = LogManager
+			.getFormatterLogger(CRMListener.class.getName());
 
 	public CRMListener(MQQueueConnection connection) {
 
@@ -51,11 +53,9 @@ public class CRMListener implements MessageListener {
 
 		} catch (JMSException e) {
 
-			e.printStackTrace();
-			
+			logger.error("Can't create queue: %s", e.getMessage(), e);
+
 		}
-
-
 
 	}
 
@@ -69,10 +69,7 @@ public class CRMListener implements MessageListener {
 
 			String response = null;
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfo.info("Message from CRM: " + request);
-			}
+			logger.debug("Message from CRM: %s", request);
 
 			// For this system response equals request
 			response = request;
@@ -83,17 +80,11 @@ public class CRMListener implements MessageListener {
 
 			producer.send(outputMsg);
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfo.info("Request to ETSM from CRM: "
-						+ response);
-			}
+			logger.debug("Request to ETSM from CRM: %s", response);
 
 		} catch (JMSException e) {
 
-			PropsChecker.loggerSevere.severe(e.getMessage());
-
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 
 		} finally {
 
@@ -106,8 +97,8 @@ public class CRMListener implements MessageListener {
 				}
 			} catch (JMSException e) {
 
-				e.printStackTrace();
-				
+				logger.error(e.getMessage(), e);
+
 			}
 
 		}

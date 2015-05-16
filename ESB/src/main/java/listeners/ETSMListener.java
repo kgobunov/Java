@@ -2,7 +2,6 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
-import static tools.PropsChecker.debug;
 
 import java.util.ArrayList;
 
@@ -12,8 +11,10 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import ru.aplana.tools.GetData;
-import tools.PropsChecker;
 import tools.Queues;
 import answers.Requests;
 
@@ -34,6 +35,9 @@ public class ETSMListener implements MessageListener {
 	private MQQueueSession session;
 
 	private MQQueueConnection connection;
+
+	private static final Logger logger = LogManager
+			.getFormatterLogger(ETSMListener.class.getName());
 
 	public ETSMListener(MQQueueConnection connection) {
 
@@ -58,10 +62,7 @@ public class ETSMListener implements MessageListener {
 
 			String response = null;
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfo.info("Message from ETSM: " + request);
-			}
+			logger.debug("Message from ETSM: %s", request);
 
 			GetData processRq = GetData.getInstance(request);
 
@@ -122,11 +123,9 @@ public class ETSMListener implements MessageListener {
 
 				} catch (Exception e) {
 
-					PropsChecker.loggerSevere
-							.severe("[ETSM ServicesListener] Error parcing message: "
-									+ e.getMessage());
+					logger.error("Parcing message failed: %s", e.getMessage(),
+							e);
 
-					e.printStackTrace();
 				}
 
 				response = Requests.getRequestToERIB(data);
@@ -135,7 +134,7 @@ public class ETSMListener implements MessageListener {
 
 			if (response == null) {
 
-				PropsChecker.loggerInfo.info("Unknown system!");
+				logger.error("Unknown system!");
 
 				queueSend = (MQQueue) this.session
 						.createQueue(Queues.GARBAGE_OUT);
@@ -152,17 +151,12 @@ public class ETSMListener implements MessageListener {
 
 			producer.send(outputMsg);
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfo.info("Queue: " + queueSend + "; "
-						+ "Response to " + system + " from ETSM: " + response);
-			}
+			logger.debug("Queue: %s; Response to %s from ETSM: %s", queueSend,
+					system, response);
 
 		} catch (JMSException e) {
 
-			PropsChecker.loggerSevere.severe(e.getMessage());
-
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 
 		} finally {
 
@@ -173,9 +167,10 @@ public class ETSMListener implements MessageListener {
 					producer.close();
 
 				}
+
 			} catch (JMSException e) {
 
-				e.printStackTrace();
+				logger.error(e.getMessage(), e);
 
 			}
 

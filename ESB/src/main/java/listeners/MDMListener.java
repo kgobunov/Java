@@ -2,7 +2,6 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
-import static tools.PropsChecker.debug;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -10,7 +9,9 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
-import tools.PropsChecker;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import tools.Queues;
 import answers.Requests;
 
@@ -34,6 +35,9 @@ public class MDMListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(MDMListener.class.getName());
+
 	public MDMListener(MQQueueConnection connection) {
 
 		this.connection = connection;
@@ -49,7 +53,7 @@ public class MDMListener implements MessageListener {
 
 		} catch (JMSException e) {
 
-			e.printStackTrace();
+			logger.error("Can't create queue: %s", e.getMessage(), e);
 
 		}
 
@@ -65,11 +69,7 @@ public class MDMListener implements MessageListener {
 
 			String response = null;
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfo
-						.info("Message from TSM_MDM: " + request);
-			}
+			logger.debug("Message from TSM_MDM: %s", request);
 
 			response = Requests.mdmResponse(request);
 
@@ -79,17 +79,11 @@ public class MDMListener implements MessageListener {
 
 			producer.send(outputMsg);
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfo.info("Request to ETSM from MDM: "
-						+ response);
-			}
+			logger.debug("Request to ETSM from MDM: %s", response);
 
 		} catch (JMSException e) {
 
-			PropsChecker.loggerSevere.severe(e.getMessage());
-
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 
 		} finally {
 
@@ -102,7 +96,7 @@ public class MDMListener implements MessageListener {
 				}
 			} catch (JMSException e) {
 
-				e.printStackTrace();
+				logger.error(e.getMessage(), e);
 
 			}
 

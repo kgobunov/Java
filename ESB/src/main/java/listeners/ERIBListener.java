@@ -2,7 +2,6 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
-import static tools.PropsChecker.debug;
 
 import java.util.ArrayList;
 
@@ -12,8 +11,10 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import ru.aplana.tools.GetData;
-import tools.PropsChecker;
 import tools.Queues;
 import answers.Requests;
 
@@ -37,6 +38,9 @@ public class ERIBListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(ERIBListener.class.getName());
+
 	public ERIBListener(MQQueueConnection connection) {
 
 		this.connection = connection;
@@ -53,7 +57,7 @@ public class ERIBListener implements MessageListener {
 
 		} catch (JMSException e) {
 
-			e.printStackTrace();
+			logger.error("Can't create queue: %s", e.getMessage(), e);
 
 		}
 
@@ -71,10 +75,7 @@ public class ERIBListener implements MessageListener {
 
 			String response = null;
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfo.info("Message from ERIB: " + request);
-			}
+			logger.debug("Message from ERIB: %s", request);
 
 			GetData processRq = GetData.getInstance(request);
 
@@ -116,11 +117,8 @@ public class ERIBListener implements MessageListener {
 
 			} catch (Exception e) {
 
-				PropsChecker.loggerSevere
-						.severe("[ERIB ServicesListener] Error parcing message: "
-								+ e.getMessage());
+				logger.error("Parcing message failed: %s", e.getMessage(), e);
 
-				e.printStackTrace();
 			}
 
 			response = Requests.getRequestToETSM(data);
@@ -131,17 +129,11 @@ public class ERIBListener implements MessageListener {
 
 			producer.send(outputMsg);
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfo.info("Request to ETSM from ERIB: "
-						+ response);
-			}
+			logger.debug("Request to ETSM from ERIB: %s", response);
 
 		} catch (JMSException e) {
 
-			PropsChecker.loggerSevere.severe(e.getMessage());
-
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 
 		} finally {
 
@@ -155,7 +147,7 @@ public class ERIBListener implements MessageListener {
 					}
 				} catch (JMSException e) {
 
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
 
 				}
 

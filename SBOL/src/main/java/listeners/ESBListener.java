@@ -1,13 +1,14 @@
 package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
-import static tools.PropCheck.loggerInfo;
-import static tools.PropCheck.loggerSevere;
 
 import java.util.ArrayList;
 
 import javax.jms.Message;
 import javax.jms.MessageListener;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import ru.aplana.tools.GetData;
 import db.DbOperation;
@@ -20,9 +21,12 @@ import db.DbOperation;
  */
 public class ESBListener implements MessageListener {
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(ESBListener.class.getName());
+
 	public ESBListener() {
 
-		loggerInfo.info("Init ESBListener!");
+		logger.info("Init ESBListener!");
 
 	}
 
@@ -92,9 +96,7 @@ public class ESBListener implements MessageListener {
 
 		} catch (Exception e) {
 
-			loggerSevere.severe(e.getMessage());
-
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 
 		}
 
@@ -104,9 +106,7 @@ public class ESBListener implements MessageListener {
 
 		} catch (Exception e) {
 
-			loggerSevere.severe(e.getMessage());
-
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 
 		}
 

@@ -2,7 +2,6 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
-import static tools.PropsChecker.debug;
 
 import java.util.ArrayList;
 
@@ -12,8 +11,10 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import ru.aplana.tools.GetData;
-import tools.PropsChecker;
 import tools.Queues;
 import answers.Requests;
 
@@ -39,6 +40,9 @@ public class ASYNCListener implements MessageListener {
 
 	private boolean flagError = false;
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(ASYNCListener.class.getName());
+
 	public ASYNCListener(MQQueueConnection connection) {
 
 		this.connection = connection;
@@ -55,7 +59,7 @@ public class ASYNCListener implements MessageListener {
 
 		} catch (JMSException e) {
 
-			e.printStackTrace();
+			logger.error("Can't create queue: %s", e.getMessage(), e);
 		}
 
 	}
@@ -72,12 +76,7 @@ public class ASYNCListener implements MessageListener {
 
 			String response = null;
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfo
-						.info("Stub[ASYNC] - Message from ETSM: " + request);
-
-			}
+			logger.debug("Message from ETSM: %s", request);
 
 			GetData processRq = GetData.getInstance(request);
 
@@ -145,11 +144,10 @@ public class ASYNCListener implements MessageListener {
 
 					} catch (Exception e) {
 
-						PropsChecker.loggerSevere
-								.severe("[FMSBookRequest] Error parcing message: "
-										+ e.getMessage());
+						logger.error(
+								"[FMSBookRequest] Error parcing message: %s",
+								e.getMessage(), e);
 
-						e.printStackTrace();
 					}
 
 				}
@@ -168,11 +166,10 @@ public class ASYNCListener implements MessageListener {
 
 					} catch (Exception e) {
 
-						PropsChecker.loggerSevere
-								.severe("[FMSResultRequest] Error parcing message: "
-										+ e.getMessage());
+						logger.error(
+								"[FMSResultRequest] Error parcing message: %s",
+								e.getMessage(), e);
 
-						e.printStackTrace();
 					}
 
 				}
@@ -191,11 +188,9 @@ public class ASYNCListener implements MessageListener {
 
 					} catch (Exception e) {
 
-						PropsChecker.loggerSevere
-								.severe("[Spoobk] Error parcing message: "
-										+ e.getMessage());
+						logger.error("[Spoobk] Error parcing message: %s",
+								e.getMessage(), e);
 
-						e.printStackTrace();
 					}
 
 				}
@@ -219,8 +214,8 @@ public class ASYNCListener implements MessageListener {
 
 			if (null == response) {
 
-				PropsChecker.loggerSevere.severe("Can't build response: "
-						+ response + "; Request: " + request);
+				logger.error("Can't build response: %s; Request: %s", response,
+						request);
 
 				response = request;
 
@@ -247,18 +242,15 @@ public class ASYNCListener implements MessageListener {
 
 			}
 
-			if (debug.get() && (response.equalsIgnoreCase(request) == false)) {
+			if (response.equalsIgnoreCase(request) == false) {
 
-				PropsChecker.loggerInfo.info(type_request
-						+ " - response to ETSM from : " + type_request + " "
-						+ response);
+				logger.debug("%s - response to ETSM from : %s", type_request,
+						response);
 			}
 
 		} catch (JMSException e) {
 
-			PropsChecker.loggerSevere.severe(e.getMessage());
-
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 
 		} finally {
 
@@ -270,7 +262,8 @@ public class ASYNCListener implements MessageListener {
 
 				} catch (JMSException e) {
 
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
+
 				}
 
 			}

@@ -1,0 +1,14 @@
+﻿<Configuration strict="true">
+	<Appenders>
+			<Appender type="File" name="fileDefault" fileName="Erib_default.log">
+				<Layout type="PatternLayout">
+					<Pattern>%d{dd MM yyyy HH:mm:ss,SSS} [%t] %-5p %c{2}:%L - %m%n"</Pattern>
+				</Layout>
+			</Appender>
+	</Appenders>	
+	<Loggers>
+		<Root level="trace">
+			<AppenderRef ref="fileDefault"/>
+		</Root>
+	</Loggers>
+</Configuration>

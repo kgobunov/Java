@@ -2,7 +2,6 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
-import static tools.PropsChecker.debug;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -10,7 +9,9 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
-import tools.PropsChecker;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import tools.Queues;
 
 import com.ibm.mq.jms.JMSC;
@@ -33,6 +34,9 @@ public class FSBListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(FSBListener.class.getName());
+
 	public FSBListener(MQQueueConnection connection) {
 
 		this.connection = connection;
@@ -49,7 +53,7 @@ public class FSBListener implements MessageListener {
 
 		} catch (JMSException e) {
 
-			e.printStackTrace();
+			logger.error("Can't create queue: %s", e.getMessage(), e);
 
 		}
 
@@ -65,10 +69,7 @@ public class FSBListener implements MessageListener {
 
 			String response = null;
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfo.info("Message from FSB: " + request);
-			}
+			logger.debug("Message from FSB: %s", request);
 
 			// For this system response equals request
 			response = request;
@@ -79,17 +80,11 @@ public class FSBListener implements MessageListener {
 
 			producer.send(outputMsg);
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfo.info("Request to ETSM from FSB: "
-						+ response);
-			}
+			logger.debug("Request to ETSM from FSB: %s", response);
 
 		} catch (JMSException e) {
 
-			PropsChecker.loggerSevere.severe(e.getMessage());
-
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 
 		} finally {
 
@@ -102,7 +97,7 @@ public class FSBListener implements MessageListener {
 
 			} catch (JMSException e) {
 
-				e.printStackTrace();
+				logger.error(e.getMessage(), e);
 
 			}
 		}

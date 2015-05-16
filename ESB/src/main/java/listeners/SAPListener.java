@@ -3,7 +3,6 @@ package listeners;
 import static ru.aplana.tools.Common.convertSOAPResponse;
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
-import static tools.PropsChecker.debug;
 
 import java.util.ArrayList;
 
@@ -16,6 +15,9 @@ import javax.xml.soap.SOAPConnection;
 import javax.xml.soap.SOAPConnectionFactory;
 import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import ru.aplana.tools.GetData;
 import tools.PropsChecker;
@@ -42,6 +44,9 @@ public class SAPListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(SAPListener.class.getName());
+
 	public SAPListener(MQQueueConnection connection) {
 
 		this.connection = connection;
@@ -58,7 +63,7 @@ public class SAPListener implements MessageListener {
 
 		} catch (JMSException e) {
 
-			e.printStackTrace();
+			logger.error("Can't create queue: %s", e.getMessage(), e);
 
 		}
 
@@ -74,11 +79,7 @@ public class SAPListener implements MessageListener {
 
 		String response = null;
 
-		if (debug.get()) {
-
-			PropsChecker.loggerInfo.info("Stub[SAP_HR] - Message from ETSM: "
-					+ request);
-		}
+		logger.debug("Message from ETSM: %s", request);
 
 		GetData processRq = GetData.getInstance(request);
 
@@ -119,11 +120,7 @@ public class SAPListener implements MessageListener {
 
 		} catch (Exception e) {
 
-			PropsChecker.loggerSevere
-					.severe("[SAP_HR ServicesListener] Error parsing message: "
-							+ e.getMessage());
-
-			e.printStackTrace();
+			logger.error("Parsing message failed: %s", e.getMessage(), e);
 
 		}
 
@@ -154,25 +151,18 @@ public class SAPListener implements MessageListener {
 
 			} catch (Exception e) {
 
-				PropsChecker.loggerSevere
-						.severe("Error convert soap to string: "
-								+ e.getMessage());
+				logger.error("Can't convert soap to string: %s",
+						e.getMessage(), e);
 
 			}
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfo.info("Response from service SAP_HR: "
-						+ soapResp);
-			}
+			logger.debug("Response from service SAP_HR: %s", soapResp);
 
 		} catch (Exception e) {
 
-			PropsChecker.loggerSevere
-					.severe("Error occurred while sending SOAP Request to Server: "
-							+ e.getMessage());
-
-			e.printStackTrace();
+			logger.error(
+					"Error occurred while sending SOAP Request to Server: %s",
+					e.getMessage(), e);
 
 		} finally {
 
@@ -184,11 +174,9 @@ public class SAPListener implements MessageListener {
 
 				} catch (SOAPException e) {
 
-					PropsChecker.loggerSevere
-							.severe("Can't close soap connection: "
-									+ e.getMessage());
+					logger.error("Can't close soap connection: %s",
+							e.getMessage(), e);
 
-					e.printStackTrace();
 				}
 
 			}
@@ -231,19 +219,12 @@ public class SAPListener implements MessageListener {
 
 			producer.send(outputMsg);
 
-			if (debug.get()) {
-
-				PropsChecker.loggerInfo.info("Response to ETSM from SAP_HR: "
-						+ response);
-			}
+			logger.debug("Response to ETSM from SAP_HR: %s", response);
 
 		} catch (JMSException e) {
 
-			PropsChecker.loggerSevere
-					.severe("Can't send SAP_HR response to ETSM: "
-							+ e.getMessage());
-
-			e.printStackTrace();
+			logger.error("Can't send SAP_HR response to ETSM: %s",
+					e.getMessage(), e);
 
 		} finally {
 
@@ -256,11 +237,10 @@ public class SAPListener implements MessageListener {
 				}
 			} catch (JMSException e) {
 
-				e.printStackTrace();
+				logger.error("Can't close producer: %s", e.getMessage(), e);
 
 			}
 		}
 
 	}
-
 }

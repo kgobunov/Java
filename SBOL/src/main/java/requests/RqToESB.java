@@ -4,13 +4,14 @@ import static ru.aplana.tools.Common.generateDOB;
 import static ru.aplana.tools.Common.generateName;
 import static ru.aplana.tools.Common.generateNumber;
 import static ru.aplana.tools.Common.generateRqUID;
-import static tools.PropCheck.debug;
-import static tools.PropCheck.loggerInfo;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import db.DbOperation;
 
@@ -23,6 +24,9 @@ import db.DbOperation;
 public class RqToESB {
 
 	private static AtomicInteger count = new AtomicInteger(-1);
+
+	private static final Logger logger = LogManager
+			.getFormatterLogger(RqToESB.class.getName());
 
 	private String response = "";
 
@@ -163,11 +167,7 @@ public class RqToESB {
 				76.31691, 99.32983, 11.350533, 25.065405, 16.351068, 7.5257044,
 				75.52107, 62.745033, 25.426977, 46.41747, 36.410374, 61.21826 };
 
-		if (debug) {
-
-			loggerInfo.info("COUNT SB: " + count.get());
-
-		}
+		logger.debug("COUNT SB: %d", count.get());
 
 		double value = data[count.get()];
 
@@ -195,11 +195,11 @@ public class RqToESB {
 
 		else {
 
-			loggerInfo.info("Count before reset: " + count.get());
+			logger.debug("Count before reset: %s", count.get());
 
 			count.set(0);
 
-			loggerInfo.info("Reset count! Count: " + count.get());
+			logger.debug("Reset count! Count: %s", count.get());
 		}
 
 		setSBFlag();

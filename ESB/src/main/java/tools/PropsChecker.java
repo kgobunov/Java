@@ -5,20 +5,17 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 
 import ru.aplana.app.EsbMqJms;
-
-import ru.aplana.tools.CreateLogger;
-import tools.Validation;
 
 /**
  * Check properties
@@ -28,17 +25,10 @@ import tools.Validation;
  */
 public class PropsChecker implements Runnable {
 
-	public static AtomicBoolean debug = new AtomicBoolean();
-
-	public static Logger loggerInfo = null;
-
-	public static Logger loggerSevere = null;
-
-	public static Logger loggerInfoServices = null;
-
-	public static Logger loggerSevereServices = null;
-
 	public static boolean flagListener = false;
+
+	private static final Logger logger = LogManager
+			.getFormatterLogger(PropsChecker.class.getName());
 
 	private static Vector<String> urlArray;
 
@@ -95,8 +85,7 @@ public class PropsChecker implements Runnable {
 
 			EsbMqJms.sc.shutdownNow();
 
-			System.err
-					.println("Config is not valid! See error log! Application stopped!");
+			logger.error("Config is not valid! See error log! Application stopped!");
 
 			System.exit(0);
 		}
@@ -118,22 +107,13 @@ public class PropsChecker implements Runnable {
 
 			config = (Document) builder.build(xmlSettings);
 
-			System.out.println("Config file " + xmlSettings
-					+ " read successfully!");
+			logger.info("Config file %s read successfully!", xmlSettings);
 
-		} catch (JDOMException e) {
+		} catch (JDOMException | IOException e) {
 
-			System.err.println("[JDOM Error] Can't parse " + xmlSettings
-					+ "; Error:" + e.getMessage());
+			logger.error("Can't parse %s; Error: %s", xmlSettings,
+					e.getMessage(), e);
 
-			e.printStackTrace();
-
-		} catch (IOException e) {
-
-			System.err.println("[IO Error] Can't read " + xmlSettings
-					+ "; Error:" + e.getMessage());
-
-			e.printStackTrace();
 		}
 
 	}
@@ -145,7 +125,7 @@ public class PropsChecker implements Runnable {
 
 		if (diff >= this.timeStop && this.timeStop > 0) {
 
-			loggerInfo.info("Service stopped! Work time: " + this.timeStop);
+			logger.info("Service stopped! Work time: %s", this.timeStop);
 
 			EsbMqJms.sc.shutdownNow();
 
@@ -167,8 +147,7 @@ public class PropsChecker implements Runnable {
 
 		if (lastModification > this.previosModification) {
 
-			loggerInfo
-					.info(">>>ESB config file was modified! Reload properties...");
+			logger.info("ESB config file was modified! Reload properties...");
 
 			this.previosModification = lastModification;
 
@@ -189,49 +168,11 @@ public class PropsChecker implements Runnable {
 
 		esb = root.getChild("systems").getChild("esb");
 
-		// Set loggers (info and severe)
-		if (null == loggerInfo && null == loggerInfoServices) {
-
-			String logName = esb.getChildText("logName");
-
-			CreateLogger loggers = new CreateLogger(logName,
-					Integer.parseInt(esb.getChildText("logSize")),
-					Integer.parseInt(esb.getChildText("logCount")));
-
-			CreateLogger loggersServices = new CreateLogger(logName
-					+ "_services",
-					Integer.parseInt(esb.getChildText("logSize")),
-					Integer.parseInt(esb.getChildText("logCount")));
-
-			loggerInfo = loggers.getInfoLogger();
-
-			loggerSevere = loggers.getSevereLogger();
-
-			loggerInfoServices = loggersServices.getInfoLogger();
-
-			loggerSevereServices = loggersServices.getSevereLogger();
-
-			loggerInfo.info("Start " + logName + "_info log...");
-
-			loggerSevere.severe("Start " + logName + "_severe log...");
-
-			loggerInfoServices.info("Start " + logName
-					+ "_services_info log...");
-
-			loggerSevereServices.severe("Start " + logName
-					+ "_services_severe log...");
-
-			loggerInfo.info(">>>" + logName + " Started!!!!");
-
-		}
-
 		db = root.getChild("connections").getChild("db");
 
 		mq = root.getChild("connections").getChild("mq");
 
 		common = root.getChild("common");
-
-		debug.set(Boolean.parseBoolean(esb.getChildText("debug")));
 
 		mode = common.getChildText("mode");
 
@@ -251,7 +192,7 @@ public class PropsChecker implements Runnable {
 		int osgiSize = osgi.size();
 
 		switch (mode) {
-		
+
 		case "round":
 
 			for (int i = 0; i < osgiSize; i++) {
@@ -260,7 +201,7 @@ public class PropsChecker implements Runnable {
 
 				urlArray.addElement(url);
 
-				loggerInfo.info(">>>ESB Properties add osgi url: " + url);
+				logger.info(">>>ESB Properties add osgi url: " + url);
 
 			}
 
@@ -269,21 +210,23 @@ public class PropsChecker implements Runnable {
 			break;
 
 		case "bind":
-			
+
 			urlBind = new HashMap<String, Integer>();
-			
+
 			for (int i = 0; i < osgiSize; i++) {
 
-				urlBind.put(((Element) osgi.get(i)).getChildText("link"), Integer.valueOf(((Element) osgi.get(i)).getChildText("countListener")));
-				
+				urlBind.put(((Element) osgi.get(i)).getChildText("link"),
+						Integer.valueOf(((Element) osgi.get(i))
+								.getChildText("countListener")));
+
 			}
 			break;
-			
+
 		default:
 			break;
 		}
 
-		loggerInfo.info(">>>ESB Properties loaded successfully!");
+		logger.info("ESB Properties loaded successfully!");
 
 	}
 

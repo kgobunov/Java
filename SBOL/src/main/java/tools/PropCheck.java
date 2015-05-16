@@ -2,8 +2,9 @@ package tools;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Logger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -11,7 +12,6 @@ import org.jdom.input.SAXBuilder;
 
 import ru.aplana.app.Request;
 import ru.aplana.app.SBOLMqJms;
-import ru.aplana.tools.CreateLogger;
 
 /**
  * 
@@ -22,12 +22,6 @@ import ru.aplana.tools.CreateLogger;
  */
 public class PropCheck implements Runnable {
 
-	public static Logger loggerInfo = null;
-
-	public static Logger loggerSevere = null;
-
-	public static boolean debug = false;
-
 	public static Element erib = null;
 
 	public static Element db = null;
@@ -35,6 +29,9 @@ public class PropCheck implements Runnable {
 	public static Element mq = null;
 
 	public static Element common = null;
+
+	private static final Logger logger = LogManager
+			.getFormatterLogger(PropCheck.class.getName());
 
 	private Document config = null;
 
@@ -54,8 +51,7 @@ public class PropCheck implements Runnable {
 
 			SBOLMqJms.sc.shutdownNow();
 
-			System.err
-					.println("Config is not valid! See error log! Application stopped!");
+			logger.error("Config is not valid! See error log! Application stopped!");
 
 			System.exit(0);
 		}
@@ -81,25 +77,6 @@ public class PropCheck implements Runnable {
 
 			erib = this.root.getChild("systems").getChild("erib");
 
-			// Set logger
-			if (null == loggerInfo) {
-
-				String logName = erib.getChildText("logName");
-
-				CreateLogger loggers = new CreateLogger(logName,
-						Integer.parseInt(erib.getChildText("logSize")),
-						Integer.parseInt(erib.getChildText("logCount")));
-
-				loggerInfo = loggers.getInfoLogger();
-
-				loggerSevere = loggers.getSevereLogger();
-
-				loggerInfo.info("Start " + logName + "_info log...");
-
-				loggerSevere.info("Start " + logName + "_severe log...");
-
-			}
-
 			db = this.root.getChild("connections").getChild("db");
 
 			mq = this.root.getChild("connections").getChild("mq");
@@ -108,24 +85,13 @@ public class PropCheck implements Runnable {
 
 			this.stopTime = Long.parseLong(erib.getChildText("runTime")) * 60 * 1000;
 
-			debug = Boolean.parseBoolean(erib.getChildText("debug"));
+			logger.info("Config file %s read successfully!", xmlSettings);
 
-			loggerInfo.info("Config file " + xmlSettings
-					+ " read successfully!");
+		} catch (JDOMException | IOException e) {
 
-		} catch (JDOMException e) {
+			logger.error("Can't parse %s; Error: %s", xmlSettings,
+					e.getMessage());
 
-			System.err.println("[JDOM Error] Can't parse " + xmlSettings
-					+ "; Error:" + e.getMessage());
-
-			e.printStackTrace();
-
-		} catch (IOException e) {
-
-			System.err.println("[IO Error] Can't read " + xmlSettings
-					+ "; Error:" + e.getMessage());
-
-			e.printStackTrace();
 		}
 
 	}
@@ -146,7 +112,7 @@ public class PropCheck implements Runnable {
 
 			} catch (InterruptedException e) {
 
-				e.printStackTrace();
+				logger.error(e.getMessage(), e);
 			}
 
 			SBOLMqJms.ex.shutdownNow();
@@ -155,9 +121,9 @@ public class PropCheck implements Runnable {
 
 			SBOLMqJms.sc.shutdownNow();
 
-			loggerInfo.info("Executors stopped!");
+			logger.info("Executors stopped!");
 
-			loggerInfo.info("Service stopped! Work time: " + this.stopTime);
+			logger.info("Service stopped! Work time: %s", this.stopTime);
 
 		}
 

@@ -3,10 +3,7 @@ package ru.aplana.app;
 import static ru.aplana.tools.MQTools.getConnection;
 import static ru.aplana.tools.MQTools.getConsumer;
 import static tools.PropCheck.common;
-import static tools.PropCheck.debug;
 import static tools.PropCheck.erib;
-import static tools.PropCheck.loggerInfo;
-import static tools.PropCheck.loggerSevere;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,6 +20,10 @@ import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 
 import listeners.ESBListener;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import tools.CheckConn;
 import tools.MQConn;
 import tools.PropCheck;
@@ -50,6 +51,9 @@ public class SBOLMqJms implements Runnable {
 
 	public static ScheduledExecutorService sc = null;
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(SBOLMqJms.class.getName());
+
 	private static int countThread;
 
 	private static AtomicInteger countThreadStart = new AtomicInteger(0);
@@ -72,7 +76,7 @@ public class SBOLMqJms implements Runnable {
 
 		} catch (NumberFormatException | JMSException e) {
 
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		}
 
 	}
@@ -91,18 +95,18 @@ public class SBOLMqJms implements Runnable {
 
 					String errorCode = e.getErrorCode();
 
-					loggerSevere.severe("Error code: " + errorCode);
+					logger.error("Error code: %s", errorCode);
 
 					// JMSWMQ1107 - connection closed
 					if (errorCode.equalsIgnoreCase("JMSWMQ1107")) {
 
-						loggerSevere.severe("Error trace: " + e.getMessage());
+						logger.error("Error msg: %s", e.getMessage(), e);
 
 						flagReconnect = true;
 
 						flagRequest.set(false);
 
-						loggerInfo.info("Connection to MQ closed.");
+						logger.info("Connection to MQ closed.");
 
 						long delay = Long.parseLong(common
 								.getChildText("delayReconnect")) * 1000;
@@ -127,9 +131,8 @@ public class SBOLMqJms implements Runnable {
 
 							} catch (Exception e1) {
 
-								loggerSevere
-										.severe("Can't reconecting to MQ: "
-												+ e1.getMessage());
+								logger.error("Can't reconecting to MQ: %s",
+										e1.getMessage(), e1);
 							}
 
 							// Delay between retry
@@ -143,20 +146,20 @@ public class SBOLMqJms implements Runnable {
 
 								long diff = stop - start;
 
-								loggerInfo.info("Time wait: " + diff);
+								logger.info("Time wait: %s", diff);
 
 								// ensure for early wake up thread
 								if (diff < delay) {
 
-									loggerInfo.info("Wake up early! Wait: "
-											+ (delay - diff));
+									logger.info("Wake up early! Wait: %s",
+											(delay - diff));
 
 									Thread.sleep(delay - diff);
 								}
 
 							} catch (InterruptedException e1) {
 
-								e1.printStackTrace();
+								logger.error(e1.getMessage(), e1);
 							}
 
 						}
@@ -170,17 +173,10 @@ public class SBOLMqJms implements Runnable {
 
 			flagRequest.set(true);
 
-			if (debug) {
-
-				loggerInfo
-						.info("Thread is connected to MQ server with parameters: HostName: "
-								+ this.factory.getHostName()
-								+ "; Port: "
-								+ this.factory.getPort()
-								+ "; QueueManager: "
-								+ this.factory.getQueueManager()
-								+ "; Channel: " + this.factory.getChannel());
-			}
+			logger.debug(
+					"Thread is connected to MQ server with parameters: HostName: %s; Port: %s; QueueManager: %s; Channel: %s",
+					this.factory.getHostName(), this.factory.getPort(),
+					this.factory.getQueueManager(), this.factory.getChannel());
 
 			String queue = erib.getChildText("queueFrom");
 
@@ -188,7 +184,7 @@ public class SBOLMqJms implements Runnable {
 
 			consumerERIB.setMessageListener(new ESBListener());
 
-			loggerInfo.info("Listener is set to queue " + queue);
+			logger.info("Listener is set to queue %s", queue);
 
 			if (!flagReconnect) {
 
@@ -196,7 +192,7 @@ public class SBOLMqJms implements Runnable {
 
 				ex.execute(new Request());
 
-				loggerInfo.info("CountThreadStart: " + countThreadStart);
+				logger.info("CountThreadStart: %s", countThreadStart);
 
 				if (countThreadStart.get() > 250) {
 
@@ -211,11 +207,9 @@ public class SBOLMqJms implements Runnable {
 
 		} catch (JMSException e) {
 
-			loggerSevere.severe("Error: Can't set listener " + e.getMessage());
+			logger.error("Can't set listener %s", e.getMessage(), e);
 
-			e.printStackTrace();
-
-			loggerSevere.severe("Flag reconnect: " + flagReconnect);
+			logger.info("Flag reconnect: %s", flagReconnect);
 
 			if (!flagReconnect) {
 
@@ -236,8 +230,6 @@ public class SBOLMqJms implements Runnable {
 	 */
 	public static void main(String[] args) throws JMSException {
 
-		System.out.println(SBOLMqJms.class.getResource("SBOLMqJms.class"));
-		
 		sc = Executors.newSingleThreadScheduledExecutor();
 
 		sc.scheduleAtFixedRate(new PropCheck(), 0, 10, TimeUnit.SECONDS);

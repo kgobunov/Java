@@ -18,6 +18,9 @@ import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
 import javax.xml.soap.SOAPPart;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import ru.aplana.tools.GetData;
 import ru.aplana.tools.RandomCreditCardNumberGenerator;
 
@@ -38,6 +41,9 @@ public class Requests {
 
 	// mod 3 must go to return credit inspector.
 	private static AtomicInteger countCalls = new AtomicInteger(0);
+
+	private static final Logger logger = LogManager
+			.getFormatterLogger(Requests.class.getName());
 
 	private Requests() {
 
@@ -170,8 +176,8 @@ public class Requests {
 			soapMessage.saveChanges();
 
 		} catch (SOAPException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
+			logger.error(e.getMessage(), e);
 		}
 		return soapMessage;
 	}
@@ -308,7 +314,7 @@ public class Requests {
 
 		} catch (UnsupportedEncodingException e) {
 
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		}
 
 		return responseFinal;

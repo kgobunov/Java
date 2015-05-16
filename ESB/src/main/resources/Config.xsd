@@ -179,15 +179,6 @@
 								</xs:annotation>
 								<xs:complexType>
 									<xs:sequence>
-										<xs:element name="debug" type="xs:boolean" minOccurs="1" maxOccurs="1">
-											<xs:annotation>
-												<xs:documentation>
-													Debug mode (extended log)
-													true - yes
-													false - no
-												</xs:documentation>
-											</xs:annotation>
-										</xs:element>
 										<xs:element name="runTime" minOccurs="1" maxOccurs="1">	
 											<xs:annotation>
 												<xs:documentation>Working time (minutes)</xs:documentation>
@@ -486,15 +477,6 @@
 								</xs:annotation>
 								<xs:complexType>
 									<xs:sequence>
-										<xs:element name="debug" type="xs:boolean" minOccurs="1" maxOccurs="1">
-											<xs:annotation>
-												<xs:documentation>
-													Debug mode (extended log)
-													true - yes
-													false - no
-												</xs:documentation>
-											</xs:annotation>
-										</xs:element>
 										<xs:element name="runTime" minOccurs="1" maxOccurs="1">	
 											<xs:annotation>
 												<xs:documentation>Working time (minutes)</xs:documentation>

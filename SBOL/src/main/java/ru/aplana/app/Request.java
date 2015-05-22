@@ -179,6 +179,8 @@ public class Request implements Runnable {
 		// Send to ESB
 		while (SBOLMqJms.flagRequest.get()) {
 
+			long start = System.currentTimeMillis();
+
 			countSendMess.getAndIncrement();
 
 			String request = RqToESB.getInstance().getRequest();
@@ -240,9 +242,9 @@ public class Request implements Runnable {
 					if (diff > timeStep
 							&& (currentStep.get() != scenario.size())) {
 
-						logger.info("Prev start_time: %d", SBOLMqJms.startTime);
+						logger.info("Prev start_time: %s", SBOLMqJms.startTime);
 
-						logger.info("Prev delay: %d", this.delay);
+						logger.info("Prev delay: %s", this.delay);
 
 						this.countAppStart = Integer
 								.parseInt(settingsFutureArray[2]);
@@ -250,7 +252,7 @@ public class Request implements Runnable {
 						if (this.countAppStart == 0) {
 
 							logger.info(
-									"[Step] %d; Count apps zero! Set default 1",
+									"[Step] %s; Count apps zero! Set default 1",
 									currentStep.get());
 
 							this.countAppStart = 1;
@@ -267,7 +269,7 @@ public class Request implements Runnable {
 
 						SBOLMqJms.startTime.set(System.currentTimeMillis());
 
-						logger.info("Start time reset. New startTime: %d",
+						logger.info("Start time reset. New startTime: %s",
 								SBOLMqJms.startTime);
 
 						logger.info("New delay: %s", this.delay);
@@ -303,9 +305,27 @@ public class Request implements Runnable {
 
 			}
 
+			long end = System.currentTimeMillis();
+
+			long diff = end - start;
+
+			logger.debug("Run send: %s ms", diff);
+
+			long delay = (diff > 0) ? this.delay - diff : 0;
+			
 			try {
 
-				Thread.sleep((long) this.delay);
+				if (delay > 0) {
+					
+					Thread.sleep(delay);
+					
+				} else {
+
+					logger.debug(
+							"Out of delay between iterations! Default delay: %s; Real delay: %s",
+							this.delay, diff);
+
+				}
 
 			} catch (InterruptedException e) {
 
@@ -317,13 +337,13 @@ public class Request implements Runnable {
 
 				Runtime r = Runtime.getRuntime();
 
-				logger.info("Total memory: %d", r.totalMemory());
+				logger.info("Total memory: %s", r.totalMemory());
 
-				logger.info("Memory before gc %d", r.freeMemory());
+				logger.info("Memory before gc %s", r.freeMemory());
 
 				r.gc();
 
-				logger.info("Memory after gc %d", r.freeMemory());
+				logger.info("Memory after gc %s", r.freeMemory());
 
 				countSendMess.set(0);
 

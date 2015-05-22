@@ -1,16 +1,16 @@
 package listener;
 
 import static ru.aplana.tools.Common.parseMessMQ;
-import static tools.PropCheck.loggerInfo;
-import static tools.PropCheck.loggerSevere;
 
 import java.util.ArrayList;
 
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import ru.aplana.tools.GetData;
-import tools.PropCheck;
 import db.DatabaseOperation;
 
 /**
@@ -21,9 +21,12 @@ import db.DatabaseOperation;
  */
 public class Listener implements MessageListener {
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(Listener.class.getName());
+
 	public Listener() {
 
-		loggerInfo.info("Init CKPITListener!");
+		logger.info("Init CKPITListener!");
 
 	}
 
@@ -34,11 +37,7 @@ public class Listener implements MessageListener {
 
 		String request = parseMessMQ(inputMsg);
 
-		if (PropCheck.debug) {
-
-			loggerInfo.info("Message from TSM for CKPIT: " + request);
-
-		}
+		logger.debug("Message from TSM for CKPIT: %s", request);
 
 		GetData getData = GetData.getInstance(request);
 
@@ -52,9 +51,7 @@ public class Listener implements MessageListener {
 
 		} catch (Exception e) {
 
-			loggerSevere.severe(e.getMessage());
-
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 
 		}
 
@@ -64,9 +61,7 @@ public class Listener implements MessageListener {
 
 		} catch (Exception e) {
 
-			loggerSevere.severe(e.getMessage());
-
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 
 		}
 

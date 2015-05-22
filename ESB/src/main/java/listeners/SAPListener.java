@@ -40,8 +40,6 @@ public class SAPListener implements MessageListener {
 
 	private MQQueueSession session;
 
-	private MQQueue queueSend;
-
 	private MQQueueConnection connection;
 
 	private static final Logger logger = LogManager
@@ -53,19 +51,6 @@ public class SAPListener implements MessageListener {
 
 		this.session = getSession(this.connection, false,
 				MQQueueSession.AUTO_ACKNOWLEDGE);
-
-		try {
-
-			this.queueSend = (MQQueue) this.session
-					.createQueue(Queues.ETSM_OUT);
-
-			this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
-
-		} catch (JMSException e) {
-
-			logger.error("Can't create queue: %s", e.getMessage(), e);
-
-		}
 
 	}
 
@@ -172,6 +157,8 @@ public class SAPListener implements MessageListener {
 
 					soapConnection.close();
 
+					soapConnectionFactory = null;
+
 				} catch (SOAPException e) {
 
 					logger.error("Can't close soap connection: %s",
@@ -211,11 +198,19 @@ public class SAPListener implements MessageListener {
 
 		MessageProducer producer = null;
 
+		MQQueue queueSend = null;
+
+		TextMessage outputMsg = null;
+
 		try {
 
-			TextMessage outputMsg = this.session.createTextMessage(response);
+			outputMsg = this.session.createTextMessage(response);
 
-			producer = this.session.createProducer(this.queueSend);
+			queueSend = (MQQueue) this.session.createQueue(Queues.ETSM_OUT);
+
+			queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
+
+			producer = this.session.createProducer(queueSend);
 
 			producer.send(outputMsg);
 
@@ -233,6 +228,10 @@ public class SAPListener implements MessageListener {
 				if (null != producer) {
 
 					producer.close();
+
+					outputMsg = null;
+
+					queueSend = null;
 
 				}
 			} catch (JMSException e) {

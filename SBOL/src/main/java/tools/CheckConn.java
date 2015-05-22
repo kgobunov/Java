@@ -27,9 +27,11 @@ public class CheckConn {
 
 		MQQueueConnection connection = null;
 
+		MQQueueConnectionFactory factory = null;
+
 		try {
 
-			MQQueueConnectionFactory factory = MQConn.getFactory();
+			factory = MQConn.getFactory();
 
 			factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
 
@@ -50,6 +52,8 @@ public class CheckConn {
 				try {
 
 					connection.close();
+
+					factory = null;
 
 				} catch (JMSException e) {
 

@@ -11,6 +11,8 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xml.sax.SAXException;
 
 /**
@@ -18,9 +20,12 @@ import org.xml.sax.SAXException;
  * Validating config file
  * 
  * @author Maksim Stepanov
- *
+ * 
  */
 public class Validation {
+
+	private static final Logger logger = LogManager
+			.getFormatterLogger(Validation.class.getName());
 
 	@SuppressWarnings("static-access")
 	public static boolean validating() {
@@ -57,24 +62,16 @@ public class Validation {
 
 			validFlag = true;
 
-		} catch (SAXException e) {
+		} catch (SAXException | IOException e) {
 
-			System.err.println(xmlFile.getSystemId()
-					+ " is not valid");
-
-			System.err.println("Reason: " + e.getLocalizedMessage());
-
-			e.printStackTrace();
-
-		} catch (IOException e) {
-
-			e.printStackTrace();
+			logger.error("%s is not valid. Reason: %s", xmlFile.getSystemId(),
+					e.getMessage(), e);
 
 		} finally {
 
 			if (validFlag) {
 
-				System.out.println(xmlFile.getSystemId() + " is valid");
+				logger.info("%s is valid", xmlFile.getSystemId());
 
 			}
 

@@ -13,7 +13,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import db.DbOperation;
+import tools.PropCheck;
+import db.Saver;
 
 /**
  * Creates ERIB app
@@ -130,7 +131,7 @@ public class RqToESB {
 
 		dataArray.add(birthday);
 
-		DbOperation.getInstance().evalOperation(1, dataArray);
+		PropCheck.cacheSaverPool.execute(new Saver("insert", dataArray));
 	}
 
 	public static RqToESB getInstance() {

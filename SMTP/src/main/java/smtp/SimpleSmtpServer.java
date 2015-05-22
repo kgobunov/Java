@@ -16,8 +16,6 @@
  */
 package smtp;
 
-import static ru.aplana.app.RunServer.loggerInfo;
-import static ru.aplana.app.RunServer.loggerSevere;
 import static testing.MailProperties.BANDWIDTH;
 import static testing.MailProperties.CONNECTION_TIME;
 import static testing.MailProperties.GC_CALLS;
@@ -41,6 +39,9 @@ import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import ru.aplana.app.RunServer;
 import db.dataBaseHelper;
 
@@ -51,6 +52,9 @@ import db.dataBaseHelper;
  */
 
 public class SimpleSmtpServer implements Runnable {
+
+	private static final Logger logger = LogManager
+			.getFormatterLogger(SimpleSmtpServer.class.getName());
 
 	private SimpleDateFormat sdf = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss.SSS");
@@ -161,6 +165,8 @@ public class SimpleSmtpServer implements Runnable {
 
 				} catch (Exception e) {
 
+					//logger.error(e.getMessage(), e);
+
 					if (socket != null) {
 
 						socket.close();
@@ -203,8 +209,6 @@ public class SimpleSmtpServer implements Runnable {
 						String body = new String(b);
 
 						if (RunServer.debug) {
-							
-							
 
 							Matcher m = p.matcher(body);
 
@@ -223,9 +227,9 @@ public class SimpleSmtpServer implements Runnable {
 
 							} else {
 
-								loggerInfo
-										.info("Can't get application number from body: "
-												+ body);
+								logger.info(
+										"Can't get application number from body: %s",
+										body);
 
 							}
 
@@ -233,8 +237,8 @@ public class SimpleSmtpServer implements Runnable {
 
 						} else {
 
-							loggerInfo.info(sdf.format(new Date()) + " Body: "
-									+ body);
+							logger.info(sdf.format(new Date()) + " Body: %s",
+									body);
 						}
 
 					}
@@ -245,17 +249,16 @@ public class SimpleSmtpServer implements Runnable {
 
 						Runtime rn = Runtime.getRuntime();
 
-						loggerInfo.info("Total memory: " + rn.totalMemory());
+						logger.info("Total memory: %s", rn.totalMemory());
 
-						loggerInfo.info("Free memory before GC: "
-								+ rn.freeMemory());
+						logger.info("Free memory before GC: %s",
+								rn.freeMemory());
 
 						rn.gc();
 
-						loggerInfo.info("Free memory after GC: "
-								+ rn.freeMemory());
+						logger.info("Free memory after GC: %s", rn.freeMemory());
 
-						loggerInfo.info("Call GC!");
+						logger.info("Call GC!");
 
 					}
 				}
@@ -265,9 +268,7 @@ public class SimpleSmtpServer implements Runnable {
 		} catch (Exception e) {
 
 			/** @todo Should throw an appropriate exception here. */
-			loggerSevere.severe("Can't get email! " + e.getMessage());
-
-			e.printStackTrace();
+			logger.error("Can't get email! %s", e.getMessage(), e);
 
 		} finally {
 
@@ -277,16 +278,13 @@ public class SimpleSmtpServer implements Runnable {
 
 					serverSocket.close();
 
-					loggerInfo.info("Server socket close!");
+					logger.info("Server socket close!");
 
 					server.stop();
 
 				} catch (IOException e) {
 
-					loggerSevere
-							.severe("Can't close socket! " + e.getMessage());
-
-					e.printStackTrace();
+					logger.error("Can't close socket! %s", e.getMessage(), e);
 
 				}
 			}
@@ -325,9 +323,7 @@ public class SimpleSmtpServer implements Runnable {
 
 		} catch (IOException e) {
 
-			loggerSevere.severe("Can't stop smtp server! " + e.getMessage());
-
-			e.printStackTrace();
+			logger.error("Can't stop smtp server! %s", e.getMessage(), e);
 
 		}
 
@@ -375,11 +371,10 @@ public class SimpleSmtpServer implements Runnable {
 
 			} catch (IOException e) {
 
-				loggerSevere.severe("Can't read email! " + e.getMessage());
+				logger.error("Can't read email! %s", e.getMessage(), e);
 
-				loggerSevere.severe("Line " + line);
+				logger.error("Line %s", line);
 
-				// e.printStackTrace();
 			}
 
 			if (line == null) {

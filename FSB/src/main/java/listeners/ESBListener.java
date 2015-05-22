@@ -3,8 +3,6 @@ package listeners;
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
 import static tools.PropCheck.fsb;
-import static tools.PropCheck.loggerInfo;
-import static tools.PropCheck.loggerSevere;
 
 import java.util.ArrayList;
 
@@ -14,10 +12,11 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import requests.ReplyToESB;
-import ru.aplana.app.FSBMqJms;
 import ru.aplana.tools.GetData;
-import tools.PropCheck;
 
 import com.ibm.mq.jms.MQQueue;
 import com.ibm.mq.jms.MQQueueConnection;
@@ -35,16 +34,36 @@ public class ESBListener implements MessageListener {
 
 	private MQQueueSession session;
 
-	private MQQueueConnection connection;
+	private final MQQueueConnection connection;
+
+	private MQQueue queueSend;
+
+	private long delay = 0;
+
+	private static final Logger logger = LogManager
+			.getFormatterLogger(ESBListener.class.getName());
 
 	public ESBListener(MQQueueConnection connection) {
 
-		loggerInfo.info("Init ESBListener");
+		logger.info("Init ESBListener");
 
 		this.connection = connection;
 
 		this.session = getSession(this.connection, false,
 				MQQueueSession.AUTO_ACKNOWLEDGE);
+
+		try {
+
+			this.queueSend = (MQQueue) this.session.createQueue(fsb
+					.getChildText("queueTo"));
+
+		} catch (JMSException e) {
+
+			logger.error(e.getMessage(), e);
+
+		}
+
+		this.delay = Long.parseLong(fsb.getChildText("delay")) * 1000;
 
 	}
 
@@ -53,160 +72,112 @@ public class ESBListener implements MessageListener {
 
 		ArrayList<String> dataArray = new ArrayList<String>(5);
 
-		MessageProducer producer = null;
-
 		int status = -99;
 
 		GetData getData = null;
 
+		String request = parseMessMQ(inputMsg);
+
+		getData = GetData.getInstance(request);
+
 		try {
 
-			String request = parseMessMQ(inputMsg);
+			dataArray.add(getData.getValueByName("RqUID"));
 
-			getData = GetData.getInstance(request);
+			dataArray.add(getData.getValueByName("StatusCode"));
 
-			boolean flag_tsm = false;
+			dataArray.add(getData.getValueByName("ApplicationNumber"));
 
-			try {
-
-				String rquid = getData.getValueByName("RqUID");
-
-				if (rquid.length() == 0) {
-
-					rquid = getData.getValueByName("MessageId");
-
-					flag_tsm = true;
-
-				}
-
-				dataArray.add(rquid);
-
-				dataArray.add(getData.getValueByName("StatusCode"));
-
-				dataArray.add(getData.getValueByName("ApplicationNumber"));
-
-				dataArray.add(getData.getValueByName("ErrorCode"));
-
-				try {
-
-					status = Integer.parseInt(dataArray.get(1));
-
-				} catch (Exception e) {
-
-					loggerSevere.severe("Error: Can't parse status. "
-							+ e.getMessage());
-
-					dataArray.set(1, "-99");
-
-				}
-				switch (status) {
-				case 1:
-					dataArray.add("Заявка успешно создана!");
-					break;
-				case 0:
-					dataArray.add("Отказ в кредите!");
-					break;
-				case 2:
-					dataArray.add("Заявка одобрена!");
-					break;
-				case 3:
-					dataArray.add("Заявка отправлена в обработку!");
-					break;
-				case 4:
-					dataArray.add("Кредит выдан!");
-					break;
-				case -99:
-					dataArray.add("Unknown xml!");
-					break;
-				default:
-					dataArray.add(getData.getValueByName("Message"));
-					break;
-				}
-
-			} catch (Exception e) {
-
-				loggerSevere.severe("Error: Can't save data from TSM "
-						+ e.getMessage());
-
-				e.printStackTrace();
-
-			}
+			dataArray.add(getData.getValueByName("ErrorCode"));
 
 			try {
 
-				if (flag_tsm) {
-
-					if (FSBMqJms.logTsmApp) {
-
-						DbOperation.getInstance().evalOperation(3, dataArray);
-
-					}
-
-				} else {
-
-					DbOperation.getInstance().evalOperation(2, dataArray);
-				}
+				status = Integer.parseInt(dataArray.get(1));
 
 			} catch (Exception e) {
 
-				loggerSevere.severe(e.getMessage());
+				logger.error("Can't parse status. %s", e.getMessage(), e);
 
-				e.printStackTrace();
+				dataArray.set(1, "-99");
 
 			}
+			switch (status) {
+			case 1:
+				dataArray.add("Заявка успешно создана!");
+				break;
+			case 0:
+				dataArray.add("Отказ в кредите!");
+				break;
+			case 2:
+				dataArray.add("Заявка одобрена!");
+				break;
+			case 3:
+				dataArray.add("Заявка отправлена в обработку!");
+				break;
+			case 4:
+				dataArray.add("Кредит выдан!");
+				break;
+			case -99:
+				dataArray.add("Unknown xml!");
+				break;
+			default:
+				dataArray.add(getData.getValueByName("Message"));
+				break;
+			}
 
-			if (status == 2) {
+		} catch (Exception e) {
 
-				ArrayList<String> data = new ArrayList<String>(4);
+			logger.error("Can't save data from TSM %s", e.getMessage(), e);
 
-				data.add(getData.getValueByName("MessageId"));
+		}
 
-				data.add(getData.getValueByName("MessageDT"));
+		try {
 
-				data.add(getData.getValueByName("RqUID"));
+			DbOperation.getInstance().evalOperation(2, dataArray);
 
-				data.add(getData.getValueByName("RqTm"));
+		} catch (Exception e) {
 
-				String queue = fsb.getChildText("queueTo");
+			logger.error(e.getMessage(), e);
 
-				String appNumber = getData.getValueByName("ApplicationNumber");
+		}
 
-				if (PropCheck.debug) {
+		if (status == 2) {
 
-					loggerInfo.info("Credit confirm for app number: "
-							+ appNumber);
+			ArrayList<String> data = new ArrayList<String>(4);
 
-				}
+			data.add(getData.getValueByName("MessageId"));
 
-				String req = ReplyToESB.getResp(data);
+			data.add(getData.getValueByName("MessageDT"));
 
-				if (PropCheck.debug) {
+			data.add(getData.getValueByName("RqUID"));
 
-					loggerInfo.info("FSB to ESB: " + req);
+			data.add(getData.getValueByName("RqTm"));
 
-				}
+			String appNumber = getData.getValueByName("ApplicationNumber");
 
-				TextMessage outputMsg = this.session.createTextMessage(req);
+			logger.info("Credit confirm for app number: %s", appNumber);
 
-				MQQueue queueSend = (MQQueue) this.session.createQueue(queue);
+			String req = ReplyToESB.getResp(data);
 
-				producer = this.session.createProducer(queueSend);
+			TextMessage outputMsg = null;
 
-				long delay = Long.parseLong(fsb.getChildText("delay")) * 1000;
+			MessageProducer producer = null;
 
-				if (delay > 0) {
+			try {
+
+				outputMsg = this.session.createTextMessage(req);
+
+				producer = this.session.createProducer(this.queueSend);
+
+				if (this.delay > 0) {
 
 					try {
 
-						Thread.sleep(delay);
+						Thread.sleep(this.delay);
 
-					} catch (NumberFormatException e) {
+					} catch (NumberFormatException | InterruptedException e) {
 
-						e.printStackTrace();
-
-					} catch (InterruptedException e) {
-
-						e.printStackTrace();
+						logger.error(e.getMessage(), e);
 
 					}
 
@@ -214,27 +185,29 @@ public class ESBListener implements MessageListener {
 
 				producer.send(outputMsg);
 
-			}
+				logger.info("Send successfully - FSB to ESB: %s", req);
 
-		} catch (JMSException e) {
-
-			loggerSevere.severe(e.getMessage());
-
-			e.printStackTrace();
-
-		} finally {
-
-			try {
-
-				if (null != producer) {
-
-					producer.close();
-
-				}
 			} catch (JMSException e) {
 
-				e.printStackTrace();
+				logger.error(e.getMessage(), e);
+
+			} finally {
+
+				try {
+
+					if (null != producer) {
+
+						producer.close();
+
+					}
+
+				} catch (JMSException e) {
+
+					logger.error(e.getMessage(), e);
+
+				}
 			}
+
 		}
 
 	}

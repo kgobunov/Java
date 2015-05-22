@@ -2,6 +2,8 @@ package tools;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,6 +24,9 @@ import ru.aplana.app.SBOLMqJms;
  */
 public class PropCheck implements Runnable {
 
+	public static ExecutorService cacheSaverPool = Executors
+			.newCachedThreadPool();
+	
 	public static Element erib = null;
 
 	public static Element db = null;
@@ -120,6 +125,8 @@ public class PropCheck implements Runnable {
 			SBOLMqJms.executor.shutdownNow();
 
 			SBOLMqJms.sc.shutdownNow();
+			
+			cacheSaverPool.shutdownNow();
 
 			logger.info("Executors stopped!");
 

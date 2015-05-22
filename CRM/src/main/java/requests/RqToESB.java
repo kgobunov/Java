@@ -6,16 +6,18 @@ import static ru.aplana.tools.Common.generateNumber;
 import static ru.aplana.tools.Common.generateRqUID;
 import static tools.PropCheck.common;
 import static tools.PropCheck.crm;
-import static tools.PropCheck.debug;
-import static tools.PropCheck.loggerInfo;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import ru.aplana.app.Request;
-import db.DbOperation;
+import tools.PropCheck;
+import db.Saver;
 
 /**
  * Creates CRM app
@@ -36,6 +38,9 @@ public class RqToESB {
 	private static AtomicInteger count = new AtomicInteger(-1);
 
 	private static AtomicInteger countUser = new AtomicInteger(10);
+
+	private static final Logger logger = LogManager
+			.getFormatterLogger(RqToESB.class.getName());
 
 	// max id for user login
 	private int maxUserKI;
@@ -128,7 +133,7 @@ public class RqToESB {
 
 		dataArray.add(birthday);
 
-		DbOperation.getInstance().evalOperation(1, dataArray);
+		PropCheck.cacheSaverPool.execute(new Saver("insert", dataArray));
 	}
 
 	public static RqToESB getInstance(String[] settings) {
@@ -147,11 +152,7 @@ public class RqToESB {
 	 */
 	private final void setKI() {
 
-		if (debug) {
-
-			loggerInfo.info("COUNT USERS: " + countUser.get());
-
-		}
+		logger.debug("COUNT USERS: %d", countUser.get());
 
 		String user = "user_crm" + countUser.get();
 
@@ -164,7 +165,7 @@ public class RqToESB {
 
 				this.maxUserKI = Integer.parseInt(this.settings[3]);
 
-				loggerInfo.info("New max login: " + this.maxUserKI);
+				logger.info("New max login: %d", this.maxUserKI);
 
 				Request.flagNewStep.set(false);
 
@@ -201,11 +202,11 @@ public class RqToESB {
 
 		else {
 
-			loggerInfo.info("Count before reset: " + count.get());
+			logger.info("Count before reset: %d", count.get());
 
 			count.set(0);
 
-			loggerInfo.info("Reset count! Count: " + count.get());
+			logger.info("Reset count! Count: %d", count.get());
 		}
 
 		setKI();
@@ -231,11 +232,7 @@ public class RqToESB {
 				21.93942, 44.466827, 79.155174, 38.93509, 73.04887, 63.64793,
 				21.292894 };
 
-		if (debug) {
-
-			loggerInfo.info("COUNT Potreb: " + count.get());
-
-		}
+		logger.debug("COUNT Potreb: %d", count.get());
 
 		double val = (double) dataSecond[count.get()];
 

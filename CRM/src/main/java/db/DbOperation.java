@@ -1,8 +1,5 @@
 package db;
 
-import static tools.PropCheck.loggerInfo;
-import static tools.PropCheck.loggerSevere;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -11,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import ru.aplana.tools.OracleDB;
 
@@ -29,6 +29,9 @@ public class DbOperation {
 	private Lock lock = new ReentrantLock();
 
 	private ArrayList<String> dataArray = null;
+
+	private static final Logger logger = LogManager
+			.getFormatterLogger(DbOperation.class.getName());
 
 	/**
 	 * 
@@ -70,7 +73,7 @@ public class DbOperation {
 
 				if (this.connection.isClosed()) {
 
-					loggerInfo.info("Connection closed!");
+					logger.info("Connection closed!");
 
 					this.connection = null;
 
@@ -104,10 +107,7 @@ public class DbOperation {
 
 		} catch (SQLException e) {
 
-			loggerSevere.severe("Can't connecting to DB! " + e.getMessage());
-
-			e.printStackTrace();
-
+			logger.error("Can't connecting to DB! %s", e.getMessage(), e);
 		}
 
 	}
@@ -126,7 +126,7 @@ public class DbOperation {
 			this.connection = OracleDB.getConnection(DbConn.ORA_DB_URL,
 					DbConn.ORA_USER, DbConn.ORA_PASS);
 
-			loggerInfo.info("Connected success!");
+			logger.info("Connected success!");
 
 		} finally {
 
@@ -165,7 +165,7 @@ public class DbOperation {
 
 			int count_rows = preparedStatement.executeUpdate();
 
-			loggerInfo.info("Select TSM success! ");
+			logger.info("Select TSM success! ");
 
 			if (count_rows == 0) {
 
@@ -175,7 +175,8 @@ public class DbOperation {
 
 					String insert = "insert into sbb_monitor.sbol_app ( RQUD, app_number , app_status,  system, description, time ) values (?,?,?,?,?,?)";
 
-					_preparedStatement = this.connection.prepareStatement(insert);
+					_preparedStatement = this.connection
+							.prepareStatement(insert);
 
 					_preparedStatement.setString(1, dataArray.get(0));
 
@@ -193,15 +194,12 @@ public class DbOperation {
 
 					_preparedStatement.executeUpdate();
 
-					loggerInfo.info("Insert TSM app success! ");
+					logger.info("Insert TSM app success! ");
 
 				} catch (SQLException e) {
 
-					loggerSevere
-							.severe("Error[TSM]: Failed insert data to databases! "
-									+ e.getMessage());
-
-					e.printStackTrace();
+					logger.error("Failed insert data to databases! %s",
+							e.getMessage(), e);
 
 				} finally {
 
@@ -235,14 +233,12 @@ public class DbOperation {
 
 					__preparedStatement.executeUpdate();
 
-					loggerInfo.info("Update TSM success!");
+					logger.info("Update TSM success!");
 
 				} catch (SQLException e) {
 
-					loggerSevere
-							.severe("Error[TSM]: Failed update data to databases!");
-
-					e.printStackTrace();
+					logger.error("Failed update data to databases! %s",
+							e.getMessage(), e);
 
 				} finally {
 
@@ -258,11 +254,8 @@ public class DbOperation {
 
 		} catch (SQLException e) {
 
-			loggerSevere
-					.severe("Error[TSM]: Failed select data from databases! "
-							+ e.getMessage());
-
-			e.printStackTrace();
+			logger.error("Failed select data from databases! %s",
+					e.getMessage(), e);
 
 		} finally {
 
@@ -274,7 +267,7 @@ public class DbOperation {
 
 				} catch (SQLException e) {
 
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
 
 				}
 
@@ -320,14 +313,12 @@ public class DbOperation {
 
 			preparedStatement.executeUpdate();
 
-			loggerInfo.info("Insert success! ");
+			logger.info("Insert success! ");
 
 		} catch (SQLException e) {
 
-			loggerSevere.severe("Error: Failed insert data to databases! "
-					+ e.getMessage());
-
-			e.printStackTrace();
+			logger.error("Failed insert data to databases! %s", e.getMessage(),
+					e);
 
 		} finally {
 
@@ -339,7 +330,7 @@ public class DbOperation {
 
 				} catch (SQLException e) {
 
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
 
 				}
 
@@ -381,13 +372,12 @@ public class DbOperation {
 
 			preparedStatement.executeUpdate();
 
-			loggerInfo.info("Update success!");
+			logger.info("Update success!");
 
 		} catch (SQLException e) {
 
-			loggerSevere.severe("Error: Failed update data to databases!");
-
-			e.printStackTrace();
+			logger.error("Failed update data to databases! %s", e.getMessage(),
+					e);
 
 		} finally {
 
@@ -399,7 +389,7 @@ public class DbOperation {
 
 				} catch (SQLException e) {
 
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
 
 				}
 

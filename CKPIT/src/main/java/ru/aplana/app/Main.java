@@ -5,9 +5,6 @@ import static ru.aplana.tools.MQTools.getConsumer;
 import static ru.aplana.tools.MQTools.getSession;
 import static tools.PropCheck.ckpit;
 import static tools.PropCheck.common;
-import static tools.PropCheck.debug;
-import static tools.PropCheck.loggerInfo;
-import static tools.PropCheck.loggerSevere;
 
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
@@ -25,6 +22,10 @@ import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
 import listener.Listener;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import products.Auto;
 import products.Card;
 import products.PotrebBez;
@@ -67,6 +68,9 @@ public class Main implements Runnable {
 
 	private boolean flagReconnect = false;
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(Main.class.getName());
+
 	private static int countThread;
 
 	// time delay between times
@@ -79,10 +83,6 @@ public class Main implements Runnable {
 
 	private MQQueueConnection connection;
 
-	private MQQueueSession session;
-
-	private MQQueue queueSend;
-
 	private static final Lock lock = new ReentrantLock();
 
 	public Main() {
@@ -94,12 +94,10 @@ public class Main implements Runnable {
 
 			this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
 
-		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JMSException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (NumberFormatException | JMSException e) {
+
+			logger.error(e.getMessage(), e);
+
 		}
 
 	}
@@ -115,10 +113,7 @@ public class Main implements Runnable {
 			flag.set(true);
 		}
 
-		if (debug) {
-
-			loggerInfo.info("Send to TSM from CKPIT");
-		}
+		logger.debug("Send to TSM from CKPIT");
 
 		if (countSetListener.get() == 0) {
 
@@ -133,19 +128,19 @@ public class Main implements Runnable {
 					public void onException(JMSException e) {
 
 						String errorCode = e.getErrorCode();
-						loggerSevere.severe("Error code: " + errorCode);
+
+						logger.error("Error code: %s", errorCode);
 
 						// JMSWMQ1107 - closed connection
 						if (errorCode.equalsIgnoreCase("JMSWMQ1107")) {
 
-							loggerSevere.severe("Error trace: "
-									+ e.getMessage());
+							logger.error("Error msg: %s", e.getMessage(), e);
 
 							flagReconnect = true;
 
 							flag.set(false);
 
-							loggerInfo.info("Connection to MQ closed.");
+							logger.info("Connection to MQ closed.");
 
 							long delay = Long.parseLong(common
 									.getChildText("delayReconnect")) * 1000;
@@ -172,9 +167,8 @@ public class Main implements Runnable {
 
 								} catch (Exception e1) {
 
-									loggerSevere
-											.severe("Cann't reconecting to MQ: "
-													+ e1.getMessage());
+									logger.error("Can't reconecting to MQ: %s",
+											e1.getMessage());
 								}
 
 								// Delay between retry get connect
@@ -188,18 +182,19 @@ public class Main implements Runnable {
 
 									long diff = stop - start;
 
-									loggerInfo.info("Time wait: " + diff);
+									logger.info("Time wait: %s", diff);
 
 									if (diff < delay) {
 
-										loggerInfo.info("Wake up early! Wait: "
-												+ (delay - diff));
+										logger.info("Wake up early! Wait: %s",
+												(delay - diff));
+
 										Thread.sleep(delay - diff);
 									}
 
 								} catch (InterruptedException e1) {
 
-									e1.printStackTrace();
+									logger.error(e1.getMessage(), e1);
 								}
 
 							}
@@ -213,30 +208,22 @@ public class Main implements Runnable {
 
 				flag.set(true);
 
-				if (debug) {
-
-					loggerInfo
-							.info("Thread is connected to MQ server with parameters: HostName: "
-									+ this.factory.getHostName()
-									+ "; Port: "
-									+ this.factory.getPort()
-									+ "; QueueManager: "
-									+ this.factory.getQueueManager()
-									+ "; Channel: " + this.factory.getChannel());
-				}
+				logger.debug(
+						"Thread is connected to MQ server with parameters: HostName: %s; Port: %s; QueueManager: %s; Channel: %s",
+						this.factory.getHostName(), this.factory.getPort(),
+						this.factory.getQueueManager(),
+						this.factory.getChannel());
 
 				MessageConsumer consumerERIB = getConsumer(this.connection,
 						Queues.CKPIT_IN);
 
 				consumerERIB.setMessageListener(new Listener());
 
-				loggerInfo.info("Listener is set to queue 'CKPIT.IN'");
+				logger.info("Listener is set to queue %s", Queues.CKPIT_IN);
 
 			} catch (JMSException e) {
 
-				loggerSevere.severe("Error: Set listener: " + e.getMessage());
-
-				e.printStackTrace();
+				logger.error("Set listener: %s", e.getMessage(), e);
 
 				if (!flagReconnect) {
 
@@ -254,20 +241,22 @@ public class Main implements Runnable {
 
 		// send request
 
+		MQQueueSession session = null;
+
+		MessageProducer producer = null;
+
 		try {
 
-			this.session = getSession(this.connection, false,
+			session = getSession(this.connection, false,
 					MQQueueSession.AUTO_ACKNOWLEDGE);
 
-			this.queueSend = (MQQueue) this.session
-					.createQueue(Queues.CKPIT_OUT);
+			MQQueue queueSend = (MQQueue) session.createQueue(Queues.CKPIT_OUT);
 
-			this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
+			queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
 
 			String request = null;
 
-			MessageProducer producer = this.session
-					.createProducer(this.queueSend);
+			producer = session.createProducer(queueSend);
 
 			TextMessage outputMsg = null;
 
@@ -302,12 +291,9 @@ public class Main implements Runnable {
 					data = potreb.getdata();
 				}
 
-				if (debug) {
+				logger.debug("Request: %s", request);
 
-					loggerInfo.info("Request: " + request);
-				}
-
-				outputMsg = this.session.createTextMessage(request);
+				outputMsg = session.createTextMessage(request);
 
 				try {
 
@@ -315,16 +301,14 @@ public class Main implements Runnable {
 
 				} catch (InterruptedException e) {
 
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
 				}
 
 				producer.send(outputMsg);
 
 				DatabaseOperation.getInstance().evalOperation(1, data);
 
-				if (debug)
-
-					loggerInfo.info("Count: " + count);
+				logger.debug("Count: %s", count);
 
 				if (count.get() > 1144) {
 
@@ -332,12 +316,12 @@ public class Main implements Runnable {
 
 					count.getAndSet(101);
 
-					loggerInfo.info("Update NT product");
+					logger.info("Update NT product");
 
 					PotrebBezNT addPotreb_NT = new PotrebBezNT();
 
-					outputMsg = this.session.createTextMessage(addPotreb_NT
-							.getXml());
+					outputMsg = session
+							.createTextMessage(addPotreb_NT.getXml());
 
 					producer.send(outputMsg);
 
@@ -357,7 +341,7 @@ public class Main implements Runnable {
 							Card addCard = new Card(
 									countAddProduct.getAndIncrement(), "insert");
 
-							outputMsg = this.session.createTextMessage(addCard
+							outputMsg = session.createTextMessage(addCard
 									.getXml());
 
 							dataAdd = addCard.getdata();
@@ -368,7 +352,7 @@ public class Main implements Runnable {
 							Auto addAuto = new Auto(
 									countAddProduct.getAndIncrement(), "insert");
 
-							outputMsg = this.session.createTextMessage(addAuto
+							outputMsg = session.createTextMessage(addAuto
 									.getXml());
 
 							dataAdd = addAuto.getdata();
@@ -380,8 +364,8 @@ public class Main implements Runnable {
 							PotrebBez addPotreb = new PotrebBez(
 									countAddProduct.getAndIncrement(), "insert");
 
-							outputMsg = this.session
-									.createTextMessage(addPotreb.getXml());
+							outputMsg = session.createTextMessage(addPotreb
+									.getXml());
 
 							dataAdd = addPotreb.getdata();
 
@@ -391,9 +375,8 @@ public class Main implements Runnable {
 
 						saveCountAddProduct.getAndIncrement();
 
-						if (debug)
-							loggerInfo.info("saveCountAddProduct: "
-									+ saveCountAddProduct);
+						logger.debug("saveCountAddProduct: %s",
+								saveCountAddProduct);
 
 						// insert to db new products
 
@@ -408,15 +391,37 @@ public class Main implements Runnable {
 
 			}
 
-			producer.close();
-
-			this.session.close();
-
 		} catch (JMSException e) {
 
-			loggerSevere.severe("Error: Can't send xml's " + e.getMessage());
+			logger.error("Can't send xml's %s", e.getMessage(), e);
 
-			e.printStackTrace();
+		} finally {
+
+			try {
+
+				if (null != producer) {
+
+					producer.close();
+
+				}
+
+			} catch (JMSException e) {
+
+				logger.error(e.getMessage(), e);
+			}
+
+			try {
+
+				if (null != session) {
+
+					session.close();
+
+				}
+
+			} catch (JMSException e) {
+
+				logger.error(e.getMessage(), e);
+			}
 
 		}
 

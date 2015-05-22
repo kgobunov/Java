@@ -23,6 +23,16 @@
 
 <dependencies>
       <dependency>
+  		<groupId>log4j-api</groupId>
+  		<artifactId>log4j-api</artifactId>
+  		<version>2.3</version>
+      </dependency>
+      <dependency>
+  		<groupId>log4j-core</groupId>
+  		<artifactId>log4j-core</artifactId>
+  		<version>2.3</version>
+      </dependency> 
+      <dependency>
   		<groupId>ru.aplana.lib</groupId>
   		<artifactId>ru.aplana.lib</artifactId>
   		<version>1.0-jar-with-dependencies</version>

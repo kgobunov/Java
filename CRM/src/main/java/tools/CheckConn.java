@@ -2,6 +2,9 @@ package tools;
 
 import javax.jms.JMSException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueueConnection;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
@@ -15,15 +18,20 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
 @SuppressWarnings("deprecation")
 public class CheckConn {
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(CheckConn.class.getName());
+
 	public static boolean checkConn() {
 
 		boolean status = false;
 
 		MQQueueConnection connection = null;
 
+		MQQueueConnectionFactory factory = null;
+
 		try {
 
-			MQQueueConnectionFactory factory = MQConn.getFactory();
+			factory = MQConn.getFactory();
 
 			factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
 
@@ -33,31 +41,29 @@ public class CheckConn {
 
 			status = true;
 
-		} catch (NumberFormatException e) {
+		} catch (NumberFormatException | JMSException e) {
 
-			e.printStackTrace();
-
-		} catch (JMSException e) {
-
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 
 		} finally {
 
-			if (connection != null) {
+			if (null != connection) {
 
 				try {
-					
+
 					connection.close();
-					
+
+					factory = null;
+
 				} catch (JMSException e) {
 
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
 				}
 
 			}
+
 		}
 
 		return status;
 	}
-
 }

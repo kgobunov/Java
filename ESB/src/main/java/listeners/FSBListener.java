@@ -30,8 +30,6 @@ public class FSBListener implements MessageListener {
 
 	private MQQueueSession session;
 
-	private MQQueue queueSend;
-
 	private MQQueueConnection connection;
 
 	private static final Logger logger = LogManager
@@ -44,24 +42,15 @@ public class FSBListener implements MessageListener {
 		this.session = getSession(this.connection, false,
 				MQQueueSession.AUTO_ACKNOWLEDGE);
 
-		try {
-
-			this.queueSend = (MQQueue) this.session
-					.createQueue(Queues.ETSM_OUT);
-
-			this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
-
-		} catch (JMSException e) {
-
-			logger.error("Can't create queue: %s", e.getMessage(), e);
-
-		}
-
 	}
 
 	public void onMessage(Message inputMsg) {
 
 		MessageProducer producer = null;
+
+		TextMessage outputMsg = null;
+
+		MQQueue queueSend = null;
 
 		try {
 
@@ -74,9 +63,13 @@ public class FSBListener implements MessageListener {
 			// For this system response equals request
 			response = request;
 
-			TextMessage outputMsg = this.session.createTextMessage(response);
+			outputMsg = this.session.createTextMessage(response);
 
-			producer = this.session.createProducer(this.queueSend);
+			queueSend = (MQQueue) this.session.createQueue(Queues.ETSM_OUT);
+
+			queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
+
+			producer = this.session.createProducer(queueSend);
 
 			producer.send(outputMsg);
 
@@ -93,6 +86,10 @@ public class FSBListener implements MessageListener {
 				if (null != producer) {
 
 					producer.close();
+
+					outputMsg = null;
+
+					queueSend = null;
 				}
 
 			} catch (JMSException e) {

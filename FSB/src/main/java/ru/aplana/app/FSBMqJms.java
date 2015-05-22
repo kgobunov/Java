@@ -3,10 +3,7 @@ package ru.aplana.app;
 import static ru.aplana.tools.MQTools.getConnection;
 import static ru.aplana.tools.MQTools.getConsumer;
 import static tools.PropCheck.common;
-import static tools.PropCheck.debug;
 import static tools.PropCheck.fsb;
-import static tools.PropCheck.loggerInfo;
-import static tools.PropCheck.loggerSevere;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,6 +20,10 @@ import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 
 import listeners.ESBListener;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import tools.CheckConn;
 import tools.MQConn;
 import tools.PropCheck;
@@ -43,8 +44,6 @@ public class FSBMqJms implements Runnable {
 	public static AtomicBoolean flagRequest = new AtomicBoolean(false);
 
 	public static AtomicLong startTime = new AtomicLong();
-
-	public static boolean logTsmApp = false;
 
 	public static ScheduledExecutorService sc = null;
 
@@ -68,6 +67,9 @@ public class FSBMqJms implements Runnable {
 
 	private static Lock lock = new ReentrantLock();
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(FSBMqJms.class.getName());
+
 	public FSBMqJms() {
 
 		// Create factory
@@ -76,16 +78,12 @@ public class FSBMqJms implements Runnable {
 			this.factory = MQConn.getFactory();
 
 			this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
-			
 
 		} catch (NumberFormatException | JMSException e) {
 
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 
 		}
-
-		// Flag for logging status tsm applications
-		logTsmApp = Boolean.parseBoolean(fsb.getChildText("flagLogTsmApp"));
 
 	}
 
@@ -105,18 +103,18 @@ public class FSBMqJms implements Runnable {
 
 					String errorCode = e.getErrorCode();
 
-					loggerSevere.severe("Error code: " + errorCode);
+					logger.error("Error code: %s", errorCode);
 
 					// JMSWMQ1107 - connection error
 					if (errorCode.equalsIgnoreCase("JMSWMQ1107")) {
 
-						loggerSevere.severe("Error trace: " + e.getMessage());
+						logger.error("Error msg: %s", e.getMessage(), e);
 
 						flagReconnect = true;
 
 						flagRequest.set(false);
 
-						loggerInfo.info("Connection to MQ closed.");
+						logger.info("Connection to MQ closed.");
 
 						long delay = Long.parseLong(common
 								.getChildText("delayReconnect")) * 1000;
@@ -142,9 +140,8 @@ public class FSBMqJms implements Runnable {
 
 							} catch (Exception e1) {
 
-								loggerSevere
-										.severe("Can't reconecting to MQ: "
-												+ e1.getMessage());
+								logger.error("Can't reconecting to MQ: %s",
+										e1.getMessage());
 							}
 
 							// Delay between retry
@@ -158,20 +155,20 @@ public class FSBMqJms implements Runnable {
 
 								long diff = stop - start;
 
-								loggerInfo.info("Time wait: " + diff);
+								logger.info("Time wait: %s", diff);
 
 								// ensure for early wake up thread
 								if (diff < delay) {
 
-									loggerInfo.info("Wake up early! Wait: "
-											+ (delay - diff));
+									logger.info("Wake up early! Wait: %s",
+											(delay - diff));
 
 									Thread.sleep(delay - diff);
 								}
 
 							} catch (InterruptedException e1) {
 
-								e1.printStackTrace();
+								logger.error(e1.getMessage(), e1);
 							}
 
 						}
@@ -185,17 +182,10 @@ public class FSBMqJms implements Runnable {
 
 			flagRequest.set(true);
 
-			if (debug) {
-
-				loggerInfo
-						.info("Thread is connected to MQ server with parameters: HostName: "
-								+ this.factory.getHostName()
-								+ "; Port: "
-								+ this.factory.getPort()
-								+ "; QueueManager: "
-								+ this.factory.getQueueManager()
-								+ "; Channel: " + this.factory.getChannel());
-			}
+			logger.debug(
+					"Thread is connected to MQ server with parameters: HostName: %s; Port: %s; QueueManager: %s; Channel: %s",
+					this.factory.getHostName(), this.factory.getPort(),
+					this.factory.getQueueManager(), this.factory.getChannel());
 
 			String queue = fsb.getChildText("queueFrom");
 
@@ -214,7 +204,7 @@ public class FSBMqJms implements Runnable {
 
 			countListeners.set(0);
 
-			loggerInfo.info("Listener is set to queue " + queue);
+			logger.info("Listener is set to queue %s", queue);
 
 			if (!flagReconnect) {
 
@@ -222,7 +212,7 @@ public class FSBMqJms implements Runnable {
 
 				ex.execute(new Request());
 
-				loggerInfo.info("CountThreadStart: " + countThreadStart.get());
+				logger.info("CountThreadStart: %s", countThreadStart.get());
 
 				if (countThreadStart.get() > 250) {
 
@@ -238,9 +228,7 @@ public class FSBMqJms implements Runnable {
 
 		} catch (JMSException e) {
 
-			loggerSevere.severe("Error: Can't set listener " + e.getMessage());
-
-			e.printStackTrace();
+			logger.error("Can't set listener %s", e.getMessage(), e);
 
 			if (!flagReconnect) {
 

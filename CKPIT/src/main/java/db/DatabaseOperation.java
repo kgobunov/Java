@@ -1,8 +1,5 @@
 package db;
 
-import static tools.PropCheck.loggerInfo;
-import static tools.PropCheck.loggerSevere;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -11,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import ru.aplana.tools.OracleDB;
 
@@ -30,6 +30,9 @@ public class DatabaseOperation {
 
 	private ArrayList<String> dataArray = null;
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(DatabaseOperation.class.getName());
+
 	private DatabaseOperation() {
 
 		if (null == this.connection) {
@@ -40,11 +43,9 @@ public class DatabaseOperation {
 
 			} catch (SQLException e) {
 
-				loggerSevere
-						.severe("Error: Failed connect to databases first time! "
-								+ e.getMessage());
+				logger.error("Failed connect to databases first time! %s",
+						e.getMessage(), e);
 
-				e.printStackTrace();
 			}
 
 		}
@@ -76,7 +77,7 @@ public class DatabaseOperation {
 
 				if (this.connection.isClosed()) {
 
-					loggerInfo.info("Connection closed!");
+					logger.info("Connection closed!");
 
 					this.connection = null;
 
@@ -88,9 +89,8 @@ public class DatabaseOperation {
 
 					} catch (SQLException e) {
 
-						loggerSevere
-								.severe("Error: Failed connect to databases! "
-										+ e.getMessage());
+						logger.error("Failed connect to databases! %s",
+								e.getMessage(), e);
 
 					} finally {
 
@@ -110,8 +110,8 @@ public class DatabaseOperation {
 
 				} catch (SQLException e) {
 
-					loggerSevere.severe("Error: Failed connect to databases! "
-							+ e.getMessage());
+					logger.error("Failed connect to databases! %s",
+							e.getMessage(), e);
 
 				} finally {
 
@@ -139,10 +139,7 @@ public class DatabaseOperation {
 
 		} catch (SQLException e) {
 
-			loggerSevere.severe("Can't connecting to DB! " + e.getMessage());
-
-			e.printStackTrace();
-
+			logger.error("Can't connecting to DB! %s", e.getMessage(), e);
 		}
 
 	}
@@ -159,7 +156,7 @@ public class DatabaseOperation {
 		this.connection = OracleDB.getConnection(DatabaseConn.ORA_DB_URL,
 				DatabaseConn.ORA_USER, DatabaseConn.ORA_PASS);
 
-		loggerInfo.info("Connected success!");
+		logger.info("Connected success!");
 
 	}
 
@@ -190,14 +187,12 @@ public class DatabaseOperation {
 
 			preparedStatement.executeUpdate();
 
-			loggerInfo.info("Insert success! ");
+			logger.info("Insert success! ");
 
 		} catch (SQLException e) {
 
-			loggerSevere.severe("Error: Failed insert data to databases! "
-					+ e.getMessage());
-
-			e.printStackTrace();
+			logger.error("Failed insert data to databases! %s", e.getMessage(),
+					e);
 
 		} finally {
 
@@ -209,7 +204,7 @@ public class DatabaseOperation {
 
 				} catch (SQLException e) {
 
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
 
 				}
 
@@ -242,13 +237,12 @@ public class DatabaseOperation {
 
 			preparedStatement.executeUpdate();
 
-			loggerInfo.info("Update success!");
+			logger.info("Update success!");
 
 		} catch (SQLException e) {
 
-			loggerSevere.severe("Error: Failed update data to databases!");
-
-			e.printStackTrace();
+			logger.error("Failed update data to databases! %s", e.getMessage(),
+					e);
 
 		} finally {
 
@@ -260,7 +254,7 @@ public class DatabaseOperation {
 
 				} catch (SQLException e) {
 
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
 
 				}
 

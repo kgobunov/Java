@@ -3,10 +3,7 @@ package ru.aplana.app;
 import static ru.aplana.tools.MQTools.getConnection;
 import static ru.aplana.tools.MQTools.getSession;
 import static tools.PropCheck.common;
-import static tools.PropCheck.debug;
 import static tools.PropCheck.fsb;
-import static tools.PropCheck.loggerInfo;
-import static tools.PropCheck.loggerSevere;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,6 +14,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import requests.RqToESB;
 import tools.MQConn;
@@ -36,15 +36,14 @@ import com.ibm.mq.jms.MQQueueSession;
 @SuppressWarnings("deprecation")
 public class Request implements Runnable {
 
-	private MQQueueSession session;
-
-	private MQQueueConnection connection;
-
 	private MQQueueConnectionFactory factory;
 
 	private static AtomicInteger countSendMess = new AtomicInteger(0);
 
 	private static Lock lock = new ReentrantLock();
+
+	private static final Logger logger = LogManager
+			.getFormatterLogger(Request.class.getName());
 
 	private long delay;
 
@@ -72,7 +71,7 @@ public class Request implements Runnable {
 
 		if (this.countAppStart == 0) {
 
-			loggerInfo.info("Count app zero! Set value by default 1");
+			logger.info("Count app zero! Set value by default 1");
 
 			this.countAppStart = 1;
 
@@ -101,17 +100,13 @@ public class Request implements Runnable {
 
 		delayForStop.set(this.delay);
 
-		if (debug) {
+		logger.debug("Test_type: %s", this.testType);
 
-			loggerInfo.info("Test_type: " + this.testType);
+		logger.debug("Count_app_start: %s", this.countAppStart);
 
-			loggerInfo.info("Count_app_start: " + this.countAppStart);
+		logger.debug("Delay: %s", this.delay);
 
-			loggerInfo.info("Delay: " + delay);
-
-			loggerInfo.info("Start time: " + FSBMqJms.startTime);
-
-		}
+		logger.debug("Start time: %s", FSBMqJms.startTime);
 
 		try {
 
@@ -119,13 +114,9 @@ public class Request implements Runnable {
 
 			this.factory.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
 
-		} catch (NumberFormatException e) {
+		} catch (NumberFormatException | JMSException e) {
 
-			e.printStackTrace();
-
-		} catch (JMSException e) {
-
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 
 		}
 
@@ -134,233 +125,248 @@ public class Request implements Runnable {
 	@Override
 	public void run() {
 
+		MQQueueConnection connection = getConnection(this.factory, null, null);
+
 		try {
 
-			this.connection = getConnection(this.factory, null, null);
+			connection.start();
 
-			this.connection.start();
+		} catch (JMSException e1) {
 
-			if (debug) {
+			logger.error(e1.getMessage(), e1);
 
-				loggerInfo
-						.info("Thread is connected to MQ server with parameters: HostName: "
-								+ this.factory.getHostName()
-								+ "; Port: "
-								+ this.factory.getPort()
-								+ "; QueueManager: "
-								+ this.factory.getQueueManager()
-								+ "; Channel: " + this.factory.getChannel());
-			}
+		}
 
-			this.session = getSession(this.connection, false,
-					MQQueueSession.AUTO_ACKNOWLEDGE);
+		logger.debug(
+				"Thread is connected to MQ server with parameters: HostName: %s; Port: %s; QueueManager: %s; Channel: %s",
+				this.factory.getHostName(), this.factory.getPort(),
+				this.factory.getQueueManager(), this.factory.getChannel());
 
-			// for step test
-			String settings = "";
+		MQQueueSession session = getSession(connection, false,
+				MQQueueSession.AUTO_ACKNOWLEDGE);
 
-			String settingsFuture = "";
+		// for step test
+		String settings = "";
 
-			String[] settingsArray = null;
+		String settingsFuture = "";
 
-			String[] settingsFutureArray = null;
+		String[] settingsArray = null;
 
-			if (this.testType.equalsIgnoreCase("step")) {
+		String[] settingsFutureArray = null;
 
-				// read first time
-				settings = scenario.get(currentStep.get());
+		if (this.testType.equalsIgnoreCase("step")) {
 
-				int stepNext = currentStep.get() + 1;
+			// read first time
+			settings = scenario.get(currentStep.get());
 
-				settingsFuture = scenario
-						.get((stepNext > scenario.size()) ? scenario.size()
-								: stepNext);
+			int stepNext = currentStep.get() + 1;
 
-				settingsArray = settings.split(",");
+			settingsFuture = scenario
+					.get((stepNext > scenario.size()) ? scenario.size()
+							: stepNext);
 
-				settingsFutureArray = settingsFuture.split(",");
+			settingsArray = settings.split(",");
 
-				if (debug) {
+			settingsFutureArray = settingsFuture.split(",");
 
-					loggerInfo.info("Settings: " + settings);
+			logger.debug("Settings: " + settings);
 
-				}
+		}
 
-			}
+		String queue = fsb.getChildText("queueTo");
 
-			String queue = fsb.getChildText("queueTo");
+		// Send to ESB
+		while (FSBMqJms.flagRequest.get()) {
+			
+			long start = System.currentTimeMillis();
 
-			// Send to ESB
-			while (FSBMqJms.flagRequest.get()) {
+			countSendMess.getAndIncrement();
 
-				String request = RqToESB.getRequest();
+			String request = RqToESB.getRequest();
 
-				TextMessage outputMsg = this.session.createTextMessage(request);
+			TextMessage outputMsg = null;
 
-				MQQueue queueSend = (MQQueue) this.session.createQueue(queue);
+			MessageProducer producer = null;
 
-				MessageProducer producer = this.session
-						.createProducer(queueSend);
+			try {
+
+				outputMsg = session.createTextMessage(request);
+
+				MQQueue queueSend = (MQQueue) session.createQueue(queue);
+
+				producer = session.createProducer(queueSend);
 
 				producer.send(outputMsg);
 
-				producer.close();
+				logger.debug("Request to ESB success: " + request);
 
-				if (debug) {
+			} catch (JMSException e1) {
 
-					loggerInfo.info("Request to ESB success: " + request);
+				logger.error("Can't send request to ESB: %s", e1.getMessage(),
+						e1);
 
-					loggerInfo.info("Connection closed!");
-
-				}
-
-				// if test type equals step - must be up count apps
-				if (this.testType.equalsIgnoreCase("step")) {
-
-					lock.lock();
-
-					try {
-
-						long now = System.currentTimeMillis();
-
-						long diff = now - FSBMqJms.startTime.get();
-
-						// sum enter with duration step
-						long timeStep = (Long.parseLong(settingsArray[0]) + Long
-								.parseLong(settingsArray[1])) * 60 * 1000;
-
-						// new step
-						if (diff > timeStep
-								&& (currentStep.get() != scenario.size())) {
-
-							loggerInfo.info("Prev start_time: "
-									+ FSBMqJms.startTime);
-
-							loggerInfo.info("Prev delay: " + this.delay);
-
-							this.countAppStart = Integer
-									.parseInt(settingsFutureArray[2]);
-
-							if (this.countAppStart == 0) {
-
-								loggerInfo
-										.info("Count app zero! Set value by default 1");
-
-								this.countAppStart = 1;
-
-							}
-
-							currentStep.getAndIncrement();
-
-							float temp = ((float) 3600 / this.countAppStart) * 1000;
-
-							this.delay = (long) temp;
-
-							delayForStop.set(this.delay);
-
-							FSBMqJms.startTime.set(System.currentTimeMillis());
-
-							loggerInfo.info("Start time reset. New startTime: "
-									+ FSBMqJms.startTime);
-
-							loggerInfo.info("New delay: " + delay);
-
-							// re-read setting
-							settings = scenario.get(currentStep.get());
-
-							int stepNext = currentStep.get() + 1;
-
-							settingsFuture = scenario.get((stepNext > scenario
-									.size()) ? scenario.size() : stepNext);
-
-							settingsArray = settings.split(",");
-
-							settingsFutureArray = settingsFuture.split(",");
-
-							if (debug) {
-
-								loggerInfo
-										.info("Re-read settings: " + settings);
-
-								loggerInfo.info("Re-read future settings: "
-										+ settingsFuture);
-
-							}
-
-							if (!(currentStep.get() != scenario.size())) {
-
-								loggerInfo.info("Last step succeed!");
-							}
-
-						}
-
-					} finally {
-
-						lock.unlock();
-					}
-
-				}
+			} finally {
 
 				try {
 
-					Thread.sleep((long) delay);
+					if (null != producer) {
 
-				} catch (InterruptedException e) {
+						producer.close();
 
-					loggerSevere.severe("Error: Interrupted thread: "
-							+ e.getMessage());
+					}
 
-					e.printStackTrace();
-				}
+				} catch (JMSException e) {
 
-				if (countSendMess.get() > 260) {
-
-					Runtime r = Runtime.getRuntime();
-
-					loggerInfo.info("Total memory: " + r.totalMemory());
-
-					loggerInfo.info("Memory before gc " + r.freeMemory());
-
-					r.gc();
-
-					loggerInfo.info("Memory after gc " + r.freeMemory());
-
-					countSendMess.set(0);
+					logger.error(e.getMessage(), e);
 
 				}
+			}
+
+			// if test type equals step - must be up count apps
+			if (this.testType.equalsIgnoreCase("step")) {
+
+				lock.lock();
+
+				try {
+
+					long now = System.currentTimeMillis();
+
+					long diff = now - FSBMqJms.startTime.get();
+
+					// sum enter with duration step
+					long timeStep = (Long.parseLong(settingsArray[0]) + Long
+							.parseLong(settingsArray[1])) * 60 * 1000;
+
+					// new step
+					if (diff > timeStep
+							&& (currentStep.get() != scenario.size())) {
+
+						logger.info("Prev start_time: %s", FSBMqJms.startTime);
+
+						logger.info("Prev delay: %s", this.delay);
+
+						this.countAppStart = Integer
+								.parseInt(settingsFutureArray[2]);
+
+						if (this.countAppStart == 0) {
+
+							logger.info("Count app zero! Set value by default 1");
+
+							this.countAppStart = 1;
+
+						}
+
+						currentStep.getAndIncrement();
+
+						float temp = ((float) 3600 / this.countAppStart) * 1000;
+
+						this.delay = (long) temp;
+
+						delayForStop.set(this.delay);
+
+						FSBMqJms.startTime.set(System.currentTimeMillis());
+
+						logger.info("Start time reset. New startTime: %s",
+								FSBMqJms.startTime);
+
+						logger.info("New delay: %s", this.delay);
+
+						// re-read setting
+						settings = scenario.get(currentStep.get());
+
+						int stepNext = currentStep.get() + 1;
+
+						settingsFuture = scenario.get((stepNext > scenario
+								.size()) ? scenario.size() : stepNext);
+
+						settingsArray = settings.split(",");
+
+						settingsFutureArray = settingsFuture.split(",");
+
+						logger.debug("Re-read settings: %s", settings);
+
+						logger.debug("Re-read future settings: %s",
+								settingsFuture);
+
+						if (!(currentStep.get() != scenario.size())) {
+
+							logger.info("Last step succeed!");
+						}
+
+					}
+
+				} finally {
+
+					lock.unlock();
+				}
+
+			}
+
+			long end = System.currentTimeMillis();
+
+			long diff = end - start;
+
+			logger.debug("Run send: %s ms", diff);
+
+			long delay = (diff > 0) ? this.delay - diff : 0;
+			
+			try {
+
+				if (delay > 0) {
+					
+					Thread.sleep(delay);
+					
+				} else {
+
+					logger.debug(
+							"Out of delay between iterations! Default delay: %s; Real delay: %s",
+							this.delay, diff);
+
+				}
+
+			} catch (InterruptedException e) {
+
+				logger.error("Interrupted thread: %s", e.getMessage(), e);
+
+			}
+
+			if (countSendMess.get() > 260) {
+
+				Runtime r = Runtime.getRuntime();
+
+				logger.info("Total memory: %s", r.totalMemory());
+
+				logger.info("Memory before gc %s", r.freeMemory());
+
+				r.gc();
+
+				logger.info("Memory after gc %s", r.freeMemory());
+
+				countSendMess.set(0);
+
+			}
+
+		}
+
+		// if can't send requests to ESB
+		try {
+
+			if (null != connection) {
+
+				connection.close();
+
+			}
+
+			if (null != session) {
+
+				session.close();
 
 			}
 
 		} catch (JMSException e) {
 
-			loggerSevere.severe("Error: Can't send request to ESB: "
-					+ e.getMessage());
+			logger.error(e.getMessage(), e);
 
-			e.printStackTrace();
-
-		} finally {
-
-			try {
-
-				if (null != this.session) {
-
-					this.session.close();
-
-				}
-
-				if (null != this.connection) {
-
-					this.connection.close();
-
-				}
-
-				loggerInfo.info("Session closed!");
-
-				loggerInfo.info("Connection closed!");
-
-			} catch (JMSException e1) {
-
-				e1.printStackTrace();
-			}
 		}
 
 	}

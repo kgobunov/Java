@@ -4,14 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Logger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 
-import ru.aplana.tools.CreateLogger;
 import smtp.SimpleSmtpServer;
 import testing.Test;
 
@@ -24,17 +24,16 @@ import testing.Test;
  */
 public class RunServer implements Runnable {
 
-	public static Logger loggerInfo = null;
-
-	public static Logger loggerSevere = null;
-
-	public static boolean debug = false;
-
 	public static Element smtp = null;
 
 	public static Element db = null;
 
 	public static Element mq = null;
+
+	public static boolean debug = false;
+
+	private static final Logger logger = LogManager
+			.getFormatterLogger(RunServer.class.getName());
 
 	private Document config = null;
 
@@ -50,8 +49,7 @@ public class RunServer implements Runnable {
 
 		} else {
 
-			System.err
-					.println("Config is not valid! See error log! Application stopped!");
+			logger.error("Config is not valid! See error log! Application stopped!");
 
 			System.exit(0);
 		}
@@ -77,47 +75,19 @@ public class RunServer implements Runnable {
 
 			smtp = root.getChild("systems").getChild("smtp");
 
-			// Set logger
-			if (null == loggerInfo) {
-
-				String logName = smtp.getChildText("logName");
-
-				CreateLogger loggers = new CreateLogger(logName,
-						Integer.parseInt(smtp.getChildText("logSize")),
-						Integer.parseInt(smtp.getChildText("logCount")));
-
-				loggerInfo = loggers.getInfoLogger();
-
-				loggerSevere = loggers.getSevereLogger();
-
-				loggerInfo.info("Start " + logName + "_info log...");
-
-				loggerSevere.info("Start " + logName + "_severe log...");
-
-			}
-
 			db = root.getChild("connections").getChild("db");
 
-			debug = Boolean.parseBoolean(smtp.getChildText("debug"));
+			debug = Boolean.parseBoolean(smtp.getChildText("debugDb"));
 
 			this.mode = smtp.getChildText("mode");
 
-			loggerInfo.info("Config file " + xmlSettings
-					+ " read successfully!");
+			logger.info("Config file %s read successfully!", xmlSettings);
 
-		} catch (JDOMException e) {
+		} catch (JDOMException | IOException e) {
 
-			System.err.println("[JDOM Error] Can't parse " + xmlSettings
-					+ "; Error:" + e.getMessage());
+			logger.error("Can't parse %s; Error: %s", xmlSettings,
+					e.getMessage());
 
-			e.printStackTrace();
-
-		} catch (IOException e) {
-
-			System.err.println("[IO Error] Can't read " + xmlSettings
-					+ "; Error:" + e.getMessage());
-
-			e.printStackTrace();
 		}
 
 	}
@@ -130,7 +100,7 @@ public class RunServer implements Runnable {
 
 		sc.submit(SimpleSmtpServer.getInstance());
 
-		loggerInfo.info("Server starting successfully!");
+		logger.info("Server starting successfully!");
 
 		// selftesting
 		if (this.mode.equalsIgnoreCase("test")) {

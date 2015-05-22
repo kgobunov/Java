@@ -1,6 +1,6 @@
 ﻿<Configuration strict="true">
 	<Properties>
-		<Property name="filename">Erib_default.log</Property>
+		<Property name="filename">Crm_default.log</Property>
 	</Properties>
 	<Appenders>
 			<Appender type="File" name="fileDefault" fileName="${filename}">

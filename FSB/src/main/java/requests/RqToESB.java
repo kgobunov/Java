@@ -9,7 +9,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import db.DbOperation;
+import tools.PropCheck;
+import db.Saver;
 
 /**
  * Creating CRM application
@@ -168,7 +169,7 @@ public class RqToESB {
 
 		dataArray.add(birthday);
 
-		DbOperation.getInstance().evalOperation(1, dataArray);
+		PropCheck.cacheSaverPool.execute(new Saver("insert", dataArray));
 
 		return response;
 

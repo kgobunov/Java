@@ -1,13 +1,17 @@
 ﻿<Configuration strict="true">
+	<Properties>
+		<Property name="filename_esb">Esb_default.log</Property>
+		<Property name="filename_services">Services.log</Property>
+	</Properties>
 	<Appenders>
-			<Appender type="File" name="fileDefault" fileName="Esb_default.log">
+			<Appender type="File" name="fileDefault" fileName="${filename_esb}">
 				<Layout type="PatternLayout">
-					<Pattern>%d{dd MM yyyy HH:mm:ss,SSS} [%t] %-5p %c{2}:%L - %m%n"</Pattern>
+					<Pattern>%d{dd MM yyyy HH:mm:ss,SSS} [%t] %-5p %c{2}:%L - %m%n</Pattern>
 				</Layout>
 			</Appender>
-			<Appender type="File" name="Services" fileName="Services.log">
+			<Appender type="File" name="Services" fileName="${filename_services}">
 				<Layout type="PatternLayout">
-					<Pattern>%d{dd MM yyyy HH:mm:ss,SSS} [%t] %-5p %c{2}:%L - %m%n"</Pattern>
+					<Pattern>%d{dd MM yyyy HH:mm:ss,SSS} [%t] %-5p %c{2}:%L - %m%n</Pattern>
 				</Layout>
 			</Appender>
 	</Appenders>	

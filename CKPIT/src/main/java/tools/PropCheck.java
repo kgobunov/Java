@@ -2,15 +2,15 @@ package tools;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Logger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 
 import ru.aplana.app.Main;
-import ru.aplana.tools.CreateLogger;
 
 /**
  * 
@@ -21,12 +21,6 @@ import ru.aplana.tools.CreateLogger;
  */
 public class PropCheck implements Runnable {
 
-	public static Logger loggerInfo = null;
-
-	public static Logger loggerSevere = null;
-
-	public static boolean debug = false;
-
 	public static Element ckpit = null;
 
 	public static Element db = null;
@@ -34,6 +28,9 @@ public class PropCheck implements Runnable {
 	public static Element mq = null;
 
 	public static Element common = null;
+
+	private static final Logger logger = LogManager
+			.getFormatterLogger(PropCheck.class.getName());
 
 	private Document config = null;
 
@@ -53,8 +50,7 @@ public class PropCheck implements Runnable {
 
 			Main.sc.shutdownNow();
 
-			System.err
-					.println("Config is not valid! See error log! Application stopped!");
+			logger.error("Config is not valid! See error log! Application stopped!");
 
 			System.exit(0);
 		}
@@ -80,25 +76,6 @@ public class PropCheck implements Runnable {
 
 			ckpit = this.root.getChild("systems").getChild("ckpit");
 
-			// Set logger
-			if (null == loggerInfo) {
-
-				String logName = ckpit.getChildText("logName");
-
-				CreateLogger loggers = new CreateLogger(logName,
-						Integer.parseInt(ckpit.getChildText("logSize")),
-						Integer.parseInt(ckpit.getChildText("logCount")));
-
-				loggerInfo = loggers.getInfoLogger();
-
-				loggerSevere = loggers.getSevereLogger();
-
-				loggerInfo.info("Start " + logName + "_info log...");
-
-				loggerSevere.info("Start " + logName + "_severe log...");
-
-			}
-
 			db = this.root.getChild("connections").getChild("db");
 
 			mq = this.root.getChild("connections").getChild("mq");
@@ -107,24 +84,13 @@ public class PropCheck implements Runnable {
 
 			this.stopTime = Long.parseLong(ckpit.getChildText("runTime")) * 60 * 1000;
 
-			debug = Boolean.parseBoolean(ckpit.getChildText("debug"));
+			logger.info("Config file %s read successfully!", xmlSettings);
 
-			loggerInfo.info("Config file " + xmlSettings
-					+ " read successfully!");
+		} catch (JDOMException | IOException e) {
 
-		} catch (JDOMException e) {
+			logger.error("Can't parse %s; Error: %s", xmlSettings,
+					e.getMessage());
 
-			System.err.println("[JDOM Error] Can't parse " + xmlSettings
-					+ "; Error:" + e.getMessage());
-
-			e.printStackTrace();
-
-		} catch (IOException e) {
-
-			System.err.println("[IO Error] Can't read " + xmlSettings
-					+ "; Error:" + e.getMessage());
-
-			e.printStackTrace();
 		}
 
 	}
@@ -137,7 +103,7 @@ public class PropCheck implements Runnable {
 
 		if (diff >= this.stopTime) {
 
-			loggerInfo.info("Service stopped! Work time: " + this.stopTime);
+			logger.info("Service stopped! Work time: %d", this.stopTime);
 
 			Main.exec.shutdownNow();
 

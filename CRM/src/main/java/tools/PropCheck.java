@@ -2,8 +2,11 @@ package tools;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Logger;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -11,7 +14,6 @@ import org.jdom.input.SAXBuilder;
 
 import ru.aplana.app.CRMMqJms;
 import ru.aplana.app.Request;
-import ru.aplana.tools.CreateLogger;
 
 /**
  * Check properties
@@ -21,11 +23,8 @@ import ru.aplana.tools.CreateLogger;
  */
 public class PropCheck implements Runnable {
 
-	public static Logger loggerInfo = null;
-
-	public static Logger loggerSevere = null;
-
-	public static boolean debug = false;
+	public static ExecutorService cacheSaverPool = Executors
+			.newCachedThreadPool();
 
 	public static Element crm = null;
 
@@ -43,6 +42,9 @@ public class PropCheck implements Runnable {
 
 	private long startTime = System.currentTimeMillis();
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(PropCheck.class.getName());
+
 	public PropCheck() {
 
 		if (Validation.validating()) {
@@ -53,8 +55,7 @@ public class PropCheck implements Runnable {
 
 			CRMMqJms.sc.shutdownNow();
 
-			System.err
-					.println("Config is not valid! See error log! Application stopped!");
+			logger.error("Config is not valid! See error log! Application stopped!");
 
 			System.exit(0);
 		}
@@ -80,25 +81,6 @@ public class PropCheck implements Runnable {
 
 			crm = this.root.getChild("systems").getChild("crm");
 
-			// Set logger
-			if (null == loggerInfo) {
-
-				String logName = crm.getChildText("logName");
-
-				CreateLogger loggers = new CreateLogger(logName,
-						Integer.parseInt(crm.getChildText("logSize")),
-						Integer.parseInt(crm.getChildText("logCount")));
-
-				loggerInfo = loggers.getInfoLogger();
-
-				loggerSevere = loggers.getSevereLogger();
-
-				loggerInfo.info("Start " + logName + "_info log...");
-
-				loggerSevere.info("Start " + logName + "_severe log...");
-
-			}
-
 			db = this.root.getChild("connections").getChild("db");
 
 			mq = this.root.getChild("connections").getChild("mq");
@@ -107,24 +89,13 @@ public class PropCheck implements Runnable {
 
 			this.stopTime = Long.parseLong(crm.getChildText("runTime")) * 60 * 1000;
 
-			debug = Boolean.parseBoolean(crm.getChildText("debug"));
+			logger.info("Config file %s read successfully!", xmlSettings);
 
-			loggerInfo.info("Config file " + xmlSettings
-					+ " read successfully!");
+		} catch (JDOMException | IOException e) {
 
-		} catch (JDOMException e) {
+			logger.error("Can't parse %s; Error: %s", xmlSettings,
+					e.getMessage());
 
-			System.err.println("[JDOM Error] Can't parse " + xmlSettings
-					+ "; Error:" + e.getMessage());
-
-			e.printStackTrace();
-
-		} catch (IOException e) {
-
-			System.err.println("[IO Error] Can't read " + xmlSettings
-					+ "; Error:" + e.getMessage());
-
-			e.printStackTrace();
 		}
 
 	}
@@ -145,7 +116,7 @@ public class PropCheck implements Runnable {
 
 			} catch (InterruptedException e) {
 
-				e.printStackTrace();
+				logger.error(e.getMessage(), e);
 			}
 
 			CRMMqJms.ex.shutdownNow();
@@ -153,10 +124,12 @@ public class PropCheck implements Runnable {
 			CRMMqJms.executor.shutdownNow();
 
 			CRMMqJms.sc.shutdownNow();
+			
+			cacheSaverPool.shutdownNow();
 
-			loggerInfo.info("Executors stopped!");
+			logger.info("Executors stopped!");
 
-			loggerInfo.info("Service stopped! Work time: " + this.stopTime);
+			logger.info("Service stopped! Work time: %d", this.stopTime);
 
 		}
 

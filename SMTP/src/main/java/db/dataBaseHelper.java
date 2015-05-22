@@ -7,7 +7,9 @@ import java.sql.SQLException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import ru.aplana.app.RunServer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import ru.aplana.tools.OracleDB;
 
 /**
@@ -22,13 +24,15 @@ public class dataBaseHelper {
 
 	private Lock lock = new ReentrantLock();
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(dataBaseHelper.class.getName());
+
 	private dataBaseHelper() {
 
 		setConnection();
 
 	}
-	
-	
+
 	public static dataBaseHelper getInstance() {
 
 		return LasyDbHolder.dbInstance;
@@ -51,17 +55,13 @@ public class dataBaseHelper {
 				this.connection = OracleDB.getConn(dbConn.ORA_DB_URL,
 						dbConn.ORA_USER, dbConn.ORA_PASS);
 
-				if (RunServer.debug) {
-
-					RunServer.loggerInfo.info("Connected success!");
-
-				}
+				logger.debug("Connected success!");
 
 			} catch (SQLException e) {
 
-				RunServer.loggerSevere
-						.severe("Error: Failed connect to databases! "
-								+ e.getMessage());
+				logger.error("Failed connect to databases! %s", e.getMessage(),
+						e);
+
 			} finally {
 
 				this.lock.unlock();
@@ -86,7 +86,7 @@ public class dataBaseHelper {
 
 		} catch (SQLException e) {
 
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		}
 
 		return flag;
@@ -111,11 +111,9 @@ public class dataBaseHelper {
 
 					} catch (SQLException e) {
 
-						RunServer.loggerSevere
-								.severe("Can't close connection! "
-										+ e.getMessage());
+						logger.error("Can't close connection! %s",
+								e.getMessage(), e);
 
-						e.printStackTrace();
 					}
 
 					this.connection = null;
@@ -144,20 +142,11 @@ public class dataBaseHelper {
 
 				st.executeUpdate();
 
-				if (RunServer.debug) {
-
-					RunServer.loggerInfo
-							.info("Update successfully! APP_NUMBER: "
-									+ appNumber);
-
-				}
+				logger.debug("Update successfully! APP_NUMBER: %s", appNumber);
 
 			} catch (SQLException e) {
 
-				RunServer.loggerSevere.severe("Can't update email! "
-						+ e.getMessage());
-
-				e.printStackTrace();
+				logger.error("Can't update email! %s", e.getMessage(), e);
 
 			} finally {
 
@@ -169,7 +158,7 @@ public class dataBaseHelper {
 
 					} catch (SQLException e) {
 
-						e.printStackTrace();
+						logger.error(e.getMessage(), e);
 					}
 				}
 
@@ -200,10 +189,9 @@ public class dataBaseHelper {
 
 				} catch (SQLException e) {
 
-					RunServer.loggerSevere.severe("Can't close connection! "
-							+ e.getMessage());
+					logger.error("Can't close connection! %s", e.getMessage(),
+							e);
 
-					e.printStackTrace();
 				}
 
 				this.connection = null;
@@ -230,21 +218,14 @@ public class dataBaseHelper {
 
 				count = Integer.parseInt(rs.getString("COUNT_CALL"));
 
-				if (RunServer.debug) {
-
-					RunServer.loggerInfo.info("Calls for APP_NUMBER "
-							+ appNumber + " : " + count);
-
-				}
+				logger.debug("Calls for APP_NUMBER %s: %s", appNumber, count);
 
 			}
 
 		} catch (SQLException e) {
 
-			RunServer.loggerSevere.severe("Can't check calls for " + appNumber
-					+ "! " + e.getMessage());
-
-			e.printStackTrace();
+			logger.error("Can't check calls for %s! %s", appNumber,
+					e.getMessage(), e);
 
 		} finally {
 
@@ -256,7 +237,8 @@ public class dataBaseHelper {
 
 				} catch (SQLException e) {
 
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
+
 				}
 			}
 
@@ -268,7 +250,8 @@ public class dataBaseHelper {
 
 				} catch (SQLException e) {
 
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
+
 				}
 
 			}
@@ -299,10 +282,9 @@ public class dataBaseHelper {
 
 				} catch (SQLException e) {
 
-					RunServer.loggerSevere.severe("Can't close connection! "
-							+ e.getMessage());
+					logger.error("Can't close connection! %s", e.getMessage(),
+							e);
 
-					e.printStackTrace();
 				}
 
 				this.connection = null;
@@ -327,12 +309,7 @@ public class dataBaseHelper {
 
 			if (rs.next()) {
 
-				if (RunServer.debug) {
-
-					RunServer.loggerInfo.info("Email was found! APP_NUMBER: "
-							+ appNumber);
-
-				}
+				logger.debug("Email was found! APP_NUMBER: %s", appNumber);
 
 				flag = true;
 
@@ -340,10 +317,8 @@ public class dataBaseHelper {
 
 		} catch (SQLException e) {
 
-			RunServer.loggerSevere.severe("Can't get email number " + appNumber
-					+ "! " + e.getMessage());
-
-			e.printStackTrace();
+			logger.error("Can't get email number %s! %s", appNumber,
+					e.getMessage(), e);
 
 		} finally {
 
@@ -355,7 +330,8 @@ public class dataBaseHelper {
 
 				} catch (SQLException e) {
 
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
+
 				}
 			}
 
@@ -367,7 +343,8 @@ public class dataBaseHelper {
 
 				} catch (SQLException e) {
 
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
+
 				}
 
 			}
@@ -396,11 +373,9 @@ public class dataBaseHelper {
 
 					} catch (SQLException e) {
 
-						RunServer.loggerSevere
-								.severe("Can't close connection! "
-										+ e.getMessage());
+						logger.error("Can't close connection! %s",
+								e.getMessage(), e);
 
-						e.printStackTrace();
 					}
 
 					this.connection = null;
@@ -421,7 +396,8 @@ public class dataBaseHelper {
 
 					String insert = "insert into sbb_monitor.email_log (APP_NUMBER, MSG_TEXT, RECEIVED_TIME, COUNT_CALL, LAST_TIME) values (?,?,sysdate, 1, sysdate)";
 
-					preparedStatement = this.connection.prepareStatement(insert);
+					preparedStatement = this.connection
+							.prepareStatement(insert);
 
 					preparedStatement.setString(1, appNumber);
 
@@ -429,18 +405,11 @@ public class dataBaseHelper {
 
 					preparedStatement.executeUpdate();
 
-					if (RunServer.debug) {
-
-						RunServer.loggerInfo.info("Insert success! ");
-
-					}
+					logger.debug("Insert success! ");
 
 				} catch (SQLException e) {
 
-					RunServer.loggerSevere.severe("Insert failed. "
-							+ e.getMessage());
-
-					e.printStackTrace();
+					logger.error("Insert failed. %s", e.getMessage(), e);
 
 				} finally {
 
@@ -452,7 +421,7 @@ public class dataBaseHelper {
 
 						} catch (SQLException e) {
 
-							e.printStackTrace();
+							logger.error(e.getMessage(), e);
 
 						}
 
@@ -465,7 +434,7 @@ public class dataBaseHelper {
 		}
 
 	}
-	
+
 	private static class LasyDbHolder {
 
 		public static dataBaseHelper dbInstance = new dataBaseHelper();

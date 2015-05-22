@@ -1,13 +1,14 @@
 package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
-import static tools.PropCheck.loggerInfo;
-import static tools.PropCheck.loggerSevere;
 
 import java.util.ArrayList;
 
 import javax.jms.Message;
 import javax.jms.MessageListener;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import ru.aplana.app.CRMMqJms;
 import ru.aplana.tools.GetData;
@@ -21,9 +22,12 @@ import db.DbOperation;
  */
 public class ESBListener implements MessageListener {
 
+	private static final Logger logger = LogManager
+			.getFormatterLogger(ESBListener.class.getName());
+
 	public ESBListener() {
 
-		loggerInfo.info("Init ESBListener");
+		logger.info("Init ESBListener");
 
 	}
 
@@ -36,7 +40,7 @@ public class ESBListener implements MessageListener {
 
 		GetData getData = GetData.getInstance(request);
 
-		boolean flag_tsm = false;
+		boolean flagTsm = false;
 
 		try {
 
@@ -46,7 +50,7 @@ public class ESBListener implements MessageListener {
 
 				rquid = getData.getValueByName("MessageId");
 
-				flag_tsm = true;
+				flagTsm = true;
 
 			}
 
@@ -66,8 +70,7 @@ public class ESBListener implements MessageListener {
 
 			} catch (Exception e) {
 
-				loggerSevere.severe("Error: Can't parse status. "
-						+ e.getMessage());
+				logger.error("Can't parse status. %s", e.getMessage(), e);
 
 				dataArray.set(1, "-99");
 
@@ -98,16 +101,13 @@ public class ESBListener implements MessageListener {
 
 		} catch (Exception e) {
 
-			loggerSevere.severe("Error: Can't save data from TSM "
-					+ e.getMessage());
-
-			e.printStackTrace();
+			logger.error("Can't save data from TSM %s", e.getMessage(), e);
 
 		}
 
 		try {
 
-			if (flag_tsm) {
+			if (flagTsm) {
 
 				if (CRMMqJms.logTsmApp) {
 
@@ -122,9 +122,7 @@ public class ESBListener implements MessageListener {
 
 		} catch (Exception e) {
 
-			loggerSevere.severe(e.getMessage());
-
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 
 		}
 

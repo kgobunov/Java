@@ -1,9 +1,11 @@
 package ru.aplana.tools;
 
 import java.util.HashMap;
+
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+
 import com.ibm.mq.jms.MQQueue;
 import com.ibm.mq.jms.MQQueueConnection;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
@@ -62,7 +64,8 @@ public class MQTools {
 		return factory;
 
 	}
-
+	
+	
 	/**
 	 * Creating mq session
 	 * 
@@ -101,13 +104,21 @@ public class MQTools {
 	 * @author Maksim Stepanov
 	 */
 	public static MQQueueConnection getConnection(
-			MQQueueConnectionFactory factory) {
+			MQQueueConnectionFactory factory, String userId, String password) {
 
 		MQQueueConnection connection = null;
 
 		try {
 
-			connection = (MQQueueConnection) factory.createQueueConnection();
+			if (userId != null && password != null) {
+
+				connection = (MQQueueConnection) factory
+						.createQueueConnection(userId, password);
+
+			} else {
+				connection = (MQQueueConnection) factory
+						.createQueueConnection();
+			}
 
 		} catch (JMSException e) {
 

@@ -10,10 +10,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
@@ -43,8 +39,6 @@ public class SBOLMqJms implements Runnable {
 
 	public static AtomicBoolean flagRequest = new AtomicBoolean(false);
 
-	public static AtomicLong startTime = new AtomicLong();
-
 	public static ExecutorService executor = null;
 
 	public static ExecutorService ex = null;
@@ -56,15 +50,11 @@ public class SBOLMqJms implements Runnable {
 
 	private static int countThread;
 
-	private static AtomicInteger countThreadStart = new AtomicInteger(0);
-
 	private MQQueueConnectionFactory factory;
 
 	private MQQueueConnection connection;
 
 	private boolean flagReconnect = false;
-
-	private static Lock lock = new ReentrantLock();
 
 	public SBOLMqJms() {
 
@@ -115,17 +105,9 @@ public class SBOLMqJms implements Runnable {
 
 							try {
 
-								lock.lock();
+								if (CheckConn.checkConn()) {
 
-								try {
-									if (CheckConn.checkConn()) {
-
-										run();
-
-									}
-								} finally {
-
-									lock.unlock();
+									run();
 
 								}
 
@@ -180,29 +162,16 @@ public class SBOLMqJms implements Runnable {
 
 			String queue = erib.getChildText("queueFrom");
 
-			MessageConsumer consumerERIB = getConsumer(this.connection, queue);
+			MessageConsumer consumer = getConsumer(this.connection, queue);
 
-			consumerERIB.setMessageListener(new ESBListener());
+			consumer.setMessageListener(new ESBListener());
 
 			logger.info("Listener is set to queue %s", queue);
 
 			if (!flagReconnect) {
 
-				countThreadStart.getAndIncrement();
-
 				ex.execute(new Request());
 
-				logger.info("CountThreadStart: %s", countThreadStart);
-
-				if (countThreadStart.get() > 250) {
-
-					Runtime r = Runtime.getRuntime();
-
-					r.gc();
-
-					countThreadStart.set(0);
-
-				}
 			}
 
 		} catch (JMSException e) {
@@ -233,12 +202,6 @@ public class SBOLMqJms implements Runnable {
 		sc = Executors.newSingleThreadScheduledExecutor();
 
 		sc.scheduleAtFixedRate(new PropCheck(), 0, 10, TimeUnit.SECONDS);
-
-		if (common.getChildText("testType").equalsIgnoreCase("step")) {
-
-			startTime.set(System.currentTimeMillis());
-
-		}
 
 		countThread = Integer.parseInt(erib.getChildText("threads"));
 

@@ -2,6 +2,7 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
+import static tools.PropsChecker.mode;
 
 import java.io.StringReader;
 import java.text.SimpleDateFormat;
@@ -47,10 +48,6 @@ public class ServicesListener implements MessageListener {
 
 	private OUGWSStub ougwsStub;
 
-	private MQQueueSession session;
-
-	private MQQueue queueSend;
-
 	private MQQueueConnection connection;
 
 	// link to UG
@@ -73,22 +70,6 @@ public class ServicesListener implements MessageListener {
 	public ServicesListener(MQQueueConnection connection, String url) {
 
 		this.connection = connection;
-
-		this.session = getSession(this.connection, false,
-				MQQueueSession.AUTO_ACKNOWLEDGE);
-
-		try {
-
-			this.queueSend = (MQQueue) this.session
-					.createQueue(Queues.SERVICE_GARBAGE_OUT);
-
-			this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
-
-		} catch (JMSException e) {
-
-			logger.error("Can't create queue %s", e.getMessage(), e);
-
-		}
 
 		this.url = url;
 
@@ -133,8 +114,35 @@ public class ServicesListener implements MessageListener {
 
 		}
 
-		String urlOsgi = (null == this.url) ? PropsChecker.getNextUrl()
-				: this.url;
+		// set ug's url
+
+		String urlOsgi = "";
+
+		if (null == this.url) {
+
+			switch (mode) {
+
+			case "round":
+
+				urlOsgi = PropsChecker.getUrlRoundRobin();
+
+				break;
+
+			case "least":
+
+				urlOsgi = PropsChecker.getUrlLeastConnection();
+
+				break;
+
+			default:
+				break;
+			}
+
+		} else {
+
+			urlOsgi = this.url;
+
+		}
 
 		// Set endpoint with properties
 		try {
@@ -225,11 +233,25 @@ public class ServicesListener implements MessageListener {
 
 			MessageProducer producer = null;
 
+			MQQueueSession session = null;
+
+			MQQueue queueSend = null;
+
+			TextMessage outputMsg = null;
+
 			try {
 
-				TextMessage outputMsg = this.session.createTextMessage(request);
+				session = getSession(this.connection, false,
+						MQQueueSession.AUTO_ACKNOWLEDGE);
 
-				producer = this.session.createProducer(this.queueSend);
+				queueSend = (MQQueue) session
+						.createQueue(Queues.SERVICE_GARBAGE_OUT);
+
+				queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
+
+				outputMsg = session.createTextMessage(request);
+
+				producer = session.createProducer(queueSend);
 
 				producer.send(outputMsg);
 
@@ -250,6 +272,16 @@ public class ServicesListener implements MessageListener {
 						producer.close();
 
 					}
+
+					if (null != session) {
+
+						session.close();
+
+					}
+
+					queueSend = null;
+
+					outputMsg = null;
 
 				} catch (JMSException e) {
 

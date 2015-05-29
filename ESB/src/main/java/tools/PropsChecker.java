@@ -2,8 +2,11 @@ package tools;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -61,6 +64,8 @@ public class PropsChecker implements Runnable {
 	public static String mode = "round";
 
 	public static HashMap<String, Integer> urlBind = null;
+
+	public static HashMap<String, Integer> urlLeast = null;
 
 	public PropsChecker() {
 
@@ -193,7 +198,29 @@ public class PropsChecker implements Runnable {
 
 		switch (mode) {
 
+		case "least":
+
+			logger.info("Mode: %s", mode);
+
+			urlLeast = new HashMap<String, Integer>(osgiSize);
+
+			for (int i = 0; i < osgiSize; i++) {
+
+				String url = ((Element) osgi.get(i)).getChildText("link");
+
+				urlLeast.put(url, 0);
+
+				logger.info("ESB Properties add osgi url: " + url);
+
+			}
+
+			size = urlArray.size();
+
+			break;
+
 		case "round":
+
+			logger.info("Mode: %s", mode);
 
 			for (int i = 0; i < osgiSize; i++) {
 
@@ -201,7 +228,7 @@ public class PropsChecker implements Runnable {
 
 				urlArray.addElement(url);
 
-				logger.info(">>>ESB Properties add osgi url: " + url);
+				logger.info("ESB Properties add osgi url: " + url);
 
 			}
 
@@ -211,7 +238,9 @@ public class PropsChecker implements Runnable {
 
 		case "bind":
 
-			urlBind = new HashMap<String, Integer>();
+			logger.info("Mode: %s", mode);
+
+			urlBind = new HashMap<String, Integer>(osgiSize);
 
 			for (int i = 0; i < osgiSize; i++) {
 
@@ -230,13 +259,36 @@ public class PropsChecker implements Runnable {
 
 	}
 
-	public static synchronized String getNextUrl() {
+	public static synchronized String getUrlRoundRobin() {
 
-		String url;
-
-		url = urlArray.get(Math.abs(callCounter.getAndIncrement() % size));
+		String url = urlArray
+				.get(Math.abs(callCounter.getAndIncrement() % size));
 
 		return url;
 	}
 
+	public static synchronized String getUrlLeastConnection() {
+
+		Entry<String, Integer> min = Collections.min(urlLeast.entrySet(),
+				new Comparator<Entry<String, Integer>>() {
+
+					@Override
+					public int compare(Entry<String, Integer> entryFirst,
+							Entry<String, Integer> entrySecond) {
+
+						return entryFirst.getValue().compareTo(
+								entrySecond.getValue());
+					}
+				});
+
+		String url = min.getKey();
+
+		int count = min.getValue();
+
+		logger.debug("Url: %s; min counter: %s", url, count);
+
+		urlLeast.put(url, ++count);
+
+		return url;
+	}
 }

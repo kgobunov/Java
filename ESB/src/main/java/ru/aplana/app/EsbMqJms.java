@@ -26,6 +26,7 @@ import listeners.ServicesListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import tools.CheckConn;
 import tools.MQConn;
 import tools.PropsChecker;
 import tools.Queues;
@@ -116,7 +117,11 @@ public class EsbMqJms implements Runnable {
 
 							try {
 
-								run();
+								if (CheckConn.checkConn()) {
+
+									run();
+
+								}
 
 							} catch (Exception e1) {
 
@@ -217,6 +222,32 @@ public class EsbMqJms implements Runnable {
 			if (countListeners.get() == countThreads) {
 
 				switch (PropsChecker.mode) {
+
+				case "least":
+
+					countListeners.set(0);
+
+					// count listener for services queue
+
+					while (countListeners.get() < countThreadListeners) {
+
+						MessageConsumer consumerServices = getConsumer(
+								this.connection, Queues.SERVICES_IN);
+
+						consumerServices
+								.setMessageListener(new ServicesListener(
+										this.connection));
+
+						countListeners.getAndIncrement();
+
+					}
+
+					countListeners.set(0);
+
+					logger.info("%s Listener's is set to queue %s",
+							countThreadListeners, Queues.SERVICES_IN);
+
+					break;
 
 				case "round":
 

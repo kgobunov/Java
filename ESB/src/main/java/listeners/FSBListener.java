@@ -28,8 +28,6 @@ import com.ibm.mq.jms.MQQueueSession;
 @SuppressWarnings("deprecation")
 public class FSBListener implements MessageListener {
 
-	private MQQueueSession session;
-
 	private MQQueueConnection connection;
 
 	private static final Logger logger = LogManager
@@ -38,9 +36,6 @@ public class FSBListener implements MessageListener {
 	public FSBListener(MQQueueConnection connection) {
 
 		this.connection = connection;
-
-		this.session = getSession(this.connection, false,
-				MQQueueSession.AUTO_ACKNOWLEDGE);
 
 	}
 
@@ -51,6 +46,8 @@ public class FSBListener implements MessageListener {
 		TextMessage outputMsg = null;
 
 		MQQueue queueSend = null;
+
+		MQQueueSession session = null;
 
 		try {
 
@@ -63,13 +60,16 @@ public class FSBListener implements MessageListener {
 			// For this system response equals request
 			response = request;
 
-			outputMsg = this.session.createTextMessage(response);
+			session = getSession(this.connection, false,
+					MQQueueSession.AUTO_ACKNOWLEDGE);
 
-			queueSend = (MQQueue) this.session.createQueue(Queues.ETSM_OUT);
+			outputMsg = session.createTextMessage(response);
+
+			queueSend = (MQQueue) session.createQueue(Queues.ETSM_OUT);
 
 			queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
 
-			producer = this.session.createProducer(queueSend);
+			producer = session.createProducer(queueSend);
 
 			producer.send(outputMsg);
 
@@ -90,6 +90,12 @@ public class FSBListener implements MessageListener {
 					outputMsg = null;
 
 					queueSend = null;
+				}
+
+				if (null != session) {
+
+					session.close();
+
 				}
 
 			} catch (JMSException e) {

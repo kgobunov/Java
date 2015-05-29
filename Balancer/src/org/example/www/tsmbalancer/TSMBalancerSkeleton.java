@@ -6,25 +6,26 @@
  */
 package org.example.www.tsmbalancer;
 
-import static tools.WebAppContext.loggerInfoBlack;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.axiom.om.OMElement;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import tools.RequestData;
 import tools.RequestErrorData;
 import tools.ReturnURL;
 import tools.Staff;
-import tools.WebAppContext;
 
 /**
  * TSMBalancerSkeleton java skeleton for the axisService
  */
 public class TSMBalancerSkeleton {
 
-	
+	private static final Logger logger = LogManager
+			.getLogger(TSMBalancerSkeleton.class.getName());
+
 	/**
 	 * Add bad url to black list
 	 * 
@@ -40,20 +41,15 @@ public class TSMBalancerSkeleton {
 
 		int type = errorData.getType();
 
-		if (WebAppContext.debug) {
-
-			loggerInfoBlack.info("Date: " + new Date()
-					+ ". Bad server: " + server + "; Error code: " + type);
-
-		}
+		logger.debug("Date: " + new Date() + ". Bad server: " + server
+				+ "; Error code: " + type);
 
 		Staff.errorServers.put(server, type);
-		
-		SimpleDateFormat sdf = new SimpleDateFormat(
-				"dd-MM-yyyy HH:mm");
-		
+
+		SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+
 		String serverWithDate = server + " - " + sdf.format(new Date());
-		
+
 		Staff.blackList.put(serverWithDate, type);
 
 		return Staff.info(server, type);

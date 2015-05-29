@@ -11,9 +11,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
@@ -43,15 +40,11 @@ public class FSBMqJms implements Runnable {
 
 	public static AtomicBoolean flagRequest = new AtomicBoolean(false);
 
-	public static AtomicLong startTime = new AtomicLong();
-
 	public static ScheduledExecutorService sc = null;
 
 	public static ExecutorService executor = null;
 
 	public static ExecutorService ex = null;
-
-	private static AtomicInteger countThreadStart = new AtomicInteger(0);
 
 	private static int countThread;
 
@@ -64,8 +57,6 @@ public class FSBMqJms implements Runnable {
 	private MQQueueConnection connection;
 
 	private boolean flagReconnect = false;
-
-	private static Lock lock = new ReentrantLock();
 
 	private static final Logger logger = LogManager
 			.getFormatterLogger(FSBMqJms.class.getName());
@@ -123,19 +114,9 @@ public class FSBMqJms implements Runnable {
 
 							try {
 
-								lock.lock();
+								if (CheckConn.checkConn()) {
 
-								try {
-
-									if (CheckConn.checkConn()) {
-
-										run();
-									}
-
-								} finally {
-
-									lock.unlock();
-
+									run();
 								}
 
 							} catch (Exception e1) {
@@ -192,10 +173,10 @@ public class FSBMqJms implements Runnable {
 			// Set listeners
 			while (countListeners.get() < countThreadListeners) {
 
-				MessageConsumer consumerCRM = getConsumer(this.connection,
+				MessageConsumer consumer = getConsumer(this.connection,
 						queue);
 
-				consumerCRM
+				consumer
 						.setMessageListener(new ESBListener(this.connection));
 
 				countListeners.getAndIncrement();
@@ -208,21 +189,7 @@ public class FSBMqJms implements Runnable {
 
 			if (!flagReconnect) {
 
-				countThreadStart.getAndIncrement();
-
 				ex.execute(new Request());
-
-				logger.info("CountThreadStart: %s", countThreadStart.get());
-
-				if (countThreadStart.get() > 250) {
-
-					Runtime r = Runtime.getRuntime();
-
-					r.gc();
-
-					countThreadStart.set(0);
-
-				}
 
 			}
 
@@ -251,13 +218,6 @@ public class FSBMqJms implements Runnable {
 		sc = Executors.newSingleThreadScheduledExecutor();
 
 		sc.scheduleAtFixedRate(new PropCheck(), 0, 10, TimeUnit.SECONDS);
-
-		// Detecting type mode - step or confirm
-		if (common.getChildText("testType").equalsIgnoreCase("step")) {
-
-			startTime.set(System.currentTimeMillis());
-
-		}
 
 		// Count threads
 		countThread = Integer.parseInt(fsb.getChildText("threads"));

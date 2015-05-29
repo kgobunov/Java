@@ -8,6 +8,7 @@ import ru.aplana.app.Initialization;
  * 
  * Version: 1.0
  * 
+ * Copyright: OOO Aplana
  * 
  * Save statistics about pfr to db
  * 

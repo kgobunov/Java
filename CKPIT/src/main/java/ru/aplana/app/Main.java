@@ -12,8 +12,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
@@ -83,8 +81,6 @@ public class Main implements Runnable {
 
 	private MQQueueConnection connection;
 
-	private static final Lock lock = new ReentrantLock();
-
 	public Main() {
 
 		// connect to mq
@@ -149,20 +145,11 @@ public class Main implements Runnable {
 
 								try {
 
-									lock.lock();
+									if (CheckConn.checkConn()) {
 
-									try {
-										if (CheckConn.checkConn()) {
+										countSetListener.set(0);
 
-											countSetListener.set(0);
-
-											flagReconnect = false;
-										}
-
-									} finally {
-
-										lock.unlock();
-
+										flagReconnect = false;
 									}
 
 								} catch (Exception e1) {
@@ -214,10 +201,10 @@ public class Main implements Runnable {
 						this.factory.getQueueManager(),
 						this.factory.getChannel());
 
-				MessageConsumer consumerERIB = getConsumer(this.connection,
+				MessageConsumer consumer = getConsumer(this.connection,
 						Queues.CKPIT_IN);
 
-				consumerERIB.setMessageListener(new Listener());
+				consumer.setMessageListener(new Listener());
 
 				logger.info("Listener is set to queue %s", Queues.CKPIT_IN);
 

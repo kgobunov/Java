@@ -1,6 +1,7 @@
 package requests;
 
 import java.util.HashMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.jms.JMSException;
@@ -16,6 +17,7 @@ import com.ibm.mq.jms.MQQueueSession;
  * 
  * Version: 1.1
  * 
+ * Copyright: OOO Aplana
  * 
  * @author Maksim Stepanov
  * 
@@ -165,7 +167,8 @@ public class DespatchRequest implements Runnable {
 
 			} catch (JMSException e) {
 
-				e.printStackTrace();
+				Initialization.severe.log(Level.SEVERE, e.getMessage(), e);
+				
 			}
 
 			return this;

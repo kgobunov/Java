@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import ru.aplana.app.Request;
 import tools.PropCheck;
 import db.Saver;
 
@@ -47,13 +46,17 @@ public class RqToESB {
 
 	private String[] settings;
 
-	private RqToESB(String[] settings) {
+	private boolean flagNewStep;
+
+	private RqToESB(String[] settings, boolean flagNewStep) {
 
 		if (common.getChildText("testType").equalsIgnoreCase("step")) {
 
 			this.settings = settings;
 
 			this.maxUserKI = Integer.parseInt(this.settings[3]);
+
+			this.flagNewStep = flagNewStep;
 
 		} else {
 
@@ -136,9 +139,9 @@ public class RqToESB {
 		PropCheck.cacheSaverPool.execute(new Saver("insert", dataArray));
 	}
 
-	public static RqToESB getInstance(String[] settings) {
+	public static RqToESB getInstance(String[] settings, boolean flagNewStep) {
 
-		return new RqToESB(settings);
+		return new RqToESB(settings, flagNewStep);
 
 	}
 
@@ -161,13 +164,11 @@ public class RqToESB {
 		// if test type equal step - must up id users
 		if (common.getChildText("testType").equalsIgnoreCase("step")) {
 
-			if (Request.flagNewStep.get()) {
+			if (this.flagNewStep) {
 
 				this.maxUserKI = Integer.parseInt(this.settings[3]);
 
 				logger.info("New max login: %d", this.maxUserKI);
-
-				Request.flagNewStep.set(false);
 
 			}
 

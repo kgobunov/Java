@@ -31,6 +31,7 @@ import connections.SaveData;
  * 
  * Version: 1.0
  * 
+ * Copyright: OOO Aplana
  * 
  * Implementation listener
  * 

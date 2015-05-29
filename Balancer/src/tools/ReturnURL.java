@@ -10,6 +10,8 @@ import javax.xml.namespace.QName;
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.OMFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * 
@@ -19,6 +21,9 @@ import org.apache.axiom.om.OMFactory;
  * 
  */
 public class ReturnURL {
+
+	private static final Logger logger = LogManager.getLogger(ReturnURL.class
+			.getName());
 
 	private final int type;
 
@@ -112,8 +117,7 @@ public class ReturnURL {
 
 							urlFinal.addChild(urlReq);
 
-							WebAppContext.loggerSevere
-									.severe("All urls ki in error list!");
+							logger.error("All urls ki in error list!");
 
 						} else {
 
@@ -140,8 +144,7 @@ public class ReturnURL {
 
 					urlFinal.addChild(urlReq);
 
-					WebAppContext.loggerSevere
-							.severe("Step download timeout error!");
+					logger.error("Step download timeout error!");
 
 				}
 
@@ -206,8 +209,7 @@ public class ReturnURL {
 
 							urlFinal.addChild(urlReq);
 
-							WebAppContext.loggerSevere
-									.severe("All urls uw in error list!");
+							logger.error("All urls uw in error list!");
 
 						} else {
 
@@ -235,8 +237,7 @@ public class ReturnURL {
 
 					urlFinal.addChild(urlReq);
 
-					WebAppContext.loggerSevere
-							.severe("Step download timeout error!");
+					logger.error("Step download timeout error!");
 
 				}
 
@@ -246,10 +247,7 @@ public class ReturnURL {
 
 		}
 
-		if (WebAppContext.debug) {
-
-			WebAppContext.loggerInfo.info("Avaliable url: " + urlFinal);
-		}
+		logger.debug("Avaliable url: " + urlFinal);
 
 		return urlFinal;
 

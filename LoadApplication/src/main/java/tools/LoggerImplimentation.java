@@ -13,6 +13,8 @@ import java.util.logging.SimpleFormatter;
  * 
  * Versiom: 1.0
  * 
+ * Copyright: OO Aplana
+ * 
  * Implementation logger
  * 
  * @author Maksim Stepanov

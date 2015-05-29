@@ -22,7 +22,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ru.aplana.tools.GetData;
-import ru.aplana.tools.RandomCreditCardNumberGenerator;
 
 /**
  * 
@@ -553,73 +552,39 @@ public class Requests {
 
 		String serial = generateNumber(4);
 
-		String city = "";
+		String city = "Москва";
 
-		String street = "";
+		String street = "Ленина";
 
-		String ufms = "";
+		String ufms = "УФМС Москвы";
 
-		String sberFull = "";
+		String sberFull = "ЗАО Сбербанк";
 
-		String mother = "";
+		String mother = "Мама";
 
-		String dep = "";
+		String dep = "УВИСАС";
 
-		String pos = "";
+		String pos = "Инженер";
 
-		String autoNum = "";
+		String autoNum = "а345вв";
 
-		String firstname = "";
+		String firstname = data.get(7);
 
-		String lastname = "";
+		String lastname = data.get(6);
 
-		String middlename = "";
+		String sbflag = data.get(12);
 
-		String birthday = "";
+		String middlename = data.get(8);
 
-		String dateId = "";
+		String birthday = data.get(9);
 
-		String cardNum = "";
+		String dateId = data.get(10);
 
-		String sbflag = "";
+		String unit = data.get(13);
 
-		String unit = "";
+		String channel = data.get(14);
 
-		String channel = "";
-
-		city = "Москва";
-
-		street = "Ленина";
-
-		ufms = "УФМС Москвы";
-
-		sberFull = "ЗАО Сбербанк";
-
-		mother = "Мама";
-
-		dep = "УВИСАС";
-
-		pos = "Инженер";
-
-		autoNum = "а345вв";
-
-		firstname = data.get(7);
-
-		lastname = data.get(6);
-
-		sbflag = data.get(12);
-
-		middlename = data.get(8);
-
-		birthday = data.get(9);
-
-		dateId = data.get(10);
-
-		unit = data.get(13);
-
-		channel = data.get(14);
-
-		cardNum = RandomCreditCardNumberGenerator.generateVisaCardNumber();
+		String cardNum = data.get(15);
 
 		response = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
 				+ "<ChargeLoanApplicationRq xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"LoanApplicationTSM.xsd\">"

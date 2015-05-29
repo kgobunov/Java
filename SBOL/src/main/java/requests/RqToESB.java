@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import ru.aplana.tools.RandomCreditCardNumberGenerator;
 import tools.PropCheck;
 import db.Saver;
 
@@ -87,6 +88,9 @@ public class RqToESB {
 
 		String dateId = dateTemp;
 
+		String cardNum = RandomCreditCardNumberGenerator
+				.generateVisaCardNumber();
+
 		this.response = new StringBuilder(
 				"<?xml version=\"1.0\" encoding=\"UTF-8\"?><ChargeLoanApplicationRq xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"LoanApplication.xsd\"><RqUID>")
 				.append("")
@@ -114,12 +118,16 @@ public class RqToESB {
 				.append(dateId)
 				.append("</IssueDt><PrevIDInfoFlag>false</PrevIDInfoFlag></IdentityCard><ExtPassportExFlag>true</ExtPassportExFlag></PersonInfo><MaritalCondition><Status>0</Status><MarriageContractFlag>false</MarriageContractFlag><ChildrenFlag>false</ChildrenFlag></MaritalCondition><RelativeList><Relative><Type>1</Type><PersonName><LastName>мама</LastName><FirstName>мама</FirstName><MiddleName>мама</MiddleName></PersonName><Birthday>1968-05-04</Birthday><DependentFlag>false</DependentFlag><SBCreditFlag>0</SBCreditFlag><SBEmployeeFlag>false</SBEmployeeFlag></Relative></RelativeList><EmploymentHistory><Status>2</Status><OrgInfo><Name>сбербанк</Name><OrgCode>001</OrgCode></OrgInfo><OrgInfoExt><FullName>ЗАО Сбербанк</FullName><TaxId>77347878</TaxId><IndustSector><Code>1</Code></IndustSector><NumEmployeesCode>1000</NumEmployeesCode></OrgInfoExt><SBEmployeeFlag>")
 				.append(this.sbflag)
-				.append("</SBEmployeeFlag><SBEmployee><RegionId>99</RegionId><FullName>УВИСАС</FullName><JobType>1</JobType></SBEmployee><EmployeeInfo><JobType>1</JobType><JobTitle>начальник</JobTitle><ExperienceCode>5</ExperienceCode><WorkPlacesNum>0</WorkPlacesNum></EmployeeInfo></EmploymentHistory><Income><BasicIncome6M>150000</BasicIncome6M><AddIncome6M>0.0</AddIncome6M><FamilyIncome6M>150000</FamilyIncome6M><Expenses6M>50000</Expenses6M></Income><RealEstateFlag>true</RealEstateFlag><RealEstateList><RealEstate><Type>2</Type><Address>Ленина</Address><PurchaseYear>2005</PurchaseYear><Area>100.00</Area><Units>1</Units><Cost>100000.00</Cost></RealEstate></RealEstateList><VehicleFlag>true</VehicleFlag><VehicleList><Vehicle><Type>1</Type><RegNumber>E881KH99RUS</RegNumber><PurchaseYear>2013</PurchaseYear><BrandName>Audi</BrandName><AgeInYears>1</AgeInYears><Cost>50000.00</Cost></Vehicle></VehicleList><LoanFlag>false</LoanFlag><AddData><LoanIssue><Type>1</Type><AcctId>AcctId0</AcctId><CardNum>1234598765986214</CardNum></LoanIssue><InsuranceFlag>false</InsuranceFlag><InsuranseNumber>000-000-000 00</InsuranseNumber><CBReqApprovalFlag>true</CBReqApprovalFlag><CBSendApprovalFlag>true</CBSendApprovalFlag><PFRReqApprovalFlag>true</PFRReqApprovalFlag><CBCode>CBCode0</CBCode><CCardGetApprovalFlag>false</CCardGetApprovalFlag><SpecialAttentionFlag>false</SpecialAttentionFlag><SBSalaryCardFlag>true</SBSalaryCardFlag><SalaryCardList><SalaryCard><Type>0</Type><CardNum>0000000000000</CardNum></SalaryCard></SalaryCardList><SBSalaryDepFlag>false</SBSalaryDepFlag><SBShareHolderFlag>false</SBShareHolderFlag><SigningDate>")
+				.append("</SBEmployeeFlag><SBEmployee><RegionId>99</RegionId><FullName>УВИСАС</FullName><JobType>1</JobType></SBEmployee><EmployeeInfo><JobType>1</JobType><JobTitle>начальник</JobTitle><ExperienceCode>5</ExperienceCode><WorkPlacesNum>0</WorkPlacesNum></EmployeeInfo></EmploymentHistory><Income><BasicIncome6M>150000</BasicIncome6M><AddIncome6M>0.0</AddIncome6M><FamilyIncome6M>150000</FamilyIncome6M><Expenses6M>50000</Expenses6M></Income><RealEstateFlag>true</RealEstateFlag><RealEstateList><RealEstate><Type>2</Type><Address>Ленина</Address><PurchaseYear>2005</PurchaseYear><Area>100.00</Area><Units>1</Units><Cost>100000.00</Cost></RealEstate></RealEstateList><VehicleFlag>true</VehicleFlag><VehicleList><Vehicle><Type>1</Type><RegNumber>E881KH99RUS</RegNumber><PurchaseYear>2013</PurchaseYear><BrandName>Audi</BrandName><AgeInYears>1</AgeInYears><Cost>50000.00</Cost></Vehicle></VehicleList><LoanFlag>false</LoanFlag><AddData><LoanIssue><Type>1</Type><AcctId>AcctId0</AcctId><CardNum>")
+				.append(cardNum)
+				.append("</CardNum></LoanIssue><InsuranceFlag>false</InsuranceFlag><InsuranseNumber>000-000-000 00</InsuranseNumber><CBReqApprovalFlag>true</CBReqApprovalFlag><CBSendApprovalFlag>true</CBSendApprovalFlag><PFRReqApprovalFlag>true</PFRReqApprovalFlag><CBCode>CBCode0</CBCode><CCardGetApprovalFlag>false</CCardGetApprovalFlag><SpecialAttentionFlag>false</SpecialAttentionFlag><SBSalaryCardFlag>true</SBSalaryCardFlag><SalaryCardList><SalaryCard><Type>0</Type><CardNum>")
+				.append(cardNum)
+				.append("</CardNum></SalaryCard></SalaryCardList><SBSalaryDepFlag>false</SBSalaryDepFlag><SBShareHolderFlag>false</SBShareHolderFlag><SigningDate>")
 				.append(dateId)
 				.append("</SigningDate></AddData></Applicant></Application></ChargeLoanApplicationRq>")
 				.toString();
 
-		ArrayList<String> dataArray = new ArrayList<String>(5);
+		ArrayList<String> dataArray = new ArrayList<String>(6);
 
 		dataArray.add(RqUID);
 
@@ -130,6 +138,8 @@ public class RqToESB {
 		dataArray.add(middlename);
 
 		dataArray.add(birthday);
+
+		dataArray.add(cardNum);
 
 		PropCheck.cacheSaverPool.execute(new Saver("insert", dataArray));
 	}

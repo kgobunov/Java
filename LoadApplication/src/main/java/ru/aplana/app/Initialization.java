@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.jms.JMSException;
@@ -46,6 +47,7 @@ import connections.SaveCorrId;
  * 
  * Version: 1.1
  * 
+ * Copyright: OOO Aplana
  * 
  * Init application
  * 
@@ -260,10 +262,8 @@ public class Initialization {
 
 			} catch (JMSException e) {
 
-				severe.severe("System: " + system + "; Error send request: "
-						+ e.getMessage());
-
-				e.printStackTrace();
+				severe.log(Level.SEVERE, "System: " + system
+						+ "; Error send request: " + e.getMessage(), e);
 
 			} finally {
 
@@ -275,7 +275,7 @@ public class Initialization {
 
 					} catch (JMSException e) {
 
-						e.printStackTrace();
+						severe.log(Level.SEVERE, e.getMessage(), e);
 
 					}
 

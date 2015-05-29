@@ -32,6 +32,7 @@ import tools.ObserverServices;
  * 
  * Version: 1.1
  * 
+ * Copyright: OOO Aplana
  * 
  * Initialization systems for load test
  * 

@@ -17,6 +17,11 @@
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
    </properties>
    <dependencies>
+   <dependency>
+    	<groupId>google-collections</groupId>
+  		<artifactId>google-collections</artifactId>
+  		<version>1.0</version>
+  	</dependency>
       <dependency>
   		<groupId>log4j-api</groupId>
   		<artifactId>log4j-api</artifactId>

@@ -32,10 +32,6 @@ import com.ibm.mq.jms.MQQueueSession;
 @SuppressWarnings("deprecation")
 public class ERIBListener implements MessageListener {
 
-	private MQQueueSession session;
-
-	private MQQueue queueSend;
-
 	private MQQueueConnection connection;
 
 	private static final Logger logger = LogManager
@@ -45,87 +41,93 @@ public class ERIBListener implements MessageListener {
 
 		this.connection = connection;
 
-		this.session = getSession(this.connection, false,
-				MQQueueSession.AUTO_ACKNOWLEDGE);
-
-		try {
-
-			this.queueSend = (MQQueue) this.session
-					.createQueue(Queues.ETSM_OUT);
-
-			this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
-
-		} catch (JMSException e) {
-
-			logger.error("Can't create queue: %s", e.getMessage(), e);
-
-		}
-
 	}
 
 	public void onMessage(Message inputMsg) {
 
+		try {
+			Thread.sleep(15000);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 		ArrayList<String> data = null;
 
-		MessageProducer producer = null;
+		String request = parseMessMQ(inputMsg);
+
+		String response = null;
+
+		logger.debug("Message from ERIB: %s", request);
+
+		GetData processRq = GetData.getInstance(request);
+
+		// Array data for response
+		data = new ArrayList<String>(15);
 
 		try {
 
-			String request = parseMessMQ(inputMsg);
+			data.add(processRq.getValueByName("RqUID"));
 
-			String response = null;
+			data.add(processRq.getValueByName("RqTm"));
 
-			logger.debug("Message from ERIB: %s", request);
+			data.add(processRq.getValueByName("OperUID"));
 
-			GetData processRq = GetData.getInstance(request);
+			data.add(processRq.getValueByName("FromAbonent"));
 
-			// Array data for response
-			data = new ArrayList<String>(15);
+			data.add(processRq.getValueByName("Code"));
 
-			try {
+			data.add(processRq.getValueByName("SubProductCode"));
 
-				data.add(processRq.getValueByName("RqUID"));
+			data.add(processRq.getValueByName("LastName"));
 
-				data.add(processRq.getValueByName("RqTm"));
+			data.add(processRq.getValueByName("FirstName"));
 
-				data.add(processRq.getValueByName("OperUID"));
+			data.add(processRq.getValueByName("MiddleName"));
 
-				data.add(processRq.getValueByName("FromAbonent"));
+			data.add(processRq.getValueByName("Birthday"));
 
-				data.add(processRq.getValueByName("Code"));
+			data.add(processRq.getValueByName("IssueDt"));
 
-				data.add(processRq.getValueByName("SubProductCode"));
+			data.add(processRq.getValueByName("SigningDate"));
 
-				data.add(processRq.getValueByName("LastName"));
+			data.add(processRq
+					.getValueByXpath("ChargeLoanApplicationRq/Application/Applicant/EmploymentHistory/SBEmployeeFlag"));
 
-				data.add(processRq.getValueByName("FirstName"));
+			data.add(processRq.getValueByName("Unit"));
 
-				data.add(processRq.getValueByName("MiddleName"));
+			data.add(processRq.getValueByName("Channel"));
 
-				data.add(processRq.getValueByName("Birthday"));
+			data.add(processRq.getValueByName("CardNum"));
 
-				data.add(processRq.getValueByName("IssueDt"));
+		} catch (Exception e) {
 
-				data.add(processRq.getValueByName("SigningDate"));
+			logger.error("Parcing message failed: %s", e.getMessage(), e);
 
-				data.add(processRq
-						.getValueByXpath("ChargeLoanApplicationRq/Application/Applicant/EmploymentHistory/SBEmployeeFlag"));
+		}
 
-				data.add(processRq.getValueByName("Unit"));
+		response = Requests.getRequestToETSM(data);
 
-				data.add(processRq.getValueByName("Channel"));
+		MessageProducer producer = null;
 
-			} catch (Exception e) {
+		MQQueueSession session = null;
 
-				logger.error("Parcing message failed: %s", e.getMessage(), e);
+		MQQueue queueSend = null;
 
-			}
+		TextMessage outputMsg = null;
 
-			response = Requests.getRequestToETSM(data);
+		try {
 
-			TextMessage outputMsg = this.session.createTextMessage(response);
+			session = getSession(this.connection, false,
+					MQQueueSession.AUTO_ACKNOWLEDGE);
 
-			producer = this.session.createProducer(this.queueSend);
+			queueSend = (MQQueue) session.createQueue(Queues.ETSM_OUT);
+
+			queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
+
+			outputMsg = session.createTextMessage(response);
+
+			producer = session.createProducer(queueSend);
 
 			producer.send(outputMsg);
 
@@ -140,11 +142,23 @@ public class ERIBListener implements MessageListener {
 			if (null != producer) {
 
 				try {
+
 					if (null != producer) {
 
 						producer.close();
 
 					}
+
+					if (null != session) {
+
+						session.close();
+
+					}
+
+					queueSend = null;
+
+					outputMsg = null;
+
 				} catch (JMSException e) {
 
 					logger.error(e.getMessage(), e);

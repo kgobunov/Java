@@ -20,6 +20,7 @@ import tools.LoggerImplimentation;
  * 
  * Version: 1.0
  * 
+ * Copyright: OOO Aplana
  * 
  * Database operations
  * 
@@ -69,6 +70,8 @@ public class DatabaseHelper {
 	 * Connect to DB
 	 * 
 	 */
+	
+	
 	private void setConnection() {
 
 		lock.lock();

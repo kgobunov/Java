@@ -3,6 +3,7 @@ package tools;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Level;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
@@ -20,12 +21,13 @@ import ru.aplana.app.Initialization;
  * 
  * Version: 1.0
  * 
+ * Copyright: OOO Aplana
  * 
  * 
  * Validating config
  * 
  * @author Maksim Stepanov
- *
+ * 
  */
 public class Validation {
 
@@ -33,9 +35,10 @@ public class Validation {
 	public static boolean validating() {
 
 		Source xmlFile = new StreamSource(new File("Settings.xml"));
-		
-		InputStream in = ClassLoader.getSystemClassLoader().getSystemResourceAsStream("Settings.xsd");
-		
+
+		InputStream in = ClassLoader.getSystemClassLoader()
+				.getSystemResourceAsStream("Settings.xsd");
+
 		Source xsdFile = new StreamSource(in);
 
 		SchemaFactory schemaFactory = SchemaFactory
@@ -51,7 +54,7 @@ public class Validation {
 
 		} catch (SAXException e1) {
 
-			e1.printStackTrace();
+			Initialization.severe.log(Level.SEVERE, e1.getMessage(), e1);
 
 		}
 
@@ -68,13 +71,12 @@ public class Validation {
 			Initialization.severe.severe(xmlFile.getSystemId()
 					+ " is not valid");
 
-			Initialization.severe.severe("Reason: " + e.getLocalizedMessage());
-
-			e.printStackTrace();
+			Initialization.severe.log(Level.SEVERE,
+					"Reason: " + e.getMessage(), e);
 
 		} catch (IOException e) {
 
-			e.printStackTrace();
+			Initialization.severe.log(Level.SEVERE, e.getMessage(), e);
 
 		} finally {
 

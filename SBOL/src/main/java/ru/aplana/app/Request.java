@@ -5,11 +5,8 @@ import static ru.aplana.tools.MQTools.getSession;
 import static tools.PropCheck.common;
 import static tools.PropCheck.erib;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
@@ -38,13 +35,9 @@ public class Request implements Runnable {
 
 	private MQQueueConnectionFactory factory;
 
-	private static AtomicInteger countSendMess = new AtomicInteger(0);
-
 	private long delay;
 
 	public static AtomicLong delayForStop = new AtomicLong();
-
-	private static Lock lock = new ReentrantLock();
 
 	private static final Logger logger = LogManager
 			.getFormatterLogger(Request.class.getName());
@@ -58,10 +51,12 @@ public class Request implements Runnable {
 	// setting for step test
 	private String settings;
 
-	public static AtomicInteger currentStep = new AtomicInteger(1);
+	private int currentStep = 1;
 
 	// scenario step test
-	private static ConcurrentHashMap<Integer, String> scenario = new ConcurrentHashMap<Integer, String>();
+	private HashMap<Integer, String> scenario = new HashMap<Integer, String>();
+
+	private long startTime;
 
 	public Request() {
 
@@ -80,6 +75,8 @@ public class Request implements Runnable {
 
 		if (testType.equalsIgnoreCase("step")) {
 
+			this.startTime = System.currentTimeMillis();
+
 			this.settings = erib.getChildText("step");
 
 			String[] tempArray = this.settings.split(";");
@@ -88,7 +85,7 @@ public class Request implements Runnable {
 
 			for (String string : tempArray) {
 
-				scenario.put(i, string);
+				this.scenario.put(i, string);
 
 				i++;
 			}
@@ -107,7 +104,7 @@ public class Request implements Runnable {
 
 		logger.debug("Delay: %s", this.delay);
 
-		logger.debug("Start time: %s", SBOLMqJms.startTime);
+		logger.debug("Start time: %s", this.startTime);
 
 		try {
 
@@ -156,13 +153,13 @@ public class Request implements Runnable {
 		if (this.testType.equalsIgnoreCase("step")) {
 
 			// read first time
-			settings = scenario.get(currentStep.get());
+			settings = this.scenario.get(this.currentStep);
 
-			int stepNext = currentStep.get() + 1;
+			int stepNext = this.currentStep + 1;
 
-			settingsFuture = scenario
-					.get((stepNext > scenario.size()) ? scenario.size()
-							: stepNext);
+			settingsFuture = this.scenario
+					.get((stepNext > this.scenario.size()) ? this.scenario
+							.size() : stepNext);
 
 			settingsArray = settings.split(",");
 
@@ -180,8 +177,6 @@ public class Request implements Runnable {
 		while (SBOLMqJms.flagRequest.get()) {
 
 			long start = System.currentTimeMillis();
-
-			countSendMess.getAndIncrement();
 
 			String request = RqToESB.getInstance().getRequest();
 
@@ -226,81 +221,72 @@ public class Request implements Runnable {
 			// if test type equals step - must be up count apps
 			if (this.testType.equalsIgnoreCase("step")) {
 
-				lock.lock();
+				long now = System.currentTimeMillis();
 
-				try {
+				long diff = now - this.startTime;
 
-					long now = System.currentTimeMillis();
+				// sum enter with duration step
+				long timeStep = (Long.parseLong(settingsArray[0]) + Long
+						.parseLong(settingsArray[1])) * 60 * 1000;
 
-					long diff = now - SBOLMqJms.startTime.get();
+				// new step
+				if (diff > timeStep
+						&& (this.currentStep != this.scenario.size())) {
 
-					// sum enter with duration step
-					long timeStep = (Long.parseLong(settingsArray[0]) + Long
-							.parseLong(settingsArray[1])) * 60 * 1000;
+					logger.info("Prev start_time: %s", this.startTime);
 
-					// new step
-					if (diff > timeStep
-							&& (currentStep.get() != scenario.size())) {
+					logger.info("Prev delay: %s", this.delay);
 
-						logger.info("Prev start_time: %s", SBOLMqJms.startTime);
+					this.countAppStart = Integer
+							.parseInt(settingsFutureArray[2]);
 
-						logger.info("Prev delay: %s", this.delay);
+					if (this.countAppStart == 0) {
 
-						this.countAppStart = Integer
-								.parseInt(settingsFutureArray[2]);
+						logger.info(
+								"[Step] %s; Count apps zero! Set default 1",
+								this.currentStep);
 
-						if (this.countAppStart == 0) {
-
-							logger.info(
-									"[Step] %s; Count apps zero! Set default 1",
-									currentStep.get());
-
-							this.countAppStart = 1;
-
-						}
-
-						currentStep.getAndIncrement();
-
-						float temp = ((float) 3600 / this.countAppStart) * 1000;
-
-						this.delay = (long) temp;
-
-						delayForStop.set(this.delay);
-
-						SBOLMqJms.startTime.set(System.currentTimeMillis());
-
-						logger.info("Start time reset. New startTime: %s",
-								SBOLMqJms.startTime);
-
-						logger.info("New delay: %s", this.delay);
-
-						// re-read setting
-						settings = scenario.get(currentStep.get());
-
-						int stepNext = currentStep.get() + 1;
-
-						settingsFuture = scenario.get((stepNext > scenario
-								.size()) ? scenario.size() : stepNext);
-
-						settingsArray = settings.split(",");
-
-						settingsFutureArray = settingsFuture.split(",");
-
-						logger.debug("Re-read settings: %s", settings);
-
-						logger.debug("Re-read future settings: %s",
-								settingsFuture);
-
-						if (!(currentStep.get() != scenario.size())) {
-
-							logger.info("Last step succeed!");
-						}
+						this.countAppStart = 1;
 
 					}
 
-				} finally {
+					this.currentStep++;
 
-					lock.unlock();
+					float temp = ((float) 3600 / this.countAppStart) * 1000;
+
+					this.delay = (long) temp;
+
+					delayForStop.set(this.delay);
+
+					this.startTime = System.currentTimeMillis();
+
+					logger.info("Start time reset. New startTime: %s",
+							this.startTime);
+
+					logger.info("New delay: %s", this.delay);
+
+					// re-read setting
+					settings = scenario.get(this.currentStep);
+
+					int stepNext = this.currentStep + 1;
+
+					settingsFuture = scenario
+							.get((stepNext > scenario.size()) ? scenario.size()
+									: stepNext);
+
+					settingsArray = settings.split(",");
+
+					settingsFutureArray = settingsFuture.split(",");
+
+					logger.debug("Re-read settings: %s", settings);
+
+					logger.debug("Re-read future settings: %s", settingsFuture);
+
+					if (!(this.currentStep != scenario.size())) {
+
+						logger.info("Last step succeed!");
+					}
+
 				}
 
 			}
@@ -312,13 +298,13 @@ public class Request implements Runnable {
 			logger.debug("Run send: %s ms", diff);
 
 			long delay = (diff > 0) ? this.delay - diff : 0;
-			
+
 			try {
 
 				if (delay > 0) {
-					
+
 					Thread.sleep(delay);
-					
+
 				} else {
 
 					logger.debug(
@@ -330,22 +316,6 @@ public class Request implements Runnable {
 			} catch (InterruptedException e) {
 
 				logger.error("Interrupted thread: %s", e.getMessage(), e);
-
-			}
-
-			if (countSendMess.get() > 260) {
-
-				Runtime r = Runtime.getRuntime();
-
-				logger.info("Total memory: %s", r.totalMemory());
-
-				logger.info("Memory before gc %s", r.freeMemory());
-
-				r.gc();
-
-				logger.info("Memory after gc %s", r.freeMemory());
-
-				countSendMess.set(0);
 
 			}
 

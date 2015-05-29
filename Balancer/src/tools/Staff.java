@@ -1,7 +1,5 @@
 package tools;
 
-import static tools.WebAppContext.loggerInfoBlack;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -16,6 +14,8 @@ import javax.xml.namespace.QName;
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.OMFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Staff functions.
@@ -24,6 +24,9 @@ import org.apache.axiom.om.OMFactory;
  * 
  */
 public class Staff {
+
+	private static final Logger logger = LogManager.getLogger(Staff.class
+			.getName());
 
 	public static final ConcurrentHashMap<String, Integer> errorServers = new ConcurrentHashMap<String, Integer>();
 
@@ -95,29 +98,26 @@ public class Staff {
 
 			ReturnURL.clearList.set(true);
 
-			loggerInfoBlack.info("BlackList size before clearing: "
-					+ blackListSize);
+			logger.info("BlackList size before clearing: " + blackListSize);
 
-			loggerInfoBlack.info("ErrorServers size before clearing: "
+			logger.info("ErrorServers size before clearing: "
 					+ errorServersSize);
 
 			blackList.clear();
 
 			errorServers.clear();
 
-			loggerInfoBlack.info("BlackList cleared in " + new Date());
+			logger.info("BlackList cleared in " + new Date());
 
-			loggerInfoBlack.info("ErrorsServers cleared in " + new Date());
-			
+			logger.info("ErrorsServers cleared in " + new Date());
+
 			blackListSize = blackList.size();
 
 			errorServersSize = errorServers.size();
 
-			loggerInfoBlack.info("BlackList size after clearing: "
-					+ blackListSize);
+			logger.info("BlackList size after clearing: " + blackListSize);
 
-			loggerInfoBlack.info("Hash size after clearing: "
-					+ errorServersSize);
+			logger.info("Hash size after clearing: " + errorServersSize);
 
 			ReturnURL.clearList.set(false);
 
@@ -197,18 +197,11 @@ public class Staff {
 
 			avaliable = true;
 
-			if (WebAppContext.debug) {
-
-				WebAppContext.loggerInfo.info("Socket opened successfully");
-
-			}
+			logger.debug("Socket opened successfully");
 
 		} catch (IOException e) {
 
-			WebAppContext.loggerSevere.severe("Can't connect to " + ip + ":"
-					+ port);
-
-			e.printStackTrace();
+			logger.error("Can't connect to " + ip + ":" + port, e);
 
 		} finally {
 
@@ -216,13 +209,13 @@ public class Staff {
 
 				sc.close();
 
-				WebAppContext.loggerInfo.info("Socket closed successfully!");
+				logger.debug("Socket closed successfully!");
 
 			} catch (IOException e) {
 
-				WebAppContext.loggerSevere.severe("Cann't closed socket!");
+				logger.error("Cann't closed socket! Error: " + e.getMessage(),
+						e);
 
-				e.printStackTrace();
 			}
 
 			sc = null;

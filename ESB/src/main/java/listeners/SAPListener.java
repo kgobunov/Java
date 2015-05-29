@@ -38,8 +38,6 @@ import com.ibm.mq.jms.MQQueueSession;
 @SuppressWarnings({ "deprecation" })
 public class SAPListener implements MessageListener {
 
-	private MQQueueSession session;
-
 	private MQQueueConnection connection;
 
 	private static final Logger logger = LogManager
@@ -48,9 +46,6 @@ public class SAPListener implements MessageListener {
 	public SAPListener(MQQueueConnection connection) {
 
 		this.connection = connection;
-
-		this.session = getSession(this.connection, false,
-				MQQueueSession.AUTO_ACKNOWLEDGE);
 
 	}
 
@@ -202,15 +197,20 @@ public class SAPListener implements MessageListener {
 
 		TextMessage outputMsg = null;
 
+		MQQueueSession session = null;
+
 		try {
 
-			outputMsg = this.session.createTextMessage(response);
+			session = getSession(this.connection, false,
+					MQQueueSession.AUTO_ACKNOWLEDGE);
 
-			queueSend = (MQQueue) this.session.createQueue(Queues.ETSM_OUT);
+			outputMsg = session.createTextMessage(response);
+
+			queueSend = (MQQueue) session.createQueue(Queues.ETSM_OUT);
 
 			queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
 
-			producer = this.session.createProducer(queueSend);
+			producer = session.createProducer(queueSend);
 
 			producer.send(outputMsg);
 
@@ -234,6 +234,13 @@ public class SAPListener implements MessageListener {
 					queueSend = null;
 
 				}
+
+				if (null != session) {
+
+					session.close();
+
+				}
+
 			} catch (JMSException e) {
 
 				logger.error("Can't close producer: %s", e.getMessage(), e);

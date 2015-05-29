@@ -4,6 +4,7 @@ import javax.jms.JMSException;
 
 public class Main {
 
+	
 	/**
 	 * @param args
 	 * @throws JMSException

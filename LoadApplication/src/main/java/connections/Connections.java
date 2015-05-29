@@ -11,6 +11,7 @@ import ru.aplana.app.Initialization;
  * 
  * Version: 1.0
  * 
+ * Copyright: OOO Aplana
  * 
  * Connection setting to db (oracle) and mq
  * 

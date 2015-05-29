@@ -5,7 +5,11 @@ import static connections.Connections.MQ_HOST;
 import static connections.Connections.MQ_MANAGER;
 import static connections.Connections.MQ_PORT;
 
+import java.util.logging.Level;
+
 import javax.jms.JMSException;
+
+import ru.aplana.app.Initialization;
 
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueueConnection;
@@ -16,6 +20,7 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
  * 
  * Version: 1.0
  * 
+ * Copyright: OOO Aplana
  * 
  * MQ settings
  * 
@@ -37,7 +42,7 @@ public class MQ {
 
 		} catch (JMSException e) {
 
-			e.printStackTrace();
+			Initialization.severe.log(Level.SEVERE, e.getMessage(), e);
 		}
 
 	}

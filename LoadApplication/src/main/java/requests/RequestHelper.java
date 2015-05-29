@@ -3,6 +3,7 @@ package requests;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 import org.apache.commons.io.FileUtils;
 
@@ -13,6 +14,7 @@ import ru.aplana.app.Initialization;
  * 
  * Version: 1.1
  * 
+ * Copyright: OOO Aplana
  * 
  * Requests initialization
  * 
@@ -70,10 +72,9 @@ public class RequestHelper {
 
 			} catch (IOException e) {
 
-				Initialization.severe.severe("Can't read file! Error: "
-						+ e.getMessage());
+				Initialization.severe.log(Level.SEVERE,
+						"Can't read file! Error: " + e.getMessage(), e);
 
-				e.printStackTrace();
 			}
 
 		}

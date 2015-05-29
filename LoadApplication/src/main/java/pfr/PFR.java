@@ -29,6 +29,7 @@ import ru.aplana.tools.GetData;
  * 
  * Version: 1.0
  * 
+ * Copyright: OOO Aplana
  * 
  * Implementation call pfr service
  * 

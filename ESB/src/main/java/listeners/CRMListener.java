@@ -28,10 +28,6 @@ import com.ibm.mq.jms.MQQueueSession;
 @SuppressWarnings("deprecation")
 public class CRMListener implements MessageListener {
 
-	private MQQueueSession session;
-
-	private MQQueue queueSend;
-
 	private MQQueueConnection connection;
 
 	private static final Logger logger = LogManager
@@ -41,27 +37,17 @@ public class CRMListener implements MessageListener {
 
 		this.connection = connection;
 
-		this.session = getSession(this.connection, false,
-				MQQueueSession.AUTO_ACKNOWLEDGE);
-
-		try {
-
-			this.queueSend = (MQQueue) this.session
-					.createQueue(Queues.ETSM_OUT);
-
-			this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
-
-		} catch (JMSException e) {
-
-			logger.error("Can't create queue: %s", e.getMessage(), e);
-
-		}
-
 	}
 
 	public void onMessage(Message inputMsg) {
 
 		MessageProducer producer = null;
+
+		MQQueueSession session = null;
+
+		MQQueue queueSend = null;
+
+		TextMessage outputMsg = null;
 
 		try {
 
@@ -74,9 +60,16 @@ public class CRMListener implements MessageListener {
 			// For this system response equals request
 			response = request;
 
-			TextMessage outputMsg = this.session.createTextMessage(response);
+			session = getSession(this.connection, false,
+					MQQueueSession.AUTO_ACKNOWLEDGE);
 
-			producer = this.session.createProducer(this.queueSend);
+			queueSend = (MQQueue) session.createQueue(Queues.ETSM_OUT);
+
+			queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
+
+			outputMsg = session.createTextMessage(response);
+
+			producer = session.createProducer(queueSend);
 
 			producer.send(outputMsg);
 
@@ -95,6 +88,17 @@ public class CRMListener implements MessageListener {
 					producer.close();
 
 				}
+
+				if (null != session) {
+
+					session.close();
+
+				}
+
+				queueSend = null;
+
+				outputMsg = null;
+
 			} catch (JMSException e) {
 
 				logger.error(e.getMessage(), e);

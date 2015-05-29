@@ -12,12 +12,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Application Lifecycle Listener implementation
@@ -25,6 +26,9 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
  * @author Maksim Stepanov
  */
 public class WebAppContext implements ServletContextListener {
+
+	public static final Logger logger = LogManager
+			.getLogger(WebAppContext.class.getName());
 
 	private ScheduledExecutorService propsChecker;
 
@@ -38,8 +42,6 @@ public class WebAppContext implements ServletContextListener {
 
 	private static int countUrls;
 
-	public static boolean debug;
-
 	public static MultiThreadedHttpConnectionManager connManager;
 
 	public static Properties properties = new Properties();
@@ -48,19 +50,9 @@ public class WebAppContext implements ServletContextListener {
 
 	private static AtomicInteger callCounterUND = new AtomicInteger(0);
 
-	// logger's
-	public static Logger loggerInfo = null;
-
-	public static Logger loggerSevere = null;
-
-	// logger's
-	public static Logger loggerInfoBlack = null;
-
-	public static Logger loggerSevereBlack = null;
-
 	public static AtomicBoolean ready = new AtomicBoolean(false);
 
-	private String properties_fname = System.getProperty("user.dir")
+	private String propertiesFile = System.getProperty("user.dir")
 			+ "\\conf\\Balancer.properties";
 
 	private long previosModification;
@@ -87,8 +79,7 @@ public class WebAppContext implements ServletContextListener {
 
 			if (lastModification > previosModification) {
 
-				loggerInfo
-						.info(">>>Balancer config file was modified! Reload properties...");
+				logger.info(">>>Balancer config file was modified! Reload properties...");
 
 				previosModification = lastModification;
 
@@ -119,8 +110,6 @@ public class WebAppContext implements ServletContextListener {
 							Integer.valueOf(properties
 									.getProperty("MaxConnections")));
 
-					debug = Boolean.valueOf(properties.getProperty("Debug"));
-
 				}
 
 				Iterator<String> propsIter = properties.stringPropertyNames()
@@ -140,7 +129,7 @@ public class WebAppContext implements ServletContextListener {
 
 						urlArrayKI.addElement(properties.getProperty(propKey));
 
-						loggerInfo.info(">>>Balancer KI Add url="
+						System.out.println(">>>Balancer KI Add url="
 								+ properties.getProperty(propKey));
 					}
 
@@ -148,7 +137,7 @@ public class WebAppContext implements ServletContextListener {
 
 						urlArrayUND.addElement(properties.getProperty(propKey));
 
-						loggerInfo.info(">>>Balancer Und Add url="
+						System.out.println(">>>Balancer Und Add url="
 								+ properties.getProperty(propKey));
 					}
 
@@ -162,9 +151,9 @@ public class WebAppContext implements ServletContextListener {
 
 				ready.set(true);
 
-				loggerInfo.info(">>>All urls loaded successfully!");
+				System.out.println(">>>All urls loaded successfully!");
 
-				loggerInfo.info(">>>Size KI: " + sizeKI + "; Size Under: "
+				System.out.println(">>>Size KI: " + sizeKI + "; Size Under: "
 						+ sizeUND + "; Count urls: " + countUrls);
 
 			} catch (FileNotFoundException e) {
@@ -189,7 +178,7 @@ public class WebAppContext implements ServletContextListener {
 
 		urlArrayUND = new Vector<String>(80);
 
-		configFile = new File(properties_fname);
+		configFile = new File(propertiesFile);
 
 		previosModification = configFile.lastModified();
 
@@ -199,38 +188,7 @@ public class WebAppContext implements ServletContextListener {
 
 		} catch (IOException e) {
 
-			e.printStackTrace();
-
-		}
-
-		if (null == loggerInfo) {
-
-			CreateLogger loggers = new CreateLogger(
-					properties.getProperty("logName"),
-					Integer.parseInt(properties.getProperty("sizeLog")) * 1000000,
-					Integer.parseInt(properties.getProperty("countFileLog")));
-
-			loggerInfo = loggers.getInfoLogger();
-
-			loggerSevere = loggers.getSevereLogger();
-
-			loggerInfo.info(">>>Balancer log Started!!!!");
-
-		}
-
-		if (null == loggerInfoBlack) {
-
-			CreateLogger loggersBlack = new CreateLogger(
-					properties.getProperty("blackLogName"),
-					Integer.parseInt(properties.getProperty("blackSizeLog")) * 1000000,
-					Integer.parseInt(properties
-							.getProperty("blackCountFileLog")));
-
-			loggerInfoBlack = loggersBlack.getInfoLogger();
-
-			loggerSevereBlack = loggersBlack.getSevereLogger();
-
-			loggerInfoBlack.info(">>>Black log Started!!!!");
+			logger.error("Can't load properties -  " + e.getMessage(), e);
 
 		}
 
@@ -279,7 +237,7 @@ public class WebAppContext implements ServletContextListener {
 
 		propsChecker.shutdownNow();
 
-		loggerInfo.info(">>>Balancer Stopped!!!!");
+		System.out.println(">>>Balancer Stopped!!!!");
 	}
 
 	public static String getNextUrlKI() {

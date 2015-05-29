@@ -135,7 +135,7 @@ public class DbOperation {
 
 		try {
 
-			String insert = "insert into sbb_monitor.sbol_app ( RQUD, app_number , app_status, firstname, lastname, middlename, birthday, system, time ) values (?,?,?,?,?,?,?,?,?)";
+			String insert = "insert into sbb_monitor.sbol_app ( RQUD, app_number , app_status, firstname, lastname, middlename, birthday, system, time, card_number ) values (?,?,?,?,?,?,?,?,?,?)";
 
 			preparedStatement = this.connection.prepareStatement(insert);
 
@@ -157,6 +157,8 @@ public class DbOperation {
 
 			preparedStatement.setTimestamp(9,
 					new Timestamp(new Date().getTime()));
+
+			preparedStatement.setString(10, dataArray.get(5));
 
 			preparedStatement.executeUpdate();
 
@@ -195,7 +197,7 @@ public class DbOperation {
 
 			preparedStatement = this.connection.prepareStatement(update);
 
-			preparedStatement.setInt(1, Integer.valueOf(dataArray.get(2)));
+			preparedStatement.setInt(1, Integer.parseInt(dataArray.get(2)));
 
 			preparedStatement.setString(2, dataArray.get(1));
 

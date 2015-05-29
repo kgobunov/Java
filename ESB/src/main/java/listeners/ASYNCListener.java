@@ -50,18 +50,6 @@ public class ASYNCListener implements MessageListener {
 		this.session = getSession(this.connection, false,
 				MQQueueSession.AUTO_ACKNOWLEDGE);
 
-		try {
-
-			this.queueSend = (MQQueue) this.session
-					.createQueue(Queues.ETSM_OUT);
-
-			this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
-
-		} catch (JMSException e) {
-
-			logger.error("Can't create queue: %s", e.getMessage(), e);
-		}
-
 	}
 
 	public void onMessage(Message inputMsg) {
@@ -211,6 +199,11 @@ public class ASYNCListener implements MessageListener {
 			default:
 				break;
 			}
+
+			this.queueSend = (MQQueue) this.session
+					.createQueue(Queues.ETSM_OUT);
+
+			this.queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
 
 			if (null == response) {
 

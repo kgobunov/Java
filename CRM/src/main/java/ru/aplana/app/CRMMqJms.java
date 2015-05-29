@@ -11,9 +11,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
@@ -43,8 +40,6 @@ public class CRMMqJms implements Runnable {
 
 	public static AtomicBoolean flagRequest = new AtomicBoolean(false);
 
-	public static AtomicLong startTime = new AtomicLong();
-
 	public static boolean logTsmApp = false;
 
 	public static ScheduledExecutorService sc = null;
@@ -52,8 +47,6 @@ public class CRMMqJms implements Runnable {
 	public static ExecutorService executor = null;
 
 	public static ExecutorService ex = null;
-
-	private static AtomicInteger countThreadStart = new AtomicInteger(0);
 
 	private static int countThread;
 
@@ -66,8 +59,6 @@ public class CRMMqJms implements Runnable {
 	private MQQueueConnection connection;
 
 	private boolean flagReconnect = false;
-
-	private static Lock lock = new ReentrantLock();
 
 	private static final Logger logger = LogManager
 			.getFormatterLogger(CRMMqJms.class.getName());
@@ -127,19 +118,9 @@ public class CRMMqJms implements Runnable {
 
 							try {
 
-								lock.lock();
+								if (CheckConn.checkConn()) {
 
-								try {
-
-									if (CheckConn.checkConn()) {
-
-										run();
-									}
-
-								} finally {
-
-									lock.unlock();
-
+									run();
 								}
 
 							} catch (Exception e1) {
@@ -196,10 +177,9 @@ public class CRMMqJms implements Runnable {
 			// Set listeners
 			while (countListeners.get() < countThreadListeners) {
 
-				MessageConsumer consumerCRM = getConsumer(this.connection,
-						queue);
+				MessageConsumer consumer = getConsumer(this.connection, queue);
 
-				consumerCRM.setMessageListener(new ESBListener());
+				consumer.setMessageListener(new ESBListener());
 
 				countListeners.getAndIncrement();
 
@@ -211,21 +191,7 @@ public class CRMMqJms implements Runnable {
 
 			if (!flagReconnect) {
 
-				countThreadStart.getAndIncrement();
-
 				ex.execute(new Request());
-
-				logger.info("CountThreadStart: %s", countThreadStart.get());
-
-				if (countThreadStart.get() > 250) {
-
-					Runtime r = Runtime.getRuntime();
-
-					r.gc();
-
-					countThreadStart.set(0);
-
-				}
 
 			}
 
@@ -254,13 +220,6 @@ public class CRMMqJms implements Runnable {
 		sc = Executors.newSingleThreadScheduledExecutor();
 
 		sc.scheduleAtFixedRate(new PropCheck(), 0, 10, TimeUnit.SECONDS);
-
-		// Detecting type mode - step or confirm
-		if (common.getChildText("testType").equalsIgnoreCase("step")) {
-
-			startTime.set(System.currentTimeMillis());
-
-		}
 
 		// Count threads
 		countThread = Integer.parseInt(crm.getChildText("threads"));

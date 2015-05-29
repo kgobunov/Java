@@ -44,6 +44,7 @@
 									<xs:restriction base="xs:string">
 										<xs:enumeration value="round"/>
 										<xs:enumeration value="bind"/>
+										<xs:enumeration value="least"/>
 									</xs:restriction>
 								</xs:simpleType>							
 							</xs:element>							

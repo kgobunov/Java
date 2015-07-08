@@ -240,10 +240,12 @@ public class Observer implements Runnable {
 						.setLoggers(this.infoLog, this.severeLog)
 						.setRequestData(this.replyTo, this.files)
 						.setMessageOptions(this.jmsSupport, this.additionalProp)
-						.build();
+						.setSession().build();
 
 				this.sc.scheduleAtFixedRate(dr, 0, interval,
 						TimeUnit.MILLISECONDS);
+
+				Initialization.info.info("Starting successfully!");
 
 			}
 
@@ -318,7 +320,7 @@ public class Observer implements Runnable {
 
 					}
 
-					 System.exit(0);
+					System.exit(0);
 
 				}
 

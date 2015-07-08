@@ -233,106 +233,94 @@ public class GettingResponses implements MessageListener {
 
 		for (int i = 0; i < this.xpath.size(); i++) {
 
-			try {
+			if (!flagCheck) {
 
-				value = xPath.evaluate(this.xpath.get(i), new InputSource(
-						new StringReader(request)));
+				try {
 
-			} catch (XPathExpressionException e) {
+					value = xPath.evaluate(this.xpath.get(i), new InputSource(
+							new StringReader(request)));
 
-				this.severeLog.severe("Error getValue: " + e.getMessage());
+				} catch (XPathExpressionException e) {
 
-				value = "";
+					this.severeLog.severe("Error getValue: " + e.getMessage());
 
-			} finally {
+					value = "";
 
-				flagCheck = false;
-			}
+				} finally {
 
-			if (system.equalsIgnoreCase("srg")) {
-
-				if (value.equalsIgnoreCase("Ошибок нет.")) {
-
-					flagCheck = true;
-
-				}
-			}
-
-			if (system.equalsIgnoreCase("fps")) {
-
-				if (value.equalsIgnoreCase("0")) {
-
-					flagCheck = true;
-
-				}
-			}
-
-			if (system.equalsIgnoreCase("mbki")) {
-
-				if (value.equalsIgnoreCase("0")) {
-
-					flagCheck = true;
-
-				}
-			}
-
-			if (system.equalsIgnoreCase("fms")) {
-
-				if (value.equalsIgnoreCase("0")) {
-
-					flagCheck = true;
-
-				}
-			}
-
-			if (system.equalsIgnoreCase("ei")) {
-
-				if (value.equalsIgnoreCase("0")) {
-
-					flagCheck = true;
-
-				}
-			}
-
-			if (system.equalsIgnoreCase("nbki")) {
-
-				if (value.equalsIgnoreCase("483647")) {
-
-					flagCheck = true;
-
+					flagCheck = false;
 				}
 
-			}
+				if (system.equalsIgnoreCase("srg")) {
 
-			if (system.equalsIgnoreCase("ei_ul")) {
+					if (value.equalsIgnoreCase("Ошибок нет.")) {
 
-				if (value.equalsIgnoreCase("0")) {
+						flagCheck = true;
 
-					flagCheck = true;
+					}
+				}
+
+				if (system.equalsIgnoreCase("fps")) {
+
+					if (value.equalsIgnoreCase("0")) {
+
+						flagCheck = true;
+
+					}
+				}
+
+				if (system.equalsIgnoreCase("mbki")) {
+
+					if (value.equalsIgnoreCase("0")) {
+
+						flagCheck = true;
+
+					}
+				}
+
+				if (system.equalsIgnoreCase("fms")) {
+
+					if (value.equalsIgnoreCase("0")) {
+
+						flagCheck = true;
+
+					}
+				}
+
+				if (system.equalsIgnoreCase("ei")
+						|| system.equalsIgnoreCase("ei_ul")) {
+
+					if (value.equalsIgnoreCase("0")
+							|| value.equalsIgnoreCase("031412220400204")
+							|| value.equalsIgnoreCase("2")) {
+
+						flagCheck = true;
+
+					}
+				}
+
+				if (system.equalsIgnoreCase("nbki")
+						|| system.equalsIgnoreCase("nbki_ul")) {
+
+					if (value.equalsIgnoreCase("483647")) {
+
+						flagCheck = true;
+
+					}
 
 				}
 
-			}
+				if (system.equalsIgnoreCase("brs")) {
 
-			if (system.equalsIgnoreCase("nbki_ul")) {
+					if (value.equalsIgnoreCase("39893022")) {
 
-				if (value.equalsIgnoreCase("483647")) {
+						flagCheck = true;
 
-					flagCheck = true;
-
-				}
-			}
-
-			if (system.equalsIgnoreCase("brs")) {
-
-				if (value.equalsIgnoreCase("39893022")) {
-
-					flagCheck = true;
+					}
 
 				}
 
 			}
-
 		}
 
 		Initialization.saveDb.execute(new SaveData(request, flagCheck, system));

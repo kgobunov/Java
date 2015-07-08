@@ -295,11 +295,16 @@ public class InitSystems {
 						info.info("Settings: " + settings);
 
 						info.info("Future settings: " + settingsFuture);
+						
+						info.info("poolThreadSize: " + poolThreadSize);
+						
 
 						float temp = ((float) 3600 / Integer
 								.parseInt(settingsArray[0])) * 1000;
 
 						long interval = (long) temp; // intensity
+						
+						info.info("interval: " + interval);
 
 						sc = Executors.newScheduledThreadPool(threads + 1);
 

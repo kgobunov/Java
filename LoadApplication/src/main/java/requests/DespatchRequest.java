@@ -193,7 +193,7 @@ public class DespatchRequest implements Runnable {
 			this.dataRequest.put("queueReplyTo", this.replyTo[0]);
 
 			Initialization.sendRequest(this.dataRequest);
-
+			
 		} else {
 
 			for (int i = 0; i < this.length; i++) {

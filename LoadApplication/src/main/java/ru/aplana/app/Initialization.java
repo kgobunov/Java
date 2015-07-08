@@ -260,7 +260,7 @@ public class Initialization {
 
 				}
 
-			} catch (JMSException e) {
+			} catch (Exception e) {
 
 				severe.log(Level.SEVERE, "System: " + system
 						+ "; Error send request: " + e.getMessage(), e);

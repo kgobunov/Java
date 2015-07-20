@@ -26,14 +26,14 @@ import com.ibm.mq.jms.MQQueueSession;
  * 
  */
 @SuppressWarnings("deprecation")
-public class CRMListener implements MessageListener {
+public class EtsmAsBsListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
 	private static final Logger logger = LogManager
-			.getFormatterLogger(CRMListener.class.getName());
+			.getFormatterLogger(EtsmAsBsListener.class.getName());
 
-	public CRMListener(MQQueueConnection connection) {
+	public EtsmAsBsListener(MQQueueConnection connection) {
 
 		this.connection = connection;
 
@@ -53,7 +53,7 @@ public class CRMListener implements MessageListener {
 
 			String request = parseMessMQ(inputMsg);
 
-			logger.debug("Message from CRM: %s", request);
+			logger.debug("Message from ETSM to AS BS: %s", request);
 
 			// For this system response equals request
 			String response = request;
@@ -61,7 +61,7 @@ public class CRMListener implements MessageListener {
 			session = getSession(this.connection, false,
 					MQQueueSession.AUTO_ACKNOWLEDGE);
 
-			queueSend = (MQQueue) session.createQueue(Queues.ETSM_OUT);
+			queueSend = (MQQueue) session.createQueue(Queues.STUB_BS_IN);
 
 			queueSend.setTargetClient(JMSC.MQJMS_CLIENT_NONJMS_MQ);
 
@@ -71,7 +71,7 @@ public class CRMListener implements MessageListener {
 
 			producer.send(outputMsg);
 
-			logger.debug("Request to ETSM from CRM: %s", response);
+			logger.debug("Request to AS BS from ETSM: %s", response);
 
 		} catch (JMSException e) {
 

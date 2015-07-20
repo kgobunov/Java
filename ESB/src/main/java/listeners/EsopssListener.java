@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import tools.Queues;
+import answers.Requests;
 
 import com.ibm.mq.jms.JMSC;
 import com.ibm.mq.jms.MQQueue;
@@ -26,14 +27,14 @@ import com.ibm.mq.jms.MQQueueSession;
  * 
  */
 @SuppressWarnings("deprecation")
-public class CRMListener implements MessageListener {
+public class EsopssListener implements MessageListener {
 
 	private MQQueueConnection connection;
 
 	private static final Logger logger = LogManager
-			.getFormatterLogger(CRMListener.class.getName());
+			.getFormatterLogger(EsopssListener.class.getName());
 
-	public CRMListener(MQQueueConnection connection) {
+	public EsopssListener(MQQueueConnection connection) {
 
 		this.connection = connection;
 
@@ -53,10 +54,11 @@ public class CRMListener implements MessageListener {
 
 			String request = parseMessMQ(inputMsg);
 
-			logger.debug("Message from CRM: %s", request);
+			String response = null;
 
-			// For this system response equals request
-			String response = request;
+			logger.debug("Message from TSM_ESOPSS: %s", request);
+
+			response = Requests.esopssResponse(request);
 
 			session = getSession(this.connection, false,
 					MQQueueSession.AUTO_ACKNOWLEDGE);
@@ -71,7 +73,7 @@ public class CRMListener implements MessageListener {
 
 			producer.send(outputMsg);
 
-			logger.debug("Request to ETSM from CRM: %s", response);
+			logger.debug("Request to ETSM from ESOPSS: %s", response);
 
 		} catch (JMSException e) {
 

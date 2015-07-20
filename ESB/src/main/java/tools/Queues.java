@@ -2,6 +2,8 @@ package tools;
 
 import static tools.PropsChecker.esb;
 
+import java.io.PrintWriter;
+
 /**
  * 
  * Queues
@@ -23,6 +25,10 @@ public class Queues {
 
 	public final static String MDM_OUT = esb.getChildText("queueToTSMMDM");
 
+	public final static String STUB_BS_IN = esb.getChildText("queueToAsBs");
+
+	public final static String BS_OUT = esb.getChildText("queueToEtsmAsBs");
+
 	// garbage queue
 	public final static String GARBAGE_OUT = esb.getChildText("queueToGarbage");
 
@@ -36,6 +42,14 @@ public class Queues {
 	public final static String ERIB_IN = esb.getChildText("queueFromErib");
 
 	public final static String MDM_IN = esb.getChildText("queueFromTSMMDM");
+
+	public final static String ESOPSS_IN = esb
+			.getChildText("queueFromEtsmEsopss");
+
+	public final static String BS_IN = esb.getChildText("queueFromEtsmAsBs");
+
+	public final static String STUB_BS_OUT = esb
+			.getChildText("queueFromAsBsEtsm");
 
 	public final static String ETSM_IN = esb.getChildText("queueFromEtsm");
 

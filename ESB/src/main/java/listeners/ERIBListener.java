@@ -45,13 +45,6 @@ public class ERIBListener implements MessageListener {
 
 	public void onMessage(Message inputMsg) {
 
-		try {
-			Thread.sleep(15000);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
 		ArrayList<String> data = null;
 
 		String request = parseMessMQ(inputMsg);

@@ -15,9 +15,12 @@ import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 
 import listeners.ASYNCListener;
+import listeners.AsBsListener;
 import listeners.CRMListener;
 import listeners.ERIBListener;
 import listeners.ETSMListener;
+import listeners.EsopssListener;
+import listeners.EtsmAsBsListener;
 import listeners.FSBListener;
 import listeners.MDMListener;
 import listeners.SAPListener;
@@ -180,6 +183,23 @@ public class EsbMqJms implements Runnable {
 					Queues.MDM_IN);
 
 			consumerMDM.setMessageListener(new MDMListener(this.connection));
+
+			MessageConsumer consumerEtsmAsBs = getConsumer(this.connection,
+					Queues.BS_IN);
+
+			consumerEtsmAsBs.setMessageListener(new EtsmAsBsListener(
+					this.connection));
+
+			MessageConsumer consumerAsBs = getConsumer(this.connection,
+					Queues.STUB_BS_OUT);
+
+			consumerAsBs.setMessageListener(new AsBsListener(this.connection));
+
+			MessageConsumer consumerEsopss = getConsumer(this.connection,
+					Queues.ESOPSS_IN);
+
+			consumerEsopss.setMessageListener(new EsopssListener(
+					this.connection));
 
 			MessageConsumer consumerETSM = getConsumer(this.connection,
 					Queues.ETSM_IN);

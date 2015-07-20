@@ -3,10 +3,13 @@ package answers;
 import static ru.aplana.tools.Common.generateNumber;
 import static ru.aplana.tools.Common.generateTaskId;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.soap.MessageFactory;
@@ -20,6 +23,11 @@ import javax.xml.soap.SOAPPart;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.JDOMException;
+import org.jdom.input.SAXBuilder;
+import org.xml.sax.InputSource;
 
 import ru.aplana.tools.GetData;
 
@@ -952,6 +960,169 @@ public class Requests {
 		response = sb.toString();
 
 		return response;
+
+	}
+
+	@SuppressWarnings("rawtypes")
+	public static String esopssResponse(String request) {
+
+		SAXBuilder builder = new SAXBuilder();
+
+		Document doc = null;
+
+		try {
+
+			doc = (Document) builder.build(new InputSource(new StringReader(
+					request)));
+
+		} catch (JDOMException | IOException e) {
+
+			logger.error(e.getMessage(), e);
+
+		}
+
+		Element root = doc.getRootElement();
+
+		String messId = root.getChild("messUID").getChildText("MessageId");
+
+		String appNum = root.getChild("application").getChildText("appNumber");
+
+		List participants = root.getChild("participants").getChildren();
+
+		int size = participants.size();
+
+		ArrayList<Participant> dealMan = new ArrayList<Participant>(size);
+
+		for (int i = 0; i < size; i++) {
+
+			ArrayList<String> tempPhones = new ArrayList<String>();
+
+			Element child = ((Element) participants.get(i));
+
+			String participantsNumber = child.getChildText("participantNumber");
+
+			List phones = child.getChildren("phone");
+
+			int sizePhones = phones.size();
+
+			for (int j = 0; j < sizePhones; j++) {
+
+				tempPhones.add(((Element) phones.get(j))
+						.getChildText("phoneNumber"));
+
+			}
+
+			dealMan.add(new Participant(participantsNumber, tempPhones));
+
+		}
+
+		int sizeDealMan = dealMan.size();
+
+		StringBuilder sb = new StringBuilder();
+
+		SimpleDateFormat sdf = new SimpleDateFormat(
+				"yyyy-MM-dd'T'hh:mm:ss");
+
+		sb.append(
+				"<NS1:SrvGetClientExtendedRateRs xmlns:NS1=\"http://CreditFactory/ru/sbrf/sbt/tsm/mobile\">")
+				.append("<messUID>").append("<MessageId>").append(messId)
+				.append("</MessageId>").append("<MessageDT>")
+				.append(sdf.format(new Date())).append("</MessageDT>")
+				.append("<FromAbonent>").append("TSM").append("</FromAbonent>")
+				.append("<ToAbonent>").append("ETSM").append("</ToAbonent>")
+				.append("</messUID>").append("<result_info>").append("<code>")
+				.append("0").append("</code>").append("<description>")
+				.append("OK").append("</description>").append("<systemID>")
+				.append("BUS").append("</systemID>").append("</result_info>")
+				.append("<business_info>").append("<appNumber>").append(appNum)
+				.append("</appNumber>");
+
+		for (int d = 0; d < sizeDealMan; d++) {
+
+			Participant participant = dealMan.get(d);
+
+			sb.append("<participant>").append("<participantNumber>")
+					.append(participant.getNumber())
+					.append("</participantNumber>");
+
+			ArrayList<String> phones = participant.getPhones();
+
+			for (String phone : phones) {
+
+				sb.append("<phone>").append("<phoneIndex>").append(phone)
+						.append("</phoneIndex>").append("</phone>");
+			}
+
+			sb.append("<CallResult>");
+
+			for (int j = 0; j < 5; j++) {
+
+				sb.append("<Score>").append("5.0").append("</Score>");
+
+			}
+
+			for (int k = 0; k < 5; k++) {
+
+				sb.append("<ScoreCard>").append("Скоринговые карты")
+						.append("</ScoreCard>");
+
+			}
+
+			for (int l = 0; l < 5; l++) {
+
+				sb.append("<AdditionalSMInfo>")
+						.append("Дополнительные параметры")
+						.append("</AdditionalSMInfo>");
+
+			}
+
+			for (int m = 0; m < 5; m++) {
+
+				sb.append("<ReliabilityCodes>").append("Коды благонадёжности")
+						.append("</ReliabilityCodes>");
+
+			}
+
+			sb.append("</CallResult>").append("</participant>");
+
+		}
+
+		sb.append("</business_info>").append(
+				"</NS1:SrvGetClientExtendedRateRs>");
+
+		String response = sb.toString();
+
+		doc = null;
+
+		builder = null;
+
+		return response;
+
+	}
+
+	private static class Participant {
+
+		private String number;
+
+		private ArrayList<String> phones;
+
+		public Participant(String number, ArrayList<String> phones) {
+
+			this.number = number;
+
+			this.phones = phones;
+		}
+
+		public String getNumber() {
+
+			return this.number;
+
+		}
+
+		public ArrayList<String> getPhones() {
+
+			return this.phones;
+		}
 
 	}
 }

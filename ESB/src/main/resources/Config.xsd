@@ -270,9 +270,29 @@
 												</xs:restriction>
 											</xs:simpleType>											
 										</xs:element>
+										<xs:element name="queueToAsBs" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>AS BS request queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueToEtsmAsBs" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>AS BS response queue to TSM</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>											
 										<xs:element name="queueFromErib" minOccurs="1" maxOccurs="1">
 											<xs:annotation>
-												<xs:documentation>ERIB response queuue</xs:documentation>
+												<xs:documentation>ERIB response queue</xs:documentation>
 											</xs:annotation>
 											<xs:simpleType>
 												<xs:restriction base="xs:string">
@@ -282,7 +302,7 @@
 										</xs:element>
 										<xs:element name="queueFromTSMMDM" minOccurs="1" maxOccurs="1">
 											<xs:annotation>
-												<xs:documentation>MDM response queuue to TSM</xs:documentation>
+												<xs:documentation>MDM response queue to TSM</xs:documentation>
 											</xs:annotation>
 											<xs:simpleType>
 												<xs:restriction base="xs:string">
@@ -292,7 +312,7 @@
 										</xs:element>										
 										<xs:element name="queueFromEtsm" minOccurs="1" maxOccurs="1">
 											<xs:annotation>
-												<xs:documentation>TSM response queuue</xs:documentation>
+												<xs:documentation>TSM response queue</xs:documentation>
 											</xs:annotation>
 											<xs:simpleType>
 												<xs:restriction base="xs:string">
@@ -302,7 +322,7 @@
 										</xs:element>
 										<xs:element name="queueFromEtsmSAPHR" minOccurs="1" maxOccurs="1">
 											<xs:annotation>
-												<xs:documentation>SAP HR response queuue</xs:documentation>
+												<xs:documentation>SAP HR response queue</xs:documentation>
 											</xs:annotation>
 											<xs:simpleType>
 												<xs:restriction base="xs:string">
@@ -312,7 +332,7 @@
 										</xs:element>
 										<xs:element name="queueFromCrmEsb" minOccurs="1" maxOccurs="1">
 											<xs:annotation>
-												<xs:documentation>CRM response queuue</xs:documentation>
+												<xs:documentation>CRM response queue</xs:documentation>
 											</xs:annotation>
 											<xs:simpleType>
 												<xs:restriction base="xs:string">
@@ -322,7 +342,7 @@
 										</xs:element>
 										<xs:element name="queueFromFsbEsb" minOccurs="1" maxOccurs="1">
 											<xs:annotation>
-												<xs:documentation>FSB response queuue</xs:documentation>
+												<xs:documentation>FSB response queue</xs:documentation>
 											</xs:annotation>
 											<xs:simpleType>
 												<xs:restriction base="xs:string">
@@ -332,7 +352,7 @@
 										</xs:element>										
 										<xs:element name="queueFromEtsmAsync" minOccurs="1" maxOccurs="1">
 											<xs:annotation>
-												<xs:documentation>ASYNC response queuue for FMS, SPOOBK</xs:documentation>
+												<xs:documentation>ASYNC response queue for FMS, SPOOBK</xs:documentation>
 											</xs:annotation>
 											<xs:simpleType>
 												<xs:restriction base="xs:string">
@@ -342,7 +362,7 @@
 										</xs:element>
 										<xs:element name="queueFromServices" minOccurs="1" maxOccurs="1">
 											<xs:annotation>
-												<xs:documentation>Services response queuue for stubs (.war)</xs:documentation>
+												<xs:documentation>Services response queue for stubs (.war)</xs:documentation>
 											</xs:annotation>
 											<xs:simpleType>
 												<xs:restriction base="xs:string">
@@ -350,6 +370,36 @@
 												</xs:restriction>
 											</xs:simpleType>											
 										</xs:element>
+										<xs:element name="queueFromEtsmEsopss" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>ESOPSS request queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueFromEtsmAsBs" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>AS BS request queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>	
+										<xs:element name="queueFromAsBsEtsm" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>ESOPSS response queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>											
 										<xs:element name="urlSAPHR" minOccurs="1" maxOccurs="1">	
 											<xs:annotation>
 												<xs:documentation>SAP HR url</xs:documentation>
@@ -912,6 +962,56 @@
 												</xs:restriction>
 											</xs:simpleType>												
 										</xs:element>
+									</xs:sequence>
+								</xs:complexType>												
+							</xs:element>
+							<xs:element name="asbs" minOccurs="1" maxOccurs="1">
+								<xs:annotation>
+									<xs:documentation>Settings for AS BS</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="runTime" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Working time (minutes)</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="threads" minOccurs="1" maxOccurs="1">	
+											<xs:annotation>
+												<xs:documentation>Count threads for running application</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:decimal">
+													<xs:pattern value="\d+"/>
+												</xs:restriction>
+											</xs:simpleType>												
+										</xs:element>
+										<xs:element name="queueTo" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Request queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+										<xs:element name="queueFrom" minOccurs="1" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>Response queue</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>											
+										</xs:element>
+
 									</xs:sequence>
 								</xs:complexType>												
 							</xs:element>							

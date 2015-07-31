@@ -1,7 +1,5 @@
 package tools;
 
-import java.io.UnsupportedEncodingException;
-
 import javax.xml.namespace.QName;
 
 import org.apache.axiom.om.OMAbstractFactory;
@@ -21,7 +19,7 @@ public class ResponseInfoVIP {
 
 	private OMElement response = null;
 
-	public ResponseInfoVIP() throws UnsupportedEncodingException {
+	public ResponseInfoVIP() {
 
 		OMFactory factory = OMAbstractFactory.getOMFactory();
 

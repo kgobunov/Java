@@ -2,6 +2,8 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
+import static tools.PropsChecker.callsCountFms;
+import static tools.PropsChecker.callsCountSpoobk;
 
 import java.util.ArrayList;
 
@@ -68,37 +70,37 @@ public class ASYNCListener implements MessageListener {
 
 			GetData processRq = GetData.getInstance(request);
 
-			String type_request = null;
+			String typeRequest = null;
 
 			// Need for detecting response
 			int flagSystem = -1;
 
-			String fms_book = processRq
+			String fmsBook = processRq
 					.getValueByXpath("//*[local-name()='FMSBookRequest']");
 
-			String fms_result = processRq
+			String fmsResult = processRq
 					.getValueByXpath("//*[local-name()='FMSResultRequest']");
 
 			String spoobk = processRq
 					.getValueByXpath("//*[local-name()='SrvCardApproveInfoRq']");
 
-			if (fms_book.length() > 0) {
+			if (fmsBook.length() > 0) {
 
-				type_request = "FMSBookRequest";
+				typeRequest = "FMSBookRequest".toUpperCase();
 
 				flagSystem = 0;
 
 			}
 
-			if (fms_result.length() > 0) {
+			if (fmsResult.length() > 0) {
 
-				type_request = "FMSResultRequest";
+				typeRequest = "FMSResultRequest".toUpperCase();
 
 				flagSystem = 0;
 			}
 
 			if (spoobk.length() > 0) {
-				type_request = "SPOOBK";
+				typeRequest = "SPOOBK";
 
 				flagSystem = 1;
 
@@ -106,10 +108,11 @@ public class ASYNCListener implements MessageListener {
 
 			// Get data from message
 
-			if (null != type_request) {
+			if (null != typeRequest) {
 
-				if (type_request.equalsIgnoreCase("FMSBookRequest")) {
+				switch (typeRequest) {
 
+				case "FMSBOOKREQUEST":
 					data = new ArrayList<String>(8);
 
 					try {
@@ -137,11 +140,8 @@ public class ASYNCListener implements MessageListener {
 								e.getMessage(), e);
 
 					}
-
-				}
-
-				if (type_request.equalsIgnoreCase("FMSResultRequest")) {
-
+					break;
+				case "FMSRESULTREQUEST":
 					data = new ArrayList<String>(3);
 
 					try {
@@ -160,10 +160,8 @@ public class ASYNCListener implements MessageListener {
 
 					}
 
-				}
-
-				if (type_request.equalsIgnoreCase("spoobk")) {
-
+					break;
+				case "SPOOBK":
 					data = new ArrayList<String>(3);
 
 					try {
@@ -180,7 +178,9 @@ public class ASYNCListener implements MessageListener {
 								e.getMessage(), e);
 
 					}
-
+					break;
+				default:
+					break;
 				}
 
 			}
@@ -189,11 +189,19 @@ public class ASYNCListener implements MessageListener {
 			switch (flagSystem) {
 
 			case 0:
-				response = Requests.getRequestToTSMFromFMS(data, type_request);
+
+				response = Requests.getRequestToTSMFromFMS(data, typeRequest);
+
+				callsCountFms.getAndIncrement();
+
 				break;
 
 			case 1:
+
 				response = Requests.getRequestToTSMFromSPOOBK(data);
+
+				callsCountSpoobk.getAndIncrement();
+
 				break;
 
 			default:
@@ -237,7 +245,7 @@ public class ASYNCListener implements MessageListener {
 
 			if (response.equalsIgnoreCase(request) == false) {
 
-				logger.debug("%s - response to ETSM from : %s", type_request,
+				logger.debug("%s - response to ETSM from : %s", typeRequest,
 						response);
 			}
 

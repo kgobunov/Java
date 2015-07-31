@@ -2,6 +2,7 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
+import static tools.PropsChecker.callsCountMdm;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -42,6 +43,8 @@ public class MDMListener implements MessageListener {
 
 	public void onMessage(Message inputMsg) {
 
+		callsCountMdm.getAndIncrement();
+		
 		MessageProducer producer = null;
 
 		MQQueueSession session = null;

@@ -55,10 +55,11 @@ public class RqToESB {
 		String lastname = generateName(9);
 
 		// ЗНИ если клиент банка , то кредит не срочный
-		// this.sbflag = false;
-		// this.codeProduct = "5";
-		// this.subProductCode = "1";
-		// this.firstname = new String(generateName(2) + "оферта");
+		// this.sbflag = true;
+		// this.codeProduct = "10";
+		 //this.subProductCode = "9";
+		// this.firstname = generateName(7);
+		//this.firstname = new String(generateName(2) + "оферта");
 
 		String middlename = "";
 

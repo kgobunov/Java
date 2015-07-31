@@ -4,6 +4,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import db.DataBaseHelper;
+
 /**
  * Building async response
  * 
@@ -19,7 +21,7 @@ public class AsyncResponseCard {
 	public AsyncResponseCard(ArrayList<String> dataArray) {
 
 		// mapping data from sbol
-		this.personalInfo = dbgetData.getInstance().select(dataArray);
+		this.personalInfo = DataBaseHelper.getInstance().select(dataArray);
 
 		/*
 		 * 

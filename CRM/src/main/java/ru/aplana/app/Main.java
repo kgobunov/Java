@@ -3,7 +3,7 @@ package ru.aplana.app;
 import static ru.aplana.tools.MQTools.getConnection;
 import static ru.aplana.tools.MQTools.getConsumer;
 import static tools.PropCheck.common;
-import static tools.PropCheck.fsb;
+import static tools.PropCheck.crm;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,9 +36,11 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
  * 
  */
 @SuppressWarnings("deprecation")
-public class FSBMqJms implements Runnable {
+public class Main implements Runnable {
 
 	public static AtomicBoolean flagRequest = new AtomicBoolean(false);
+
+	public static boolean logTsmApp = false;
 
 	public static ScheduledExecutorService sc = null;
 
@@ -59,9 +61,9 @@ public class FSBMqJms implements Runnable {
 	private boolean flagReconnect = false;
 
 	private static final Logger logger = LogManager
-			.getFormatterLogger(FSBMqJms.class.getName());
+			.getFormatterLogger(Main.class.getName());
 
-	public FSBMqJms() {
+	public Main() {
 
 		// Create factory
 		try {
@@ -73,8 +75,10 @@ public class FSBMqJms implements Runnable {
 		} catch (NumberFormatException | JMSException e) {
 
 			logger.error(e.getMessage(), e);
-
 		}
+
+		// Flag for logging status tsm applications
+		logTsmApp = Boolean.parseBoolean(crm.getChildText("flagLogTsmApp"));
 
 	}
 
@@ -85,6 +89,8 @@ public class FSBMqJms implements Runnable {
 
 			// Create connection to MQ
 			this.connection = getConnection(this.factory, null, null);
+
+			PropCheck.connections.add(this.connection);
 
 			// Listener for catch MQ exceptions
 			this.connection.setExceptionListener(new ExceptionListener() {
@@ -168,16 +174,14 @@ public class FSBMqJms implements Runnable {
 					this.factory.getHostName(), this.factory.getPort(),
 					this.factory.getQueueManager(), this.factory.getChannel());
 
-			String queue = fsb.getChildText("queueFrom");
+			String queue = crm.getChildText("queueFrom");
 
 			// Set listeners
 			while (countListeners.get() < countThreadListeners) {
 
-				MessageConsumer consumer = getConsumer(this.connection,
-						queue);
+				MessageConsumer consumer = getConsumer(this.connection, queue);
 
-				consumer
-						.setMessageListener(new ESBListener(this.connection));
+				consumer.setMessageListener(new ESBListener());
 
 				countListeners.getAndIncrement();
 
@@ -220,10 +224,10 @@ public class FSBMqJms implements Runnable {
 		sc.scheduleAtFixedRate(new PropCheck(), 0, 10, TimeUnit.SECONDS);
 
 		// Count threads
-		countThread = Integer.parseInt(fsb.getChildText("threads"));
+		countThread = Integer.parseInt(crm.getChildText("threads"));
 
 		// Count listeners
-		countThreadListeners = Integer.parseInt(fsb.getChildText("listeners"));
+		countThreadListeners = Integer.parseInt(crm.getChildText("listeners"));
 
 		executor = Executors.newFixedThreadPool(countThread);
 
@@ -231,7 +235,7 @@ public class FSBMqJms implements Runnable {
 
 		for (int i = 0; i < countThread; i++) {
 
-			executor.execute(new FSBMqJms());
+			executor.execute(new Main());
 
 		}
 

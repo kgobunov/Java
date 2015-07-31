@@ -31,6 +31,8 @@ public class Saver implements Runnable {
 		this.operation = operation;
 
 		this.dataArray = dataArray;
+		
+		logger.info("Init Saver");
 
 	}
 

@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Enumeration;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -13,6 +17,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.Map.Entry;
 
 import javax.servlet.ServletContextEvent;
@@ -22,6 +27,8 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import db.DataBaseHelper;
+
 /**
  * Application Lifecycle Listener implementation
  */
@@ -29,6 +36,8 @@ public class WebAppContext implements ServletContextListener {
 
 	public static final Logger logger = LogManager
 			.getLogger(WebAppContext.class.getName());
+
+	public static AtomicLong countCalls = new AtomicLong(0);
 
 	public static MultiThreadedHttpConnectionManager connManager;
 
@@ -47,6 +56,10 @@ public class WebAppContext implements ServletContextListener {
 	public static long delay;
 
 	private ScheduledExecutorService propsChecker;
+
+	private ScheduledExecutorService checkCalls = null;
+
+	private long timeCheckCalls = 0;
 
 	private int poolSize;
 
@@ -74,6 +87,9 @@ public class WebAppContext implements ServletContextListener {
 			previosModification = configFile.lastModified();
 
 			readProps();
+
+			timeCheckCalls = Long
+					.parseLong(properties.getProperty("timeCheck"));
 
 			delay = Long.parseLong(properties.getProperty("Delay_COD"));
 
@@ -127,6 +143,17 @@ public class WebAppContext implements ServletContextListener {
 
 		private void checkProps() {
 
+			if (null == checkCalls) {
+
+				checkCalls = Executors.newSingleThreadScheduledExecutor();
+
+				DataBaseHelper.getInstance().saveCountCall(sysName);
+
+				checkCalls.scheduleAtFixedRate(new CallsChecker(sysName), 0,
+						timeCheckCalls, TimeUnit.SECONDS);
+
+			}
+
 			long lastModification = configFile.lastModified();
 
 			if (lastModification > previosModification) {
@@ -163,25 +190,16 @@ public class WebAppContext implements ServletContextListener {
 
 		private void readProps() {
 
+			FileReader fr = null;
+
 			try {
 
-				FileReader fr = new FileReader(configFile);
+				fr = new FileReader(configFile);
+
 				synchronized (properties) {
 					properties.clear();
 					properties.load(fr);
 				}
-
-				fr.close();
-
-			} catch (FileNotFoundException e) {
-
-				logger.error(e.getMessage(), e);
-
-			} catch (IOException e) {
-
-				logger.error(e.getMessage(), e);
-
-			} finally {
 
 				synchronized (connManager) {
 					connManager.getParams().setMaxTotalConnections(
@@ -195,6 +213,30 @@ public class WebAppContext implements ServletContextListener {
 
 				System.out
 						.println(">>>COD_CARD Stub Properties loaded successfully!");
+
+			} catch (FileNotFoundException e) {
+
+				logger.error(e.getMessage(), e);
+
+			} catch (IOException e) {
+
+				logger.error(e.getMessage(), e);
+
+			} finally {
+
+				try {
+
+					if (null != fr) {
+
+						fr.close();
+
+					}
+
+				} catch (IOException e) {
+
+					e.printStackTrace();
+				}
+
 			}
 		}
 
@@ -228,6 +270,31 @@ public class WebAppContext implements ServletContextListener {
 	public void contextDestroyed(ServletContextEvent arg0) {
 
 		propsChecker.shutdownNow();
+
+		DataBaseHelper.getInstance().disconnect();
+
+		Enumeration<Driver> drivers = DriverManager.getDrivers();
+
+		while (drivers.hasMoreElements()) {
+
+			Driver driver = (Driver) drivers.nextElement();
+
+			System.out.println("Deregister driver: "
+					+ driver.getClass().getName());
+
+			try {
+
+				DriverManager.deregisterDriver(driver);
+
+			} catch (SQLException e) {
+
+				e.printStackTrace();
+
+			}
+
+		}
+
+		checkCalls.shutdownNow();
 
 		ex.shutdownNow();
 

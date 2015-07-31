@@ -51,6 +51,31 @@ public class DbOperation {
 
 	/**
 	 * 
+	 * close connection to database
+	 * 
+	 */
+	public void disconnect() {
+
+		try {
+
+			if (null != this.connection) {
+
+				this.connection.close();
+
+				logger.info("Connection closed!");
+
+			}
+
+		} catch (SQLException e) {
+
+			logger.error(e.getMessage(), e);
+
+		}
+
+	}
+
+	/**
+	 * 
 	 * Evaluation task
 	 * 
 	 * @param operation
@@ -64,21 +89,30 @@ public class DbOperation {
 
 		try {
 
-			if (null != this.connection) {
+			this.lock.lock();
 
-				if (this.connection.isClosed()) {
+			try {
+				if (null != this.connection) {
 
-					logger.info("Connection closed!");
+					if (this.connection.isClosed()) {
 
-					this.connection = null;
+						logger.info("Connection closed!");
+
+						this.connection = null;
+
+						initConnection();
+
+					}
+
+				} else {
 
 					initConnection();
 
 				}
 
-			} else {
+			} finally {
 
-				initConnection();
+				this.lock.unlock();
 
 			}
 
@@ -113,19 +147,10 @@ public class DbOperation {
 	 */
 	private void initConnection() {
 
-		this.lock.lock();
+		this.connection = OracleDB.getConnection(DbConn.ORA_DB_URL,
+				DbConn.ORA_USER, DbConn.ORA_PASS);
 
-		try {
-
-			this.connection = OracleDB.getConnection(DbConn.ORA_DB_URL,
-					DbConn.ORA_USER, DbConn.ORA_PASS);
-
-			logger.info("Connected success!");
-
-		} finally {
-
-			this.lock.unlock();
-		}
+		logger.info("Connected success!");
 
 	}
 

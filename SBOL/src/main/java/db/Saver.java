@@ -29,6 +29,8 @@ public class Saver implements Runnable {
 
 	public Saver(String operation, ArrayList<String> dataArray) {
 
+		logger.info("Init Saver!");
+		
 		this.operation = operation;
 
 		this.dataArray = dataArray;

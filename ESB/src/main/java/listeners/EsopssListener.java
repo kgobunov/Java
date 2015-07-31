@@ -2,6 +2,7 @@ package listeners;
 
 import static ru.aplana.tools.Common.parseMessMQ;
 import static ru.aplana.tools.MQTools.getSession;
+import static tools.PropsChecker.callsCountEsopss;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -41,6 +42,8 @@ public class EsopssListener implements MessageListener {
 	}
 
 	public void onMessage(Message inputMsg) {
+
+		callsCountEsopss.getAndIncrement();
 
 		MessageProducer producer = null;
 

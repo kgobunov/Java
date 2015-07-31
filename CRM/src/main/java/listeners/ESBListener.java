@@ -10,7 +10,7 @@ import javax.jms.MessageListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import ru.aplana.app.CRMMqJms;
+import ru.aplana.app.Main;
 import ru.aplana.tools.GetData;
 import db.DbOperation;
 
@@ -109,7 +109,7 @@ public class ESBListener implements MessageListener {
 
 			if (flagTsm) {
 
-				if (CRMMqJms.logTsmApp) {
+				if (Main.logTsmApp) {
 
 					DbOperation.getInstance().evalOperation(3, dataArray);
 

@@ -129,7 +129,7 @@
                <archive>
                   <manifest>
                      <addClasspath>true</addClasspath>
-                     <mainClass>ru.aplana.app.CRMMqJms</mainClass>
+                     <mainClass>ru.aplana.app.Main</mainClass>
                      <classpathPrefix>dependency-jars/</classpathPrefix>
                   </manifest>
                </archive>

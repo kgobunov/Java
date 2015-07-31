@@ -2,8 +2,6 @@ package tools;
 
 import static tools.PropsChecker.esb;
 
-import java.io.PrintWriter;
-
 /**
  * 
  * Queues

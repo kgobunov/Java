@@ -74,7 +74,7 @@ public class Request implements Runnable {
 
 		}
 
-		if (testType.equalsIgnoreCase("step")) {
+		if (this.testType.equalsIgnoreCase("step")) {
 
 			this.startTime = System.currentTimeMillis();
 
@@ -174,7 +174,7 @@ public class Request implements Runnable {
 		String queue = crm.getChildText("queueTo");
 
 		// Send to ESB
-		while (CRMMqJms.flagRequest.get()) {
+		while (Main.flagRequest.get()) {
 
 			long start = System.currentTimeMillis();
 

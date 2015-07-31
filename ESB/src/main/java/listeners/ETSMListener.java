@@ -93,32 +93,50 @@ public class ETSMListener implements MessageListener {
 
 				try {
 
-					data.add(processRq.getValueByName("RqUID"));
-
-					data.add(processRq.getValueByName("RqTm"));
-
-					data.add(processRq.getValueByName("SrcObjID"));
+					String rqUid = processRq.getValueByName("RqUID");
 
 					String code = processRq.getValueByName("StatusCode");
 
-					data.add(code);
+					String appNumber = processRq
+							.getValueByName("ApplicationNumber");
 
-					data.add(processRq.getValueByName("ApplicationNumber"));
+					if (rqUid.length() == 0) {
 
-					if (code.equalsIgnoreCase("2")) {
+						logger.info(
+								"Application from ETSM. Application number: %s",
+								appNumber);
 
-						data.add(processRq.getValueByName("PeriodM"));
-
-						data.add(processRq.getValueByName("Amount"));
-
-						data.add(processRq.getValueByName("InterestRate"));
+						response = request;
 
 					} else {
 
-						data.add(processRq.getValueByName("ErrorCode"));
+						data.add(rqUid);
 
-						data.add(processRq.getValueByName("Message"));
+						data.add(processRq.getValueByName("RqTm"));
 
+						data.add(processRq.getValueByName("SrcObjID"));
+
+						data.add(code);
+
+						data.add(appNumber);
+
+						if (code.equalsIgnoreCase("2")) {
+
+							data.add(processRq.getValueByName("PeriodM"));
+
+							data.add(processRq.getValueByName("Amount"));
+
+							data.add(processRq.getValueByName("InterestRate"));
+
+						} else {
+
+							data.add(processRq.getValueByName("ErrorCode"));
+
+							data.add(processRq.getValueByName("Message"));
+
+						}
+
+						response = Requests.getRequestToERIB(data);
 					}
 
 				} catch (Exception e) {
@@ -127,8 +145,6 @@ public class ETSMListener implements MessageListener {
 							e);
 
 				}
-
-				response = Requests.getRequestToERIB(data);
 
 			}
 

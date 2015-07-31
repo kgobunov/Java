@@ -2,13 +2,24 @@ package tools;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Vector;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.jms.JMSException;
 
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.logging.log4j.LogManager;
@@ -18,17 +29,32 @@ import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 
-import ru.aplana.app.EsbMqJms;
+import com.ibm.mq.jms.MQQueueConnection;
+
+import ru.aplana.app.Main;
+import db.DataBaseHelper;
 
 /**
- * Check properties
+ * Read config file and check shutdown time
  * 
  * @author Maksim Stepanov
  * 
  */
 public class PropsChecker implements Runnable {
 
+	public static AtomicLong callsCountEsopss = new AtomicLong(0);
+
+	public static AtomicLong callsCountMdm = new AtomicLong(0);
+
+	public static AtomicLong callsCountFms = new AtomicLong(0);
+
+	public static AtomicLong callsCountSpoobk = new AtomicLong(0);
+
+	private ArrayList<String> systems = new ArrayList<String>(4);
+
 	public static boolean flagListener = false;
+
+	public static ArrayList<MQQueueConnection> connections = new ArrayList<MQQueueConnection>();
 
 	private static final Logger logger = LogManager
 			.getFormatterLogger(PropsChecker.class.getName());
@@ -38,6 +64,8 @@ public class PropsChecker implements Runnable {
 	public static MultiThreadedHttpConnectionManager connManager;
 
 	private static AtomicInteger callCounter = new AtomicInteger(0);
+
+	private ScheduledExecutorService checkCalls = null;
 
 	private long previosModification;
 
@@ -69,6 +97,14 @@ public class PropsChecker implements Runnable {
 
 	public PropsChecker() {
 
+		this.systems.add("ESOPSS");
+
+		this.systems.add("MDM");
+
+		this.systems.add("FMS");
+
+		this.systems.add("SPOOBK");
+
 		this.startTime = System.currentTimeMillis();
 
 		this.configFile = new File("Config.xml");
@@ -83,12 +119,28 @@ public class PropsChecker implements Runnable {
 
 			readProps();
 
+			if (null == this.checkCalls) {
+
+				this.checkCalls = Executors.newScheduledThreadPool(this.systems
+						.size());
+
+				for (String system : this.systems) {
+
+					DataBaseHelper.getInstance().saveCountCalls(system);
+
+					this.checkCalls.scheduleAtFixedRate(
+							new CallsChecker(system), 0, 60, TimeUnit.SECONDS);
+
+				}
+
+			}
+
 			// to millisecond
 			this.timeStop = Long.parseLong(esb.getChildText("runTime")) * 60 * 1000;
 
 		} else {
 
-			EsbMqJms.sc.shutdownNow();
+			Main.sc.shutdownNow();
 
 			logger.error("Config is not valid! See error log! Application stopped!");
 
@@ -132,9 +184,52 @@ public class PropsChecker implements Runnable {
 
 			logger.info("Service stopped! Work time: %s", this.timeStop);
 
-			EsbMqJms.sc.shutdownNow();
+			DataBaseHelper.getInstance().disconnect();
 
-			EsbMqJms.executor.shutdownNow();
+			Enumeration<Driver> drivers = DriverManager.getDrivers();
+
+			while (drivers.hasMoreElements()) {
+
+				Driver driver = (Driver) drivers.nextElement();
+
+				logger.info("Deregister driver: " + driver.getClass().getName());
+
+				try {
+
+					DriverManager.deregisterDriver(driver);
+
+				} catch (SQLException e) {
+
+					logger.error(e.getMessage(), e);
+
+				}
+
+			}
+			for (MQQueueConnection connection : connections) {
+
+				try {
+
+					String clientId = connection.getClientID();
+
+					connection.clear();
+
+					connection.close();
+
+					logger.info("Connection %s closed successfully", clientId);
+
+				} catch (JMSException e) {
+
+					logger.error(e.getMessage(), e);
+
+				}
+
+			}
+
+			this.checkCalls.shutdownNow();
+
+			Main.sc.shutdownNow();
+
+			Main.executor.shutdownNow();
 
 		}
 

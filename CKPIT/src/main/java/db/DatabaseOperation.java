@@ -60,6 +60,31 @@ public class DatabaseOperation {
 
 	/**
 	 * 
+	 * close connection to database
+	 * 
+	 */
+	public void disconnect() {
+
+		try {
+
+			if (null != this.connection) {
+
+				this.connection.close();
+
+				logger.info("Connection closed!");
+
+			}
+
+		} catch (SQLException e) {
+
+			logger.error(e.getMessage(), e);
+
+		}
+
+	}
+	
+	/**
+	 * 
 	 * Evaluation task
 	 * 
 	 * @param operation
@@ -73,15 +98,32 @@ public class DatabaseOperation {
 
 		try {
 
-			if (null != this.connection) {
+			this.lock.lock();
 
-				if (this.connection.isClosed()) {
+			try {
 
-					logger.info("Connection closed!");
+				if (null != this.connection) {
 
-					this.connection = null;
+					if (this.connection.isClosed()) {
 
-					this.lock.lock();
+						logger.info("Connection closed!");
+
+						this.connection = null;
+
+						try {
+
+							initConnection();
+
+						} catch (SQLException e) {
+
+							logger.error("Failed connect to databases! %s",
+									e.getMessage(), e);
+
+						}
+
+					}
+
+				} else {
 
 					try {
 
@@ -92,32 +134,13 @@ public class DatabaseOperation {
 						logger.error("Failed connect to databases! %s",
 								e.getMessage(), e);
 
-					} finally {
-
-						this.lock.unlock();
-
 					}
 
 				}
 
-			} else {
+			} finally {
 
-				this.lock.lock();
-
-				try {
-
-					initConnection();
-
-				} catch (SQLException e) {
-
-					logger.error("Failed connect to databases! %s",
-							e.getMessage(), e);
-
-				} finally {
-
-					this.lock.unlock();
-
-				}
+				this.lock.unlock();
 
 			}
 

@@ -117,6 +117,8 @@ public class Main implements Runnable {
 
 				this.connection = getConnection(this.factory, null, null);
 
+				PropCheck.connections.add(this.connection);
+
 				// exception Listener
 				this.connection.setExceptionListener(new ExceptionListener() {
 

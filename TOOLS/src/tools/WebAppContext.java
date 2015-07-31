@@ -6,15 +6,17 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.Vector;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 /**
  * Application Lifecycle Listener implementation
@@ -23,18 +25,12 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
  */
 public class WebAppContext implements ServletContextListener {
 
-	public static boolean debug;
+	private static final Logger logger = LogManager
+			.getLogger(WebAppContext.class.getName());
 
 	public static MultiThreadedHttpConnectionManager connManager;
 
 	public static Properties properties = null;
-
-	// logger's
-	public static Logger loggerInfo = null;
-
-	public static Logger loggerSevere = null;
-
-	private boolean stopped = false;
 
 	// Under arrays
 	private static Vector<String> arrayUnderSbolDoverie;
@@ -56,7 +52,7 @@ public class WebAppContext implements ServletContextListener {
 	private static Vector<String> arrayUnderCard;
 
 	private static Vector<String> arrayUnderVIP;
-	
+
 	private static Vector<String> arrayUnderDeb;
 
 	private static Vector<String> arrayUnderMortgage;
@@ -86,9 +82,9 @@ public class WebAppContext implements ServletContextListener {
 	private static Vector<String> arrayKIMortgage2D;
 
 	private static Vector<String> arrayKIVIP;
-	
+
 	private static Vector<String> arrayKIDeb;
-	
+
 	private static AtomicInteger callCounterSbolUnder = new AtomicInteger(0);
 
 	private static AtomicInteger callCounterSurrogatUnder = new AtomicInteger(0);
@@ -98,50 +94,53 @@ public class WebAppContext implements ServletContextListener {
 	private static AtomicInteger callCounterDoverieUnder = new AtomicInteger(0);
 
 	private static AtomicInteger callCounterCRMUnder = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterKIPBO = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterKIPBOOferta = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterKIPBODoverie = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterKIPSO = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterKIPSOOferta = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterKIAuto = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterKICard = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterKIMortgage2D = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterAutoUnder = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterVIPUnder = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterDebUnder = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterCardUnder = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterMortgageUnder = new AtomicInteger(0);
-	
-	private static AtomicInteger callCounterMortgage2DUnder = new AtomicInteger(0);
-	
+
+	private static AtomicInteger callCounterMortgage2DUnder = new AtomicInteger(
+			0);
+
 	private static AtomicInteger callCounterKIVIP = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterKIDEB = new AtomicInteger(0);
-	
+
 	private static AtomicInteger callCounterPSOUnder = new AtomicInteger(0);
-	
-	private static AtomicInteger callCounterPSOOfertaUnder = new AtomicInteger(0);
-	
+
+	private static AtomicInteger callCounterPSOOfertaUnder = new AtomicInteger(
+			0);
+
 	private static AtomicInteger callCounterPBOUnder = new AtomicInteger(0);
-	
-	private static AtomicInteger callCounterPBOSbolOfertaUnder = new AtomicInteger(0);
-	
+
+	private static AtomicInteger callCounterPBOSbolOfertaUnder = new AtomicInteger(
+			0);
+
 	private static AtomicInteger callCounterPBOSbolUnder = new AtomicInteger(0);
 
-	private ExecutorService propsChecker;
+	private ScheduledExecutorService propsChecker;
 
 	public class PropsChecker implements Runnable {
 
@@ -152,11 +151,12 @@ public class WebAppContext implements ServletContextListener {
 		public PropsChecker() {
 
 			properties = new Properties();
-			
-			 String propertiesFname = System.getProperty("user.dir")
-			 + "\\conf\\TSM.properties";
 
-			//String properties_fname = "C:\\Documents and Settings\\tester\\Рабочий стол\\tools.properties";
+			String propertiesFname = System.getProperty("user.dir")
+					+ "\\conf\\TSM.properties";
+
+			// String properties_fname =
+			// "C:\\Documents and Settings\\tester\\Рабочий стол\\tools.properties";
 
 			configFile = new File(propertiesFname);
 
@@ -168,22 +168,7 @@ public class WebAppContext implements ServletContextListener {
 
 		public void run() {
 
-			while (!stopped) {
-				try {
-
-					Thread.sleep(10000);
-
-				} catch (NumberFormatException e1) {
-
-					e1.printStackTrace();
-
-				} catch (InterruptedException e1) {
-
-					e1.printStackTrace();
-				}
-
-				checkProps();
-			}
+			checkProps();
 
 		}
 
@@ -193,8 +178,7 @@ public class WebAppContext implements ServletContextListener {
 
 			if (lastModification > previosModification) {
 
-				loggerInfo
-						.info(">>>TSM_TOOLS config file was modified! Reload properties...");
+				logger.info(">>>TSM_TOOLS config file was modified! Reload properties...");
 
 				previosModification = lastModification;
 
@@ -203,9 +187,12 @@ public class WebAppContext implements ServletContextListener {
 		}
 
 		private void readProps() {
+
+			FileReader fr = null;
+
 			try {
 
-				FileReader fr = new FileReader(configFile);
+				fr = new FileReader(configFile);
 
 				synchronized (properties) {
 
@@ -213,18 +200,6 @@ public class WebAppContext implements ServletContextListener {
 
 					properties.load(fr);
 				}
-
-				fr.close();
-
-			} catch (FileNotFoundException e) {
-
-				e.printStackTrace();
-
-			} catch (IOException e) {
-
-				e.printStackTrace();
-
-			} finally {
 
 				synchronized (connManager) {
 
@@ -236,8 +211,29 @@ public class WebAppContext implements ServletContextListener {
 					connManager.getParams().setDefaultMaxConnectionsPerHost(
 							connections);
 
-					debug = Boolean.parseBoolean(properties.getProperty("Debug"));
+				}
 
+			} catch (FileNotFoundException e) {
+
+				e.printStackTrace();
+
+			} catch (IOException e) {
+
+				e.printStackTrace();
+
+			} finally {
+
+				try {
+
+					if (null != fr) {
+
+						fr.close();
+
+					}
+
+				} catch (IOException e) {
+
+					e.printStackTrace();
 				}
 
 			}
@@ -245,24 +241,10 @@ public class WebAppContext implements ServletContextListener {
 
 	}
 
-	public void shutdown() {
-		stopped = true;
-	}
-
 	/**
 	 * Default constructor.
 	 */
 	public WebAppContext() {
-
-		if (null == loggerInfo) {
-
-			CreateLogger loggers = new CreateLogger("TSM_Tools", 512000000, 2);
-
-			loggerInfo = loggers.getInfoLogger();
-
-			loggerSevere = loggers.getSevereLogger();
-
-		}
 
 	}
 
@@ -273,9 +255,10 @@ public class WebAppContext implements ServletContextListener {
 
 		connManager = new MultiThreadedHttpConnectionManager();
 
-		propsChecker = Executors.newFixedThreadPool(1);
+		propsChecker = Executors.newSingleThreadScheduledExecutor();
 
-		propsChecker.submit(new PropsChecker());
+		propsChecker.scheduleAtFixedRate(new PropsChecker(), 0, 30,
+				TimeUnit.SECONDS);
 
 		arrayKIPBO = getVector(properties.getProperty("01_KI_PBO"), 0);
 
@@ -294,11 +277,10 @@ public class WebAppContext implements ServletContextListener {
 
 		arrayKICard = getVector(properties.getProperty("04_KI_CARD"), 0);
 
-		arrayKIMortgage2D = getVector(
-				properties.getProperty("11_SGK_2D"), 0);
+		arrayKIMortgage2D = getVector(properties.getProperty("11_SGK_2D"), 0);
 
 		arrayKIVIP = getVector(properties.getProperty("42_KI_VIP"), 0);
-		
+
 		arrayKIDeb = getVector(properties.getProperty("44_KI_DebCard"), 0);
 
 		arrayUnderSbolDoverie = getVector(
@@ -339,10 +321,10 @@ public class WebAppContext implements ServletContextListener {
 				properties.getProperty("15_Und0_PSO_oferta"), 1);
 
 		arrayUnderVIP = getVector(properties.getProperty("21_Und0_VIP"), 1);
-		
+
 		arrayUnderDeb = getVector(properties.getProperty("45_Und0_Deb_Card"), 1);
 
-		loggerInfo.info(">>>TSM_Tools Started!!!!");
+		System.out.println(">>>TSM_Tools Started!!!!");
 
 	}
 
@@ -357,11 +339,7 @@ public class WebAppContext implements ServletContextListener {
 	 */
 	private Vector<String> getVector(String seq, int type) {
 
-		if (debug) {
-
-			loggerInfo.info("Sequence: " + seq);
-
-		}
+		System.out.println("Sequence: " + seq);
 
 		Vector<String> vector = null;
 
@@ -400,33 +378,23 @@ public class WebAppContext implements ServletContextListener {
 
 			}
 
-			if (debug) {
-
-				loggerInfo.info("Size: " + size + "; Confirm: " + confirm
-						+ "; To under: " + toUnder + "; Cancel: " + cancel);
-
-			}
+			System.out.println("Size: " + size + "; Confirm: " + confirm
+					+ "; To under: " + toUnder + "; Cancel: " + cancel);
 
 			vector = new Vector<String>(size);
-
-			String confirmStr = new String(String.valueOf(confirm));
-
-			String toUnderStr = new String(String.valueOf(toUnder));
-
-			String cancelStr = new String(String.valueOf(cancel));
 
 			for (int i = 0; i < size; i++) {
 
 				if (confirm != 0) {
 
-					vector.add(confirmStr);
+					vector.add("1");
 
 					confirm--;
 				}
 
 				if (toUnder != 0) {
 
-					vector.add(toUnderStr);
+					vector.add("0");
 
 					toUnder--;
 
@@ -434,7 +402,7 @@ public class WebAppContext implements ServletContextListener {
 
 				if (cancel != 0) {
 
-					vector.add(cancelStr);
+					vector.add("-1");
 
 					cancel--;
 				}
@@ -453,24 +421,16 @@ public class WebAppContext implements ServletContextListener {
 
 			int cancelKI = size - toUnderKI;
 
-			if (debug) {
-
-				loggerInfo.info("Size: " + size + "; toUnder: " + toUnderKI
-						+ "; CancelKi: " + cancelKI);
-
-			}
+			System.out.println("Size: " + size + "; toUnder: " + toUnderKI
+					+ "; CancelKi: " + cancelKI);
 
 			vector = new Vector<String>(size);
-
-			String toUnderKIStr = new String(String.valueOf(toUnderKI));
-
-			String cancelKIStr = new String(String.valueOf(cancelKI));
 
 			for (int i = 0; i < size; i++) {
 
 				if (toUnderKI != 0) {
 
-					vector.add(toUnderKIStr);
+					vector.add("1");
 
 					toUnderKI--;
 
@@ -478,7 +438,7 @@ public class WebAppContext implements ServletContextListener {
 
 				if (cancelKI != 0) {
 
-					vector.add(cancelKIStr);
+					vector.add("0");
 
 					cancelKI--;
 
@@ -488,17 +448,17 @@ public class WebAppContext implements ServletContextListener {
 
 			break;
 		}
-		
-		
+
 		String result = "";
+
 		for (int i = 0; i < vector.size(); i++) {
-			
+
 			result += vector.get(i);
-			
+
 			result += ",";
-			
+
 		}
-		
+
 		System.out.println(result);
 
 		return vector;
@@ -510,11 +470,9 @@ public class WebAppContext implements ServletContextListener {
 	 */
 	public void contextDestroyed(ServletContextEvent arg0) {
 
-		shutdown();
-
 		propsChecker.shutdownNow();
 
-		loggerInfo.info(">>>TSM_Tools Stopped!!!!");
+		System.out.println(">>>TSM_Tools Stopped!!!!");
 	}
 
 	public static String getNext(int action) {
@@ -543,16 +501,16 @@ public class WebAppContext implements ServletContextListener {
 					.getAndIncrement() % arrayUnderCRM.size()));
 			break;
 		case 6:
-			number = arrayKIPBO.get(Math.abs(callCounterKIPBO
-					.getAndIncrement() % arrayKIPBO.size()));
+			number = arrayKIPBO.get(Math.abs(callCounterKIPBO.getAndIncrement()
+					% arrayKIPBO.size()));
 			break;
 		case 7:
 			number = arrayKIPBOOferta.get(Math.abs(callCounterKIPBOOferta
 					.getAndIncrement() % arrayKIPBOOferta.size()));
 			break;
 		case 8:
-			number = arrayKIPSO.get(Math.abs(callCounterKIPSO
-					.getAndIncrement() % arrayKIPSO.size()));
+			number = arrayKIPSO.get(Math.abs(callCounterKIPSO.getAndIncrement()
+					% arrayKIPSO.size()));
 			break;
 		case 9:
 			number = arrayKIPSOOferta.get(Math.abs(callCounterKIPSOOferta
@@ -569,7 +527,7 @@ public class WebAppContext implements ServletContextListener {
 		case 12:
 			number = arrayKIPBODoverie.get(Math.abs(callCounterKIPBODoverie
 					.getAndIncrement() % arrayKIPBODoverie.size()));
-			break;	
+			break;
 		case 13:
 			number = arrayKIMortgage2D.get(Math.abs(callCounterKIMortgage2D
 					.getAndIncrement() % arrayKIMortgage2D.size()));
@@ -585,18 +543,19 @@ public class WebAppContext implements ServletContextListener {
 		case 16:
 			number = arrayUnderCard.get(Math.abs(callCounterCardUnder
 					.getAndIncrement() % arrayUnderCard.size()));
-			break;	
+			break;
 		case 17:
 			number = arrayUnderMortgage.get(Math.abs(callCounterMortgageUnder
 					.getAndIncrement() % arrayUnderMortgage.size()));
 			break;
 		case 18:
-			number = arrayUnderMortgage2D.get(Math.abs(callCounterMortgage2DUnder
-					.getAndIncrement() % arrayUnderMortgage2D.size()));
+			number = arrayUnderMortgage2D.get(Math
+					.abs(callCounterMortgage2DUnder.getAndIncrement()
+							% arrayUnderMortgage2D.size()));
 			break;
 		case 19:
-			number = arrayKIVIP.get(Math.abs(callCounterKIVIP
-					.getAndIncrement() % arrayKIVIP.size()));
+			number = arrayKIVIP.get(Math.abs(callCounterKIVIP.getAndIncrement()
+					% arrayKIVIP.size()));
 			break;
 		case 20:
 			number = arrayUnderPSO.get(Math.abs(callCounterPSOUnder
@@ -605,27 +564,28 @@ public class WebAppContext implements ServletContextListener {
 		case 21:
 			number = arrayUnderPSOOferta.get(Math.abs(callCounterPSOOfertaUnder
 					.getAndIncrement() % arrayUnderPSOOferta.size()));
-			break;	
+			break;
 		case 22:
 			number = arrayUnderPBO.get(Math.abs(callCounterPBOUnder
 					.getAndIncrement() % arrayUnderPBO.size()));
 			break;
 		case 23:
-			number = arrayUnderPBOSbolOferta.get(Math.abs(callCounterPBOSbolOfertaUnder
-					.getAndIncrement() % arrayUnderPBOSbolOferta.size()));
+			number = arrayUnderPBOSbolOferta.get(Math
+					.abs(callCounterPBOSbolOfertaUnder.getAndIncrement()
+							% arrayUnderPBOSbolOferta.size()));
 			break;
 		case 24:
 			number = arrayUnderPBOSbol.get(Math.abs(callCounterPBOSbolUnder
 					.getAndIncrement() % arrayUnderPBOSbol.size()));
-			break;	
+			break;
 		case 25:
-			number = arrayKIDeb.get(Math.abs(callCounterKIDEB
-					.getAndIncrement() % arrayKIDeb.size()));
+			number = arrayKIDeb.get(Math.abs(callCounterKIDEB.getAndIncrement()
+					% arrayKIDeb.size()));
 			break;
 		case 26:
 			number = arrayUnderDeb.get(Math.abs(callCounterDebUnder
 					.getAndIncrement() % arrayUnderDeb.size()));
-			break;			
+			break;
 		default:
 			break;
 		}

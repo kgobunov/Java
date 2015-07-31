@@ -3,14 +3,13 @@ package ru.aplana.app;
 import static ru.aplana.tools.MQTools.getConnection;
 import static ru.aplana.tools.MQTools.getConsumer;
 import static tools.PropCheck.common;
-import static tools.PropCheck.crm;
+import static tools.PropCheck.erib;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
@@ -30,29 +29,26 @@ import com.ibm.mq.jms.MQQueueConnection;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 
 /**
- * Main Class - enter point. This bundle emulation CRM system.
+ * Main - enter point.
  * 
  * @author Maksim Stepanov
  * 
  */
 @SuppressWarnings("deprecation")
-public class CRMMqJms implements Runnable {
+public class Main implements Runnable {
 
 	public static AtomicBoolean flagRequest = new AtomicBoolean(false);
-
-	public static boolean logTsmApp = false;
-
-	public static ScheduledExecutorService sc = null;
 
 	public static ExecutorService executor = null;
 
 	public static ExecutorService ex = null;
 
+	public static ScheduledExecutorService sc = null;
+
+	private static final Logger logger = LogManager
+			.getFormatterLogger(Main.class.getName());
+
 	private static int countThread;
-
-	private static int countThreadListeners;
-
-	private static AtomicInteger countListeners = new AtomicInteger(0);
 
 	private MQQueueConnectionFactory factory;
 
@@ -60,12 +56,8 @@ public class CRMMqJms implements Runnable {
 
 	private boolean flagReconnect = false;
 
-	private static final Logger logger = LogManager
-			.getFormatterLogger(CRMMqJms.class.getName());
+	public Main() {
 
-	public CRMMqJms() {
-
-		// Create factory
 		try {
 
 			this.factory = MQConn.getFactory();
@@ -77,9 +69,6 @@ public class CRMMqJms implements Runnable {
 			logger.error(e.getMessage(), e);
 		}
 
-		// Flag for logging status tsm applications
-		logTsmApp = Boolean.parseBoolean(crm.getChildText("flagLogTsmApp"));
-
 	}
 
 	@Override
@@ -87,10 +76,10 @@ public class CRMMqJms implements Runnable {
 
 		try {
 
-			// Create connection to MQ
 			this.connection = getConnection(this.factory, null, null);
 
-			// Listener for catch MQ exceptions
+			PropCheck.connections.add(this.connection);
+			
 			this.connection.setExceptionListener(new ExceptionListener() {
 
 				@Override
@@ -100,7 +89,7 @@ public class CRMMqJms implements Runnable {
 
 					logger.error("Error code: %s", errorCode);
 
-					// JMSWMQ1107 - connection error
+					// JMSWMQ1107 - connection closed
 					if (errorCode.equalsIgnoreCase("JMSWMQ1107")) {
 
 						logger.error("Error msg: %s", e.getMessage(), e);
@@ -121,12 +110,13 @@ public class CRMMqJms implements Runnable {
 								if (CheckConn.checkConn()) {
 
 									run();
+
 								}
 
 							} catch (Exception e1) {
 
 								logger.error("Can't reconecting to MQ: %s",
-										e1.getMessage());
+										e1.getMessage(), e1);
 							}
 
 							// Delay between retry
@@ -172,20 +162,11 @@ public class CRMMqJms implements Runnable {
 					this.factory.getHostName(), this.factory.getPort(),
 					this.factory.getQueueManager(), this.factory.getChannel());
 
-			String queue = crm.getChildText("queueFrom");
+			String queue = erib.getChildText("queueFrom");
 
-			// Set listeners
-			while (countListeners.get() < countThreadListeners) {
+			MessageConsumer consumer = getConsumer(this.connection, queue);
 
-				MessageConsumer consumer = getConsumer(this.connection, queue);
-
-				consumer.setMessageListener(new ESBListener());
-
-				countListeners.getAndIncrement();
-
-			}
-
-			countListeners.set(0);
+			consumer.setMessageListener(new ESBListener());
 
 			logger.info("Listener is set to queue %s", queue);
 
@@ -199,6 +180,8 @@ public class CRMMqJms implements Runnable {
 
 			logger.error("Can't set listener %s", e.getMessage(), e);
 
+			logger.info("Flag reconnect: %s", flagReconnect);
+
 			if (!flagReconnect) {
 
 				executor.shutdownNow();
@@ -206,6 +189,7 @@ public class CRMMqJms implements Runnable {
 				ex.shutdownNow();
 
 				sc.shutdownNow();
+
 			}
 		}
 
@@ -221,11 +205,7 @@ public class CRMMqJms implements Runnable {
 
 		sc.scheduleAtFixedRate(new PropCheck(), 0, 10, TimeUnit.SECONDS);
 
-		// Count threads
-		countThread = Integer.parseInt(crm.getChildText("threads"));
-
-		// Count listeners
-		countThreadListeners = Integer.parseInt(crm.getChildText("listeners"));
+		countThread = Integer.parseInt(erib.getChildText("threads"));
 
 		executor = Executors.newFixedThreadPool(countThread);
 
@@ -233,7 +213,7 @@ public class CRMMqJms implements Runnable {
 
 		for (int i = 0; i < countThread; i++) {
 
-			executor.execute(new CRMMqJms());
+			executor.execute(new Main());
 
 		}
 

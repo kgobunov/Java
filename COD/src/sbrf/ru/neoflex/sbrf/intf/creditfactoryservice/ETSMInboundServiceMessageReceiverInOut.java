@@ -6,6 +6,8 @@
  */
 package sbrf.ru.neoflex.sbrf.intf.creditfactoryservice;
 
+import static tsm_methods.WebAppContext.countCalls;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,6 +25,8 @@ public class ETSMInboundServiceMessageReceiverInOut extends
 			org.apache.axis2.context.MessageContext msgContext,
 			org.apache.axis2.context.MessageContext newMsgContext)
 			throws org.apache.axis2.AxisFault {
+
+		countCalls.getAndIncrement();
 
 		try {
 

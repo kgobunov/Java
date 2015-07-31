@@ -1,7 +1,5 @@
 package tools;
 
-import java.io.UnsupportedEncodingException;
-
 import javax.xml.namespace.QName;
 
 import org.apache.axiom.om.OMAbstractFactory;
@@ -17,8 +15,7 @@ import org.apache.axiom.om.OMFactory;
  */
 public class ResponseAction {
 
-	public static OMElement getResponse(String product)
-			throws UnsupportedEncodingException {
+	public static OMElement getResponse(String product) {
 
 		OMElement response = null;
 
@@ -62,7 +59,7 @@ public class ResponseAction {
 			break;
 		case 4:
 			number = WebAppContext.getNext(intAction);
-			break;				
+			break;
 		case 5:
 			number = WebAppContext.getNext(intAction);
 			break;
@@ -107,16 +104,16 @@ public class ResponseAction {
 			break;
 		case 19:
 			number = WebAppContext.getNext(intAction);
-			break;	
+			break;
 		case 20:
 			number = WebAppContext.getNext(intAction);
 			break;
 		case 21:
 			number = WebAppContext.getNext(intAction);
-			break;	
+			break;
 		case 22:
 			number = WebAppContext.getNext(intAction);
-			break;	
+			break;
 		case 23:
 			number = WebAppContext.getNext(intAction);
 			break;
@@ -125,10 +122,10 @@ public class ResponseAction {
 			break;
 		case 25:
 			number = WebAppContext.getNext(intAction);
-			break;			
+			break;
 		case 26:
 			number = WebAppContext.getNext(intAction);
-			break;			
+			break;
 		default:
 			break;
 		}

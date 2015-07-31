@@ -952,16 +952,6 @@
 												</xs:restriction>
 											</xs:simpleType>												
 										</xs:element>
-										<xs:element name="gc" minOccurs="1" maxOccurs="1">	
-											<xs:annotation>
-												<xs:documentation>Count calls after need call gc</xs:documentation>
-											</xs:annotation>
-											<xs:simpleType>
-												<xs:restriction base="xs:decimal">
-													<xs:pattern value="\d+"/>
-												</xs:restriction>
-											</xs:simpleType>												
-										</xs:element>
 									</xs:sequence>
 								</xs:complexType>												
 							</xs:element>
@@ -977,7 +967,7 @@
 											</xs:annotation>
 											<xs:simpleType>
 												<xs:restriction base="xs:decimal">
-													<xs:pattern value="\d+"/>
+													<xs:pattern value="-?\d+"/>
 												</xs:restriction>
 											</xs:simpleType>												
 										</xs:element>
@@ -1011,7 +1001,6 @@
 												</xs:restriction>
 											</xs:simpleType>											
 										</xs:element>
-
 									</xs:sequence>
 								</xs:complexType>												
 							</xs:element>							

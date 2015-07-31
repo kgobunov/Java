@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+  <classpathentry kind="src" path="src/test/java" output="target/test-classes" including="**/*.java"/>
+  <classpathentry kind="src" path="src/main/java" including="**/*.java"/>
+  <classpathentry kind="output" path="target/classes"/>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+  <classpathentry kind="var" path="M2_REPO/log4j-api/log4j-api/2.3/log4j-api-2.3.jar"/>
+  <classpathentry kind="var" path="M2_REPO/log4j-core/log4j-core/2.3/log4j-core-2.3.jar"/>
+  <classpathentry kind="var" path="M2_REPO/jdom/jdom/1.0/jdom-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/jms/jms/1.0/jms-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/ibm/mq/headers/com.ibm.mq.headers/1.0/com.ibm.mq.headers-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/ibm/mq/com.ibm.mq/1.0/com.ibm.mq-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/ibm/mq/pcf/com.ibm.mq.pcf/1.0/com.ibm.mq.pcf-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/ibm/mq/jmqi/com.ibm.mq.jmqi/1.0/com.ibm.mq.jmqi-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/connector/connector/1.0/connector-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/ibm/mq/commonservices/com.ibm.mq.commonservices/1.0/com.ibm.mq.commonservices-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/dhbcore/dhbcore/1.0/dhbcore-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/fscontext/fscontext/1.0/fscontext-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/providerutil/providerutil/1.0/providerutil-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/ibm/mqjms/com.ibm.mqjms/1.0/com.ibm.mqjms-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/ru/aplana/lib/ru.aplana.lib/1.0-jar-with-dependencies/ru.aplana.lib-1.0-jar-with-dependencies.jar"/>
+  <classpathentry kind="var" path="M2_REPO/ojdbc14_g/ojdbc14_g/1.0/ojdbc14_g-1.0.jar"/>
+</classpath>

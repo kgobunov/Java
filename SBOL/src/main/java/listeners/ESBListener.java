@@ -41,56 +41,83 @@ public class ESBListener implements MessageListener {
 
 		try {
 
-			dataArray.add(getData.getValueByName("RqUID"));
+			String rqUid = getData.getValueByName("RqUID");
 
-			dataArray.add(getData.getValueByName("StatusCode"));
+			String status = getData.getValueByName("StatusCode");
 
-			dataArray.add(getData.getValueByName("ApplicationNumber"));
+			String appNumber = getData.getValueByName("ApplicationNumber");
 
-			if (dataArray.get(2).length() == 0) {
+			if (rqUid.length() > 0) {
 
-				dataArray.set(2, "null");
+				dataArray.add(rqUid);
 
-				dataArray.add(getData.getValueByName("ErrorCode"));
+				dataArray.add(status);
 
-				dataArray.add(getData.getValueByName("Message"));
+				dataArray.add(appNumber);
 
-			} else {
+				if (dataArray.get(2).length() == 0) {
 
-				String error_code = getData.getValueByName("ErrorCode");
+					dataArray.set(2, "null");
 
-				if (error_code.length() > 0) {
+					dataArray.add(getData.getValueByName("ErrorCode"));
 
-					dataArray.add(error_code);
+					dataArray.add(getData.getValueByName("Message"));
 
 				} else {
 
-					dataArray.add("0");
+					String error_code = getData.getValueByName("ErrorCode");
+
+					if (error_code.length() > 0) {
+
+						dataArray.add(error_code);
+
+					} else {
+
+						dataArray.add("0");
+					}
+
+					switch (status) {
+
+					case "-1":
+						dataArray.add("Ошибки заполнения");
+						break;
+					case "0":
+						dataArray.add("Отказ");
+						break;
+					case "1":
+						dataArray.add("Заявка создана успешно");
+						break;
+					case "2":
+						dataArray.add("Одобрена");
+						break;
+					case "3":
+						dataArray.add("Обрабатывается");
+						break;
+					case "4":
+						dataArray.add("Кредит Выдан");
+						break;
+					default:
+						dataArray.add("Unknown status!");
+						break;
+					}
+
 				}
 
-				switch (Integer.parseInt(dataArray.get(1))) {
+				try {
 
-				case -1:
-					dataArray.add("Ошибки заполнения");
-					break;
-				case 0:
-					dataArray.add("Отказ");
-					break;
-				case 1:
-					dataArray.add("Заявка создана успешно");
-					break;
-				case 2:
-					dataArray.add("Одобрена");
-					break;
-				case 3:
-					dataArray.add("Обрабатывается");
-					break;
-				case 4:
-					dataArray.add("Кредит Выдан");
-					break;
-				default:
-					break;
+					DbOperation.getInstance().evalOperation(2, dataArray);
+
+				} catch (Exception e) {
+
+					logger.error(e.getMessage(), e);
+
 				}
+
+			} else {
+
+				logger.info(
+						"Message from ETSM. Don't save to database. Application number: %s; Status code: %s",
+						appNumber, status);
 
 			}
 
@@ -100,16 +127,5 @@ public class ESBListener implements MessageListener {
 
 		}
 
-		try {
-
-			DbOperation.getInstance().evalOperation(2, dataArray);
-
-		} catch (Exception e) {
-
-			logger.error(e.getMessage(), e);
-
-		}
-
 	}
-
 }

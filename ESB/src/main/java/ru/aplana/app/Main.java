@@ -45,7 +45,7 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
  * 
  */
 @SuppressWarnings("deprecation")
-public class EsbMqJms implements Runnable {
+public class Main implements Runnable {
 
 	public static int countThreads;
 
@@ -64,9 +64,9 @@ public class EsbMqJms implements Runnable {
 	private boolean flagReconnect = false;
 
 	private static final Logger logger = LogManager
-			.getFormatterLogger(EsbMqJms.class.getName());
+			.getFormatterLogger(Main.class.getName());
 
-	public EsbMqJms() {
+	public Main() {
 
 		// Create factory
 		try {
@@ -369,7 +369,7 @@ public class EsbMqJms implements Runnable {
 
 		for (int i = 0; i < countThreads; i++) {
 
-			executor.execute(new EsbMqJms());
+			executor.execute(new Main());
 
 		}
 

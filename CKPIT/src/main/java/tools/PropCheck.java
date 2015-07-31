@@ -2,6 +2,13 @@ package tools;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+
+import javax.jms.JMSException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,6 +19,10 @@ import org.jdom.input.SAXBuilder;
 
 import ru.aplana.app.Main;
 
+import com.ibm.mq.jms.MQQueueConnection;
+
+import db.DatabaseOperation;
+
 /**
  * 
  * Check properties
@@ -20,6 +31,8 @@ import ru.aplana.app.Main;
  * 
  */
 public class PropCheck implements Runnable {
+
+	public static ArrayList<MQQueueConnection> connections = new ArrayList<MQQueueConnection>();
 
 	public static Element ckpit = null;
 
@@ -104,6 +117,48 @@ public class PropCheck implements Runnable {
 		if (diff >= this.stopTime) {
 
 			logger.info("Service stopped! Work time: %d", this.stopTime);
+
+			DatabaseOperation.getInstance().disconnect();
+
+			Enumeration<Driver> drivers = DriverManager.getDrivers();
+
+			while (drivers.hasMoreElements()) {
+
+				Driver driver = (Driver) drivers.nextElement();
+
+				logger.info("Deregister driver: " + driver.getClass().getName());
+
+				try {
+
+					DriverManager.deregisterDriver(driver);
+
+				} catch (SQLException e) {
+
+					logger.error(e.getMessage(), e);
+
+				}
+
+			}
+
+			for (MQQueueConnection connection : connections) {
+
+				try {
+
+					String clientId = connection.getClientID();
+
+					connection.clear();
+
+					connection.close();
+
+					logger.info("Connection %s closed successfully", clientId);
+
+				} catch (JMSException e) {
+
+					logger.error(e.getMessage(), e);
+
+				}
+
+			}
 
 			Main.exec.shutdownNow();
 

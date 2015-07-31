@@ -41,7 +41,7 @@ public class TSMBalancerSkeleton {
 
 		int type = errorData.getType();
 
-		logger.debug("Date: " + new Date() + ". Bad server: " + server
+		logger.info("Date: " + new Date() + ". Bad server: " + server
 				+ "; Error code: " + type);
 
 		Staff.errorServers.put(server, type);

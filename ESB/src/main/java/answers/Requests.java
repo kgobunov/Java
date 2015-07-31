@@ -197,12 +197,14 @@ public class Requests {
 
 		String status = data.get(3);
 
+		String rqUid = data.get(0);
+
 		if (status.equalsIgnoreCase("-1") || status.equalsIgnoreCase("0")) {
 
 			response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 					+ "<StatusLoanApplicationRq xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"LoanApplication.xsd\">"
 					+ "<RqUID>"
-					+ data.get(0)
+					+ rqUid
 					+ "</RqUID>"
 					+ "<OperUID>"
 					+ data.get(2)
@@ -210,7 +212,7 @@ public class Requests {
 					+ "<SPName>BP_ES</SPName>"
 					+ "<SrcRq>"
 					+ "<RqUID>"
-					+ data.get(0)
+					+ rqUid
 					+ "</RqUID>"
 					+ "<RqTm>"
 					+ data.get(1)
@@ -233,15 +235,14 @@ public class Requests {
 					+ "</Message>"
 					+ "</Error>"
 					+ "</Status>"
-					+ "</ApplicationStatus>"
-					+ "</StatusLoanApplicationRq>";
+					+ "</ApplicationStatus>" + "</StatusLoanApplicationRq>";
 
 		} else if (status.equalsIgnoreCase("1") || status.equalsIgnoreCase("4")) {
 
 			response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 					+ "<StatusLoanApplicationRq xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"LoanApplication.xsd\">"
 					+ "<RqUID>"
-					+ data.get(0)
+					+ rqUid
 					+ "</RqUID>"
 					+ "<RqTm>"
 					+ data.get(1)
@@ -252,7 +253,7 @@ public class Requests {
 					+ "<SPName>BP_ES</SPName>"
 					+ "<SrcRq>"
 					+ "<RqUID>"
-					+ data.get(0)
+					+ rqUid
 					+ "</RqUID>"
 					+ "<RqTm>"
 					+ data.get(1)
@@ -274,7 +275,7 @@ public class Requests {
 			response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 					+ "<StatusLoanApplicationRq xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"LoanApplication.xsd\">"
 					+ "<RqUID>"
-					+ data.get(0)
+					+ rqUid
 					+ "</RqUID>"
 					+ "<RqTm>"
 					+ data.get(1)
@@ -285,7 +286,7 @@ public class Requests {
 					+ "<SPName>BP_ES</SPName>"
 					+ "<SrcRq>"
 					+ "<RqUID>"
-					+ data.get(0)
+					+ rqUid
 					+ "</RqUID>"
 					+ "<RqTm>"
 					+ data.get(1)
@@ -1005,10 +1006,20 @@ public class Requests {
 
 			int sizePhones = phones.size();
 
-			for (int j = 0; j < sizePhones; j++) {
+			if (sizePhones == 0) {
 
-				tempPhones.add(((Element) phones.get(j))
-						.getChildText("phoneNumber"));
+				logger.info("Empty phone number!");
+
+				tempPhones.add("0");
+
+			} else {
+
+				for (int j = 0; j < sizePhones; j++) {
+
+					tempPhones.add(((Element) phones.get(j))
+							.getChildText("phoneNumber"));
+
+				}
 
 			}
 
@@ -1020,8 +1031,7 @@ public class Requests {
 
 		StringBuilder sb = new StringBuilder();
 
-		SimpleDateFormat sdf = new SimpleDateFormat(
-				"yyyy-MM-dd'T'hh:mm:ss");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss");
 
 		sb.append(
 				"<NS1:SrvGetClientExtendedRateRs xmlns:NS1=\"http://CreditFactory/ru/sbrf/sbt/tsm/mobile\">")

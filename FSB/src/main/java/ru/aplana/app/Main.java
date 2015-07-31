@@ -3,13 +3,14 @@ package ru.aplana.app;
 import static ru.aplana.tools.MQTools.getConnection;
 import static ru.aplana.tools.MQTools.getConsumer;
 import static tools.PropCheck.common;
-import static tools.PropCheck.erib;
+import static tools.PropCheck.fsb;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
@@ -29,26 +30,27 @@ import com.ibm.mq.jms.MQQueueConnection;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 
 /**
- * Main - enter point.
+ * Main Class - enter point. This bundle emulation CRM system.
  * 
  * @author Maksim Stepanov
  * 
  */
 @SuppressWarnings("deprecation")
-public class SBOLMqJms implements Runnable {
+public class Main implements Runnable {
 
 	public static AtomicBoolean flagRequest = new AtomicBoolean(false);
+
+	public static ScheduledExecutorService sc = null;
 
 	public static ExecutorService executor = null;
 
 	public static ExecutorService ex = null;
 
-	public static ScheduledExecutorService sc = null;
-
-	private static final Logger logger = LogManager
-			.getFormatterLogger(SBOLMqJms.class.getName());
-
 	private static int countThread;
+
+	private static int countThreadListeners;
+
+	private static AtomicInteger countListeners = new AtomicInteger(0);
 
 	private MQQueueConnectionFactory factory;
 
@@ -56,8 +58,12 @@ public class SBOLMqJms implements Runnable {
 
 	private boolean flagReconnect = false;
 
-	public SBOLMqJms() {
+	private static final Logger logger = LogManager
+			.getFormatterLogger(Main.class.getName());
 
+	public Main() {
+
+		// Create factory
 		try {
 
 			this.factory = MQConn.getFactory();
@@ -67,6 +73,7 @@ public class SBOLMqJms implements Runnable {
 		} catch (NumberFormatException | JMSException e) {
 
 			logger.error(e.getMessage(), e);
+
 		}
 
 	}
@@ -76,8 +83,12 @@ public class SBOLMqJms implements Runnable {
 
 		try {
 
+			// Create connection to MQ
 			this.connection = getConnection(this.factory, null, null);
 
+			PropCheck.connections.add(this.connection);
+
+			// Listener for catch MQ exceptions
 			this.connection.setExceptionListener(new ExceptionListener() {
 
 				@Override
@@ -87,7 +98,7 @@ public class SBOLMqJms implements Runnable {
 
 					logger.error("Error code: %s", errorCode);
 
-					// JMSWMQ1107 - connection closed
+					// JMSWMQ1107 - connection error
 					if (errorCode.equalsIgnoreCase("JMSWMQ1107")) {
 
 						logger.error("Error msg: %s", e.getMessage(), e);
@@ -108,13 +119,12 @@ public class SBOLMqJms implements Runnable {
 								if (CheckConn.checkConn()) {
 
 									run();
-
 								}
 
 							} catch (Exception e1) {
 
 								logger.error("Can't reconecting to MQ: %s",
-										e1.getMessage(), e1);
+										e1.getMessage());
 							}
 
 							// Delay between retry
@@ -160,11 +170,20 @@ public class SBOLMqJms implements Runnable {
 					this.factory.getHostName(), this.factory.getPort(),
 					this.factory.getQueueManager(), this.factory.getChannel());
 
-			String queue = erib.getChildText("queueFrom");
+			String queue = fsb.getChildText("queueFrom");
 
-			MessageConsumer consumer = getConsumer(this.connection, queue);
+			// Set listeners
+			while (countListeners.get() < countThreadListeners) {
 
-			consumer.setMessageListener(new ESBListener());
+				MessageConsumer consumer = getConsumer(this.connection, queue);
+
+				consumer.setMessageListener(new ESBListener(this.connection));
+
+				countListeners.getAndIncrement();
+
+			}
+
+			countListeners.set(0);
 
 			logger.info("Listener is set to queue %s", queue);
 
@@ -178,8 +197,6 @@ public class SBOLMqJms implements Runnable {
 
 			logger.error("Can't set listener %s", e.getMessage(), e);
 
-			logger.info("Flag reconnect: %s", flagReconnect);
-
 			if (!flagReconnect) {
 
 				executor.shutdownNow();
@@ -187,7 +204,6 @@ public class SBOLMqJms implements Runnable {
 				ex.shutdownNow();
 
 				sc.shutdownNow();
-
 			}
 		}
 
@@ -203,7 +219,11 @@ public class SBOLMqJms implements Runnable {
 
 		sc.scheduleAtFixedRate(new PropCheck(), 0, 10, TimeUnit.SECONDS);
 
-		countThread = Integer.parseInt(erib.getChildText("threads"));
+		// Count threads
+		countThread = Integer.parseInt(fsb.getChildText("threads"));
+
+		// Count listeners
+		countThreadListeners = Integer.parseInt(fsb.getChildText("listeners"));
 
 		executor = Executors.newFixedThreadPool(countThread);
 
@@ -211,7 +231,7 @@ public class SBOLMqJms implements Runnable {
 
 		for (int i = 0; i < countThread; i++) {
 
-			executor.execute(new SBOLMqJms());
+			executor.execute(new Main());
 
 		}
 

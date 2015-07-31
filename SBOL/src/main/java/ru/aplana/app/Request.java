@@ -174,7 +174,7 @@ public class Request implements Runnable {
 		String queue = erib.getChildText("queueTo");
 
 		// Send to ESB
-		while (SBOLMqJms.flagRequest.get()) {
+		while (Main.flagRequest.get()) {
 
 			long start = System.currentTimeMillis();
 

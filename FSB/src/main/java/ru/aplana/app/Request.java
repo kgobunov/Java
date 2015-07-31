@@ -173,7 +173,7 @@ public class Request implements Runnable {
 		String queue = fsb.getChildText("queueTo");
 
 		// Send to ESB
-		while (FSBMqJms.flagRequest.get()) {
+		while (Main.flagRequest.get()) {
 
 			long start = System.currentTimeMillis();
 

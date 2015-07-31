@@ -1,0 +1,17 @@
+<Configuration strict="true">
+	<Properties>
+		<Property name="filename">logs\TOOLS_default.log</Property>
+	</Properties>
+	<Appenders>
+			<Appender type="File" name="fileDefault" fileName="${filename}">
+				<Layout type="PatternLayout">
+					<Pattern>%d{dd MM yyyy HH:mm:ss,SSS} [%t] %-5p %c{2}:%L - %m%n</Pattern>
+				</Layout>
+			</Appender>
+	</Appenders>	
+	<Loggers>
+		<Root level="trace">
+			<AppenderRef ref="fileDefault"/>
+		</Root>
+	</Loggers>
+</Configuration>
